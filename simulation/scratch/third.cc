@@ -889,7 +889,7 @@ int main(int argc, char *argv[])
 
 			node->AggregateObject (rdma);
 			rdma->Init();
-			rdma->TraceConnectWithoutContext("QpComplete", MakeBoundCallback (qp_finish, fct_output));
+			rdma->TraceConnectWithoutContext("QpComplete", MakeBoundCallback (qp_finish, fct_output)); // fct output
 		}
 	}
 	#endif
