@@ -107,9 +107,9 @@ struct Interface{
 map<Ptr<Node>, map<Ptr<Node>, Interface> > nbr2if;
 // Mapping destination to next hop for each node: <node, <dest, <nexthop0, ...> > >
 map<Ptr<Node>, map<Ptr<Node>, vector<Ptr<Node> > > > nextHop;
-map<Ptr<Node>, map<Ptr<Node>, uint64_t> > pairDelay;
-map<Ptr<Node>, map<Ptr<Node>, uint64_t> > pairTxDelay;
-map<uint32_t, map<uint32_t, uint64_t> > pairBw;
+map<Ptr<Node>, map<Ptr<Node>, uint64_t> > pairDelay; // accumulated propagation delay between two nodes (on shortest path)
+map<Ptr<Node>, map<Ptr<Node>, uint64_t> > pairTxDelay; // accumulated transmission delay between two nodes (on shortest path)
+map<uint32_t, map<uint32_t, uint64_t> > pairBw; // smallest bandwidth between two nodes (on shortest path)
 map<Ptr<Node>, map<Ptr<Node>, uint64_t> > pairBdp;
 map<uint32_t, map<uint32_t, uint64_t> > pairRtt;
 
@@ -163,8 +163,10 @@ uint32_t ip_to_node_id(Ipv4Address ip){
 void qp_finish(FILE* fout, Ptr<RdmaQueuePair> q){
 	uint32_t sid = ip_to_node_id(q->sip), did = ip_to_node_id(q->dip);
 	uint64_t base_rtt = pairRtt[sid][did], b = pairBw[sid][did];
+	// total payload size plus the header size
 	uint32_t total_bytes = q->m_size + ((q->m_size-1) / packet_payload_size + 1) * (CustomHeader::GetStaticWholeHeaderSize() - IntHeader::GetStaticSize()); // translate to the minimum bytes required (with header but no INT)
-	uint64_t standalone_fct = base_rtt + total_bytes * 8000000000lu / b;
+	// standalone fct only includes the transmission delay + propagation delay (base_rtt), plus one transmission delay of all data? problem? 
+	uint64_t standalone_fct = base_rtt + total_bytes * 8000000000lu / b; 
 	// sip, dip, sport, dport, size (B), start_time, fct (ns), standalone_fct (ns)
 	fprintf(fout, "%08x %08x %u %u %lu %lu %lu %lu\n", q->sip.Get(), q->dip.Get(), q->sport, q->dport, q->m_size, q->startTime.GetTimeStep(), (Simulator::Now() - q->startTime).GetTimeStep(), standalone_fct);
 	fflush(fout);
@@ -798,6 +800,7 @@ int main(int argc, char *argv[])
 		// used to create a graph of the topology
 		nbr2if[snode][dnode].idx = DynamicCast<QbbNetDevice>(d.Get(0))->GetIfIndex();
 		nbr2if[snode][dnode].up = true;
+		// propagation delay in ns
 		nbr2if[snode][dnode].delay = DynamicCast<QbbChannel>(DynamicCast<QbbNetDevice>(d.Get(0))->GetChannel())->GetDelay().GetTimeStep();
 		nbr2if[snode][dnode].bw = DynamicCast<QbbNetDevice>(d.Get(0))->GetDataRate().GetBitRate();
 		nbr2if[dnode][snode].idx = DynamicCast<QbbNetDevice>(d.Get(1))->GetIfIndex();
