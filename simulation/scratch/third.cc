@@ -44,6 +44,7 @@ NS_LOG_COMPONENT_DEFINE("GENERIC_SIMULATION");
 
 uint32_t cc_mode = 1;
 bool enable_qcn = true, use_dynamic_pfc_threshold = true;
+bool enable_qbb = false;
 uint32_t packet_payload_size = 1000, l2_chunk_size = 0, l2_ack_interval = 0;
 double pause_time = 5, simulator_stop_time = 3.01;
 std::string data_rate, link_delay, topology_file, flow_file, trace_file, trace_output_file;
@@ -359,7 +360,17 @@ int main(int argc, char *argv[])
 
 			//std::cout << conf.cur << "\n";
 
-			if (key.compare("ENABLE_QCN") == 0)
+			if (key.compare("ENABLE_QBB") == 0)
+			{
+				uint32_t v;
+				conf >> v;
+				enable_qbb = v;
+				if (enable_qbb)
+					std::cout << "ENABLE_QBB\t\t\t" << "Yes" << "\n";
+				else
+					std::cout << "ENABLE_QBB\t\t\t" << "No" << "\n";
+			}
+			else if (key.compare("ENABLE_QCN") == 0)
 			{
 				uint32_t v;
 				conf >> v;
@@ -669,6 +680,7 @@ int main(int argc, char *argv[])
 
 	Config::SetDefault("ns3::QbbNetDevice::PauseTime", UintegerValue(pause_time));
 	Config::SetDefault("ns3::QbbNetDevice::QcnEnabled", BooleanValue(enable_qcn));
+	Config::SetDefault("ns3::QbbNetDevice::QbbEnabled", BooleanValue(enable_qbb));
 	Config::SetDefault("ns3::QbbNetDevice::DynamicThreshold", BooleanValue(dynamicth));
 
 	// set int_multi
@@ -716,6 +728,7 @@ int main(int argc, char *argv[])
 			Ptr<SwitchNode> sw = CreateObject<SwitchNode>();
 			n.Add(sw);
 			sw->SetAttribute("EcnEnabled", BooleanValue(enable_qcn));
+			sw->SetAttribute("QbbEnabled", BooleanValue(enable_qcn));
 		}
 	}
 

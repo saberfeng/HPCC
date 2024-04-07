@@ -1,4 +1,4 @@
-simulation\.waf-*\waflib\*.pyc
-simulation\build
-simulation\waf-tools\*.pyc
-simulation\mix\*.tr
+simulation/.waf-*/waflib/*.pyc
+simulation/build
+simulation/waf-tools/*.pyc
+simulation/mix/*.tr
