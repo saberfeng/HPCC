@@ -36,7 +36,7 @@ RdmaClientHelper::RdmaClientHelper (uint16_t pg, Ipv4Address sip, Ipv4Address di
 	SetAttribute ("DestIP", Ipv4AddressValue (dip));
 	SetAttribute ("SourcePort", UintegerValue (sport));
 	SetAttribute ("DestPort", UintegerValue (dport));
-	SetAttribute ("WriteSize", UintegerValue (size));
+	SetAttribute ("WriteSize", UintegerValue (size)); // bytes to write
 	SetAttribute ("Window", UintegerValue (win));
 	SetAttribute ("BaseRtt", UintegerValue (baseRtt));
 }

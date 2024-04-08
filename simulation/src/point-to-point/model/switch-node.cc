@@ -19,6 +19,11 @@ TypeId SwitchNode::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::SwitchNode")
     .SetParent<Node> ()
     .AddConstructor<SwitchNode> ()
+	.AddAttribute("QbbEnabled",
+			"Enable Qbb PFC.",
+			BooleanValue(false),
+			MakeBooleanAccessor(&SwitchNode::m_qbbEnabled),
+			MakeBooleanChecker())
 	.AddAttribute("EcnEnabled",
 			"Enable ECN marking.",
 			BooleanValue(false),

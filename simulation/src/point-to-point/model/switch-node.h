@@ -27,6 +27,7 @@ class SwitchNode : public Node{
 	double m_u[pCnt];
 
 protected:
+	bool m_qbbEnabled;
 	bool m_ecnEnabled;
 	uint32_t m_ccMode;
 	uint64_t m_maxRtt;

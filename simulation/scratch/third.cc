@@ -36,6 +36,7 @@
 #include <ns3/rdma-driver.h>
 #include <ns3/switch-node.h>
 #include <ns3/sim-setting.h>
+#include "rand_offset_injector.h"
 
 using namespace ns3;
 using namespace std;
@@ -120,7 +121,7 @@ std::vector<Ipv4Address> serverAddress;
 std::unordered_map<uint32_t, unordered_map<uint32_t, uint16_t> > portNumder;
 
 struct FlowInput{
-	uint32_t src, dst, pg, maxPacketCount, port, dport;
+	uint32_t src, dst, pg, writeSizeByte, port, dport; // pg: priority group
 	double start_time;
 	uint32_t idx;
 };
@@ -129,14 +130,14 @@ uint32_t flow_num;
 
 void ReadFlowInput(){
 	if (flow_input.idx < flow_num){
-		flowf >> flow_input.src >> flow_input.dst >> flow_input.pg >> flow_input.dport >> flow_input.maxPacketCount >> flow_input.start_time;
+		flowf >> flow_input.src >> flow_input.dst >> flow_input.pg >> flow_input.dport >> flow_input.writeSizeByte >> flow_input.start_time;
 		NS_ASSERT(n.Get(flow_input.src)->GetNodeType() == 0 && n.Get(flow_input.dst)->GetNodeType() == 0);
 	}
 }
 void ScheduleFlowInputs(){
 	while (flow_input.idx < flow_num && Seconds(flow_input.start_time) == Simulator::Now()){
 		uint32_t port = portNumder[flow_input.src][flow_input.dst]++; // get a new port number 
-		RdmaClientHelper clientHelper(flow_input.pg, serverAddress[flow_input.src], serverAddress[flow_input.dst], port, flow_input.dport, flow_input.maxPacketCount, has_win?(global_t==1?maxBdp:pairBdp[n.Get(flow_input.src)][n.Get(flow_input.dst)]):0, global_t==1?maxRtt:pairRtt[flow_input.src][flow_input.dst]);
+		RdmaClientHelper clientHelper(flow_input.pg, serverAddress[flow_input.src], serverAddress[flow_input.dst], port, flow_input.dport, flow_input.writeSizeByte, has_win?(global_t==1?maxBdp:pairBdp[n.Get(flow_input.src)][n.Get(flow_input.dst)]):0, global_t==1?maxRtt:pairRtt[flow_input.src][flow_input.dst]);
 		ApplicationContainer appCon = clientHelper.Install(n.Get(flow_input.src));
 		appCon.Start(Time(0));
 
@@ -338,6 +339,7 @@ uint64_t get_nic_rate(NodeContainer &n){
 
 int main(int argc, char *argv[])
 {
+	RandOffsetInjector rand_offset_injector = RandOffsetInjector();
 	clock_t begint, endt;
 	begint = clock();
 #ifndef PGO_TRAINING
@@ -718,7 +720,7 @@ int main(int argc, char *argv[])
 	for (uint32_t i = 0; i < switch_num; i++)
 	{
 		uint32_t sid;
-		topof >> sid;
+		topof >> sid; // node switch ID
 		node_type[sid] = 1; // mark as switch
 	}
 	for (uint32_t i = 0; i < node_num; i++){ // create servers and switches
@@ -728,7 +730,7 @@ int main(int argc, char *argv[])
 			Ptr<SwitchNode> sw = CreateObject<SwitchNode>();
 			n.Add(sw);
 			sw->SetAttribute("EcnEnabled", BooleanValue(enable_qcn));
-			sw->SetAttribute("QbbEnabled", BooleanValue(enable_qcn));
+			sw->SetAttribute("QbbEnabled", BooleanValue(enable_qbb));
 		}
 	}
 

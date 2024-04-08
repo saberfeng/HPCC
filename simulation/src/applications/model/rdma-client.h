@@ -69,7 +69,7 @@ private:
   virtual void StartApplication (void);
   virtual void StopApplication (void);
 
-  uint64_t m_size;
+  uint64_t m_size; // bytes to write
   uint16_t m_pg;
 
   Ipv4Address m_sip, m_dip;
