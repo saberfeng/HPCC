@@ -12,6 +12,10 @@ void test_matrix(){
     double data2[2][2] = {{2,1},{7,4}};
     Matrix C(data2);
     std::cout<<Inverse(C)<<endl;
+
+    double data3[2][2] = {{4,7},{2,6}};
+    Matrix D(data3);
+    std::cout<<Inverse(D)<<endl;
 }
 
 int main(int argc, char *argv[]){
