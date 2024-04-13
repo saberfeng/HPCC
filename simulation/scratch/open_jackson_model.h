@@ -8,6 +8,7 @@
 #include <string>
 #include <unordered_map>
 #include "matrix.h"
+#include "ns3/core-module.h"
 
 namespace rand_offset{
 
@@ -20,6 +21,7 @@ struct FlowInputEntry{
     uint32_t src, dst, priority_group, dst_port; // pg: priority group
     uint64_t size_byte;
 	double start_time_s;
+    uint32_t flow_idx;
 };
 
 struct HostFlowSum{
@@ -28,6 +30,12 @@ struct HostFlowSum{
     double start_time_s;
     double end_time_s;
 };
+
+struct NodeEntry{
+    uint32_t node_type;
+    uint64_t bandwidth_bps;
+};
+
 
 class OpenJacksonModel {
 public:
@@ -39,17 +47,24 @@ public:
         Then, when calculating the service rate, use the same unit.
         -> reduce the probability calculation time complexity 
     */ 
-    void initialize(const string& flow_file, const string& topo_file); // init input_rate_bps, service_rate_bps, routing_matrix, node_type
+    void initialize(const string& flow_file, const string& topo_file, 
+                    const map<Ptr<Node>, map<Ptr<Node>, vector<Ptr<Node>>>> &next_hop); // init input_rate_bps, service_rate_bps, routing_matrix, node_type
 private:
-    void initInputRate(ifstream &flow_f); 
-    void initServiceRateRoutingMatrix(ifstream &flow_f);
+    void readTopology(const string& topo_file);
+    void readFlows(const string& flow_file);
+
+    void initInputRate(); 
+    void initServiceRate();
+    void initRoutingMatrix(const map<Ptr<Node>, map<Ptr<Node>, vector<Ptr<Node>>>> &next_hop);
 
     Vector<double> input_rate_bps; // byte per second
     Vector<double> service_rate_bps; // byte per second
     Matrix routing_matrix;
-    vector<uint32_t> node_type; // 0: host, 1: switch
+    vector<NodeEntry> node_info; // 0: host, 1: switch
+    
     unordered_map<uint32_t, vector<FlowInputEntry>> node2flows;
     unordered_map<uint32_t, HostFlowSum> node2flowsums;
+    unordered_map<uint32_t, Matrix> flow2routing_matrix;
 };
 
 

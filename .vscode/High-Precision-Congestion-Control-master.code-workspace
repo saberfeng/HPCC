@@ -1,0 +1,24 @@
+{
+    "folders": [
+        {
+            "path": ".."
+        }
+    ],
+    "settings": {
+        "files.associations": {
+            "unordered_map": "cpp",
+            "charconv": "cpp",
+            "format": "cpp",
+            "iterator": "cpp",
+            "regex": "cpp",
+            "xutility": "cpp",
+            "deque": "cpp",
+            "list": "cpp",
+            "vector": "cpp",
+            "xstring": "cpp",
+            "iosfwd": "cpp",
+            "map": "cpp",
+            "utility": "cpp"
+        }
+    }
+}

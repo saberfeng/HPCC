@@ -168,7 +168,7 @@ void qp_finish(FILE* fout, Ptr<RdmaQueuePair> q){
 	// total payload size plus the header size
 	uint32_t total_bytes = q->m_size + ((q->m_size-1) / packet_payload_size + 1) * (CustomHeader::GetStaticWholeHeaderSize() - IntHeader::GetStaticSize()); // translate to the minimum bytes required (with header but no INT)
 	// standalone fct only includes the transmission delay + propagation delay (base_rtt), plus one transmission delay of all data? problem? 
-	uint64_t standalone_fct = base_rtt + total_bytes * 8000000000lu / b; 
+	uint64_t standalone_fct = base_rtt + total_bytes * 8000000000lu / b; // fct in unit of ns
 	// sip, dip, sport, dport, size (B), start_time, fct (ns), standalone_fct (ns)
 	fprintf(fout, "%08x %08x %u %u %lu %lu %lu %lu\n", q->sip.Get(), q->dip.Get(), q->sport, q->dport, q->m_size, q->startTime.GetTimeStep(), (Simulator::Now() - q->startTime).GetTimeStep(), standalone_fct);
 	fflush(fout);
