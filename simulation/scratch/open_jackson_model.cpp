@@ -7,9 +7,10 @@ void OpenJacksonModel::initInputRate(std::ifstream &flow_file){
 }
 
 void OpenJacksonModel::initialize(const string& flow_file, const string& topo_file,
-                                const map<Ptr<Node>, map<Ptr<Node>, vector<Ptr<Node>>>> &next_hop){
+                                const map<Ptr<Node>, map<Ptr<Node>, vector<Ptr<Node>>>> &next_hop,
+                                const NodeContainer &nodes){
     readTopology(topo_file);
-    readFlows(flow_file);
+    readFlows(flow_file, nodes);
 
     initRoutingMatrix(next_hop);
     initInputRate();
@@ -68,7 +69,9 @@ void OpenJacksonModel::readFlows(const string& flow_file){
     }
 }
 
-void OpenJacksonModel::initRoutingMatrix(const map<Ptr<Node>, map<Ptr<Node>, vector<Ptr<Node>>>> &next_hop){
+void OpenJacksonModel::initRoutingMatrix(
+        const map<Ptr<Node>, map<Ptr<Node>, vector<Ptr<Node>>>> &next_hop,
+        const NodeContainer &nodes){
     // first iterate through node2flows to get all flows
     for(auto& node2flow : node2flows){
         uint32_t node_id = node2flow.first;
@@ -76,9 +79,18 @@ void OpenJacksonModel::initRoutingMatrix(const map<Ptr<Node>, map<Ptr<Node>, vec
 
         for(auto& flow : flows){
             Matrix routing_matrix(node_info.size(), node_info.size());
+            routing_matrix.fill(0);
+            // get flow path
+            Node src = nodes.Get(flow.src);
+            Node dst = nodes.Get(flow.dst);
+            vector<Ptr<Node>> path = next_hop.at(src).at(dst);
+            for (uint32_t i = 0; i <= path.size()-2; i++){
+                uint32_t src_id = path[i]->GetId();
+                uint32_t dst_id = path[i+1]->GetId();
+                routing_matrix[src_id][dst_id] = 1;
+            }
             flow2routing_matrix[node_id] = routing_matrix;
         }
-        
     }
 }
 

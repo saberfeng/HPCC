@@ -55,7 +55,9 @@ private:
 
     void initInputRate(); 
     void initServiceRate();
-    void initRoutingMatrix(const map<Ptr<Node>, map<Ptr<Node>, vector<Ptr<Node>>>> &next_hop);
+    void initRoutingMatrix(
+        const map<Ptr<Node>, map<Ptr<Node>, vector<Ptr<Node>>>> &next_hop,
+        const NodeContainer &nodes);
 
     Vector<double> input_rate_bps; // byte per second
     Vector<double> service_rate_bps; // byte per second
@@ -64,6 +66,8 @@ private:
     
     unordered_map<uint32_t, vector<FlowInputEntry>> node2flows;
     unordered_map<uint32_t, HostFlowSum> node2flowsums;
+    
+    // routing matrix:
     unordered_map<uint32_t, Matrix> flow2routing_matrix;
 };
 
