@@ -36,6 +36,12 @@ struct NodeEntry{
     uint64_t bandwidth_bps;
 };
 
+struct Link{
+    uint32_t src, dst;
+    uint64_t bandwidth_bps;
+};
+
+typedef std::unordered_map<uint32_t, std::unordered_map<uint32_t, Link>> Topology;
 
 class OpenJacksonModel {
 public:
@@ -48,7 +54,9 @@ public:
         -> reduce the probability calculation time complexity 
     */ 
     void initialize(const string& flow_file, const string& topo_file, 
-                    const map<Ptr<Node>, map<Ptr<Node>, vector<Ptr<Node>>>> &next_hop); // init input_rate_bps, service_rate_bps, routing_matrix, node_type
+                    const map<Ptr<Node>, map<Ptr<Node>, vector<Ptr<Node>>>> &next_hop, // init input_rate_bps, service_rate_bps, routing_matrix, node_type
+                    const NodeContainer &nodes);
+    
 private:
     void readTopology(const string& topo_file);
     void readFlows(const string& flow_file);
@@ -59,8 +67,9 @@ private:
         const map<Ptr<Node>, map<Ptr<Node>, vector<Ptr<Node>>>> &next_hop,
         const NodeContainer &nodes);
 
-    Vector<double> input_rate_bps; // byte per second
-    Vector<double> service_rate_bps; // byte per second
+    void calcStateProb();
+    Vector<double> input_rate_bps; // bit per second
+    Vector<double> service_rate_bps; // bit per second
     Matrix routing_matrix;
     vector<NodeEntry> node_info; // 0: host, 1: switch
     
@@ -69,6 +78,7 @@ private:
     
     // routing matrix:
     unordered_map<uint32_t, Matrix> flow2routing_matrix;
+    Topology topology;
 };
 
 

@@ -2,19 +2,36 @@
 
 namespace rand_offset{
 
-void OpenJacksonModel::initInputRate(std::ifstream &flow_file){
-
-}
-
 void OpenJacksonModel::initialize(const string& flow_file, const string& topo_file,
                                 const map<Ptr<Node>, map<Ptr<Node>, vector<Ptr<Node>>>> &next_hop,
-                                const NodeContainer &nodes){
+                                const NodeContainer &node_container){
     readTopology(topo_file);
-    readFlows(flow_file, nodes);
+    readFlows(flow_file, node_container);
 
     initRoutingMatrix(next_hop);
     initInputRate();
     initServiceRate();
+
+    calcStateProb();
+}
+
+void OpenJacksonModel::calcStateProb(){
+    // calculate the state probability
+    // first calculate the transition matrix
+    // then calculate the steady state probability
+    // transition matrix is the routing matrix * input_rate_bps / service_rate_bps
+    // steady state probability is the eigenvector of the transition matrix
+    // corresponding to the eigenvalue 1
+    // the steady state probability is the probability of each state
+    // the state is the number of packets in each queue
+
+    vector<double> node_drop_prob(node_info.size(), 0);
+    // \lambda^t = \gamma * (I - R^t)-1 = (\lambda_1, lambda_2, ..., lambda_n)
+    gamma = Vector(input_rate_bps);
+    I = Eye(node_info.size());
+    R = routing_matrix;
+    lambda = gamma * (I - R).Inverse()
+    std::cout<<lambda<<std::endl;
 }
 
 void OpenJacksonModel::readTopology(const string& topo_file){
@@ -39,8 +56,8 @@ void OpenJacksonModel::readTopology(const string& topo_file){
         } else {
             throw std::runtime_error("unsupported bandwidth unit");
         }
-        node_info[src].bandwidth_bps = bandwidth_bps;
-        node_info[dst].bandwidth_bps = bandwidth_bps;
+        Link link = {src, dst, bandwidth_bps};
+        topo[src][dst] = link;      
     }
 }
 
@@ -71,7 +88,7 @@ void OpenJacksonModel::readFlows(const string& flow_file){
 
 void OpenJacksonModel::initRoutingMatrix(
         const map<Ptr<Node>, map<Ptr<Node>, vector<Ptr<Node>>>> &next_hop,
-        const NodeContainer &nodes){
+        const NodeContainer &node_container){
     // first iterate through node2flows to get all flows
     for(auto& node2flow : node2flows){
         uint32_t node_id = node2flow.first;
@@ -81,8 +98,8 @@ void OpenJacksonModel::initRoutingMatrix(
             Matrix routing_matrix(node_info.size(), node_info.size());
             routing_matrix.fill(0);
             // get flow path
-            Node src = nodes.Get(flow.src);
-            Node dst = nodes.Get(flow.dst);
+            Node src = node_container.Get(flow.src);
+            Node dst = node_container.Get(flow.dst);
             vector<Ptr<Node>> path = next_hop.at(src).at(dst);
             for (uint32_t i = 0; i <= path.size()-2; i++){
                 uint32_t src_id = path[i]->GetId();
@@ -102,7 +119,15 @@ void OpenJacksonModel::initInputRate(){
 }
 
 void OpenJacksonModel::initServiceRate(){
-    
+    // service rate is the sum of the bandwidth of all links connected to the switch    
+    service_rate_bps.fill(0);
+    for (auto& src_dst_link : topo){
+        uint32_t src = src_dst_link.first;
+        for(auto& dst_link : src_dst_link.second){
+            uint32_t dst = dst_link.first;
+            service_rate_bps[src] += dst_link.second.bandwidth_bps;
+        }
+    }
 }
 
 } // namespace rand_offset
