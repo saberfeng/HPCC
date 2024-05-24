@@ -17,15 +17,18 @@ using std::string;
 using std::ifstream;
 using std::unordered_map;
 
+typedef uint32_t NodeId;
+typedef uint32_t FlowId;
+
 struct FlowInputEntry{
     uint32_t src, dst, priority_group, dst_port; // pg: priority group
     uint64_t size_byte;
 	double start_time_s;
-    uint32_t flow_idx;
+    FlowId flow_idx;
 };
 
 struct HostFlowSum{
-    uint32_t host_id;
+    NodeId host_id;
     uint64_t sum_flow_size_byte;
     double start_time_s;
     double end_time_s;
@@ -33,16 +36,16 @@ struct HostFlowSum{
 
 struct NodeEntry{
     uint32_t node_type;
-    uint64_t bandwidth_bps;
+    uint64_t bandwidth_Bps;
+    uint64_t queue_size_byte;
 };
 
 struct Link{
-    uint32_t src, dst;
-    uint64_t bandwidth_bps;
+    NodeId src, dst;
+    uint64_t bandwidth_Bps;
 };
 
 typedef std::unordered_map<uint32_t, std::unordered_map<uint32_t, Link>> Topology;
-
 class OpenJacksonModel {
 public:
     OpenJacksonModel(){}
@@ -53,13 +56,13 @@ public:
         Then, when calculating the service rate, use the same unit.
         -> reduce the probability calculation time complexity 
     */ 
-    void initialize(const string& flow_file, const string& topo_file, 
-                    const map<Ptr<Node>, map<Ptr<Node>, vector<Ptr<Node>>>> &next_hop, // init input_rate_bps, service_rate_bps, routing_matrix, node_type
+    void initialize(ifstream& flow_file, ifstream& topo_file, 
+                    const map<Ptr<Node>, map<Ptr<Node>, vector<Ptr<Node>>>> &next_hop, // init input_rate_Bps, service_rate_Bps, routing_matrix, node_type
                     const NodeContainer &nodes);
     
 private:
-    void readTopology(const string& topo_file);
-    void readFlows(const string& flow_file);
+    void readTopology(ifstream &topo_file);
+    void readFlows(ifstream &flow_file);
 
     void initInputRate(); 
     void initServiceRate();
@@ -67,17 +70,17 @@ private:
         const map<Ptr<Node>, map<Ptr<Node>, vector<Ptr<Node>>>> &next_hop,
         const NodeContainer &nodes);
 
-    void calcStateProb();
-    Vector<double> input_rate_bps; // bit per second
-    Vector<double> service_rate_bps; // bit per second
+    pair<vector, vector> calcStateProb(); // return utilization and node drop probability
+    Vector<double> input_rate_Bps; // byte per second
+    Vector<double> service_rate_Bps; // byte per second
     Matrix routing_matrix;
     vector<NodeEntry> node_info; // 0: host, 1: switch
     
-    unordered_map<uint32_t, vector<FlowInputEntry>> node2flows;
-    unordered_map<uint32_t, HostFlowSum> node2flowsums;
+    unordered_map<NodeId, vector<FlowInputEntry>> node2flows;
+    unordered_map<NodeId, HostFlowSum> node2flowsums;
     
     // routing matrix:
-    unordered_map<uint32_t, Matrix> flow2routing_matrix;
+    unordered_map<FlowId, Matrix> flow2routing_matrix;
     Topology topology;
 };
 

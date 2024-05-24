@@ -339,9 +339,10 @@ uint64_t get_nic_rate(NodeContainer &n){
 
 int main(int argc, char *argv[])
 {
-	RandOffsetInjector rand_offset_injector = RandOffsetInjector();
 	clock_t begint, endt;
 	begint = clock();
+	
+	RandOffsetInjector rand_offset_injector = RandOffsetInjector();
 #ifndef PGO_TRAINING
 	if (argc > 1)
 #else
@@ -705,6 +706,10 @@ int main(int argc, char *argv[])
 	}
 
 	//SeedManager::SetSeed(time(NULL));
+	// topology and flow files used to initialize OpenJacksonModel
+	ifstream topology_file(topology_file);
+	ifstream flow_file(flow_file);
+	rand_offset_injector.initialize(topology_file, flow_file);	
 
 	topof.open(topology_file.c_str());
 	flowf.open(flow_file.c_str());
