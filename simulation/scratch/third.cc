@@ -40,6 +40,7 @@
 
 using namespace ns3;
 using namespace std;
+using namespace rand_offset;
 
 NS_LOG_COMPONENT_DEFINE("GENERIC_SIMULATION");
 
@@ -342,7 +343,7 @@ int main(int argc, char *argv[])
 	clock_t begint, endt;
 	begint = clock();
 	
-	RandOffsetInjector rand_offset_injector = RandOffsetInjector();
+	RandOffsetInjector rand_offset_injector = rand_offset::RandOffsetInjector();
 #ifndef PGO_TRAINING
 	if (argc > 1)
 #else
@@ -707,10 +708,6 @@ int main(int argc, char *argv[])
 
 	//SeedManager::SetSeed(time(NULL));
 	// topology and flow files used to initialize OpenJacksonModel
-	ifstream topology_file(topology_file);
-	ifstream flow_file(flow_file);
-	rand_offset_injector.initialize(topology_file, flow_file);	
-
 	topof.open(topology_file.c_str());
 	flowf.open(flow_file.c_str());
 	tracef.open(trace_file.c_str());
@@ -926,6 +923,13 @@ int main(int argc, char *argv[])
 	// setup routing
 	CalculateRoutes(n);
 	SetRoutingEntries();
+	
+	ifstream topo_file_ROI(topology_file);// topology file for Random Offset Injector (ROI)
+	ifstream flow_file_ROI(flow_file); // flow file for Random Offset Injector
+	rand_offset_injector.initialize(flow_file_ROI, topo_file_ROI, nextHop, n);	
+	auto rho_drop_prob_pair = rand_offset_injector.calcStateProb();
+	vector<long double> rho_vec = rho_drop_prob_pair.first;
+	vector<long double> drop_prob_vec = rho_drop_prob_pair.second;
 
 	//
 	// get BDP and delay

@@ -9,6 +9,9 @@
 #include <unordered_map>
 #include "matrix.h"
 #include "ns3/core-module.h"
+#include "ns3/node.h"
+#include "ns3/ptr.h"
+#include "ns3/node-container.h"
 
 namespace rand_offset{
 
@@ -16,6 +19,11 @@ using std::vector;
 using std::string;
 using std::ifstream;
 using std::unordered_map;
+using ns3::Node;
+using ns3::Ptr;
+using ns3::NodeContainer;
+using std::pair;
+using std::map;
 
 typedef uint32_t NodeId;
 typedef uint32_t FlowId;
@@ -56,10 +64,13 @@ public:
         Then, when calculating the service rate, use the same unit.
         -> reduce the probability calculation time complexity 
     */ 
+    // init input_rate_Bps, service_rate_Bps, routing_matrix, node_type
     void initialize(ifstream& flow_file, ifstream& topo_file, 
-                    const map<Ptr<Node>, map<Ptr<Node>, vector<Ptr<Node>>>> &next_hop, // init input_rate_Bps, service_rate_Bps, routing_matrix, node_type
+                    const map<Ptr<Node>, map<Ptr<Node>, vector<Ptr<Node>>>>& nextHop,
                     const NodeContainer &nodes);
     
+    pair<vector<long double>, vector<long double>> calcStateProb(); // return utilization and node drop probability
+
 private:
     void readTopology(ifstream &topo_file);
     void readFlows(ifstream &flow_file);
@@ -70,7 +81,6 @@ private:
         const map<Ptr<Node>, map<Ptr<Node>, vector<Ptr<Node>>>> &next_hop,
         const NodeContainer &nodes);
 
-    pair<vector, vector> calcStateProb(); // return utilization and node drop probability
     Vector<double> input_rate_Bps; // byte per second
     Vector<double> service_rate_Bps; // byte per second
     Matrix routing_matrix;

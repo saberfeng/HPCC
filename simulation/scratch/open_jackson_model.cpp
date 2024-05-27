@@ -3,7 +3,8 @@
 namespace rand_offset{
 
 void OpenJacksonModel::initialize(ifstream &flow_file, ifstream &topo_file,
-                                const map<Ptr<Node>, map<Ptr<Node>, vector<Ptr<Node>>>> &next_hop,
+                                const map<Ptr<Node>, 
+                                          map<Ptr<Node>, vector<Ptr<Node>>>> &next_hop,
                                 const NodeContainer &node_container){
     readTopology(topo_file);
     readFlows(flow_file, node_container);
@@ -14,7 +15,8 @@ void OpenJacksonModel::initialize(ifstream &flow_file, ifstream &topo_file,
 
 }
 
-pair<vector, vector> OpenJacksonModel::calcStateProb(){
+pair<vector<long double>, vector<long double>> 
+OpenJacksonModel::calcStateProb(){
     // the steady state probability is the probability of each state
     // the state is the number of packets in each queue
     // gamma (vector): mean arrival rate from outside network
@@ -41,7 +43,7 @@ pair<vector, vector> OpenJacksonModel::calcStateProb(){
             }
         }
     }
-    return pair<vector, vector>(rho_vec, node_drop_prob); 
+    return <vector, vector>(rho_vec, node_drop_prob); 
 }
 
 void OpenJacksonModel::readTopology(ifstream& topo_file){
