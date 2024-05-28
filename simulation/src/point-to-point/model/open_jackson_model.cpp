@@ -26,27 +26,28 @@ OpenJacksonModel::calcStateProb(){
     vector<long double> rho_vec(node_info.size(), 0);
     vector<long double> node_drop_prob(node_info.size(), 0);
     // \lambda^t = \gamma * (I - R^t)-1 = (\lambda_1, lambda_2, ..., lambda_n)
-    gamma = Vector(input_rate_Bps);
-    I = Eye(node_info.size());
-    lambda = Vector(node_info.size()).Zeros();
+    Vector<long double> gamma = Vector<long double>(input_rate_Bps);
+    Matrix I = Eye(node_info.size());
+    Vector<long double> lambda = Vector<long double>(node_info.size()).Zeros();
+
     for (auto& flow_routing_matrix : flow2routing_matrix){
         FlowId flow_id = flow_routing_matrix.first;
         Matrix routing_matrix = flow_routing_matrix.second;
-        lambda_t = gamma * (I - routing_matrix).Inverse();
+        Matrix lambda_t = gamma * Inverse(I - routing_matrix);
         std::cout<<lambda<<std::endl;
         lambda = lambda + lambda_t;
         for (int i = 0; i < lambda.size(); i++){
             rho_vec[i] = lambda[i] / service_rate_Bps[i];
             // p(buffered packets >= queue_size) = (1 - rho) * \sum_n^{queue_size} rho^n
             for (int n = 0; n < node_info[i].queue_size_byte; n++){
-                node_drop_prob[i] += (1 - rho) * std::pow(rho, n);
+                node_drop_prob[i] += (1 - rho_vec[i]) * std::pow(rho_vec[i], n);
             }
         }
     }
-    return <vector, vector>(rho_vec, node_drop_prob); 
+    return pair<vector<long double>, vector<long double>>(rho_vec, node_drop_prob); 
 }
 
-void OpenJacksonModel::readTopology(ifstream& topo_file){
+void OpenJacksonModel::readTopology(ifstream& topo_file, const NodeContainer &node_container){
     std::ifstream topo_f(topo_file);
     assert(topo_f.is_open());
     uint32_t num_node, num_switch, num_link;
@@ -62,7 +63,7 @@ void OpenJacksonModel::readTopology(ifstream& topo_file){
         string bandwidth_str;
         topo_f >> src >> dst >> bandwidth_str; // bandwidth: "100Gbps" -> 100 * 10^9
         // convert bandwidth to bps
-        if(bandwidth_str.find('Gbps') != string::npos){ // unit is Gbps
+        if(bandwidth_str.find(string("Gbps")) != string::npos){ // unit is Gbps
             bandwidth_str = bandwidth_str.substr(0, bandwidth_str.size() - 4);
             bandwidth_Bps = std::stod(bandwidth_str) * 1e9 / 8;
         } else {
@@ -73,7 +74,7 @@ void OpenJacksonModel::readTopology(ifstream& topo_file){
     }
 }
 
-void OpenJacksonModel::readFlows(ifstream& flow_file){
+void OpenJacksonModel::readFlows(ifstream& flow_file, const NodeContainer &node_container){
     std::ifstream flow_f(flow_file);
     assert(flow_f.is_open());
     uint32_t flow_num;
@@ -108,10 +109,10 @@ void OpenJacksonModel::initRoutingMatrix(
 
         for(auto& flow : flows){
             Matrix routing_matrix(node_info.size(), node_info.size());
-            routing_matrix.fill(0);
+            routing_matrix.Fill(0);
             // get flow path
-            Node src = node_container.Get(flow.src);
-            Node dst = node_container.Get(flow.dst);
+            Ptr<Node> src = node_container.Get(flow.src);
+            Ptr<Node> dst = node_container.Get(flow.dst);
             vector<Ptr<Node>> path = next_hop.at(src).at(dst);
             for (uint32_t i = 0; i <= path.size()-2; i++){
                 uint32_t src_id = path[i]->GetId();
@@ -132,8 +133,8 @@ void OpenJacksonModel::initInputRate(){
 
 void OpenJacksonModel::initServiceRate(){
     // service rate is the sum of the bandwidth of all links connected to the switch    
-    service_rate_Bps.fill(0);
-    for (auto& src_dst_link : topo){
+    service_rate_Bps.Zeros();
+    for (auto& src_dst_link : topology){
         uint32_t src = src_dst_link.first;
         for(auto& dst_link : src_dst_link.second){
             uint32_t dst = dst_link.first;

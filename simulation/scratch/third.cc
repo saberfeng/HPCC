@@ -36,7 +36,7 @@
 #include <ns3/rdma-driver.h>
 #include <ns3/switch-node.h>
 #include <ns3/sim-setting.h>
-#include "rand_offset_injector.h"
+#include "ns3/rand_offset_injector.h"
 
 using namespace ns3;
 using namespace std;

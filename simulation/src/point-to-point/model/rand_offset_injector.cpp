@@ -8,5 +8,8 @@ void RandOffsetInjector::initialize(ifstream& flow_file, ifstream& topo_file,
     jackson_model.initialize(flow_file, topo_file, next_hop, node_container);
 }
 
+pair<vector<long double>, vector<long double>> RandOffsetInjector::calcStateProb(){
+    return jackson_model.calcStateProb();
+}
 
 }// namespace rand_offset

@@ -31,9 +31,8 @@ public:
         return 100;
     }
 
-    pair<vector<long double>, vector<long double>> calcStateProb(){
-        return jackson_model.calcStateProb();
-    }
+    pair<vector<long double>, vector<long double>> calcStateProb();
+
 private:
     double offset;
     OpenJacksonModel jackson_model;

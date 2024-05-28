@@ -4,7 +4,6 @@
 
 //#include "matrix.h"		// header file
 #include <iostream>
-#include <cmath>
 #include "matrix.h"
 
 
@@ -102,7 +101,7 @@ double Norm(const Vector<double> vec, const double p= 2)	// p-norm of a Vector
 	else if (p == 2)	//	2-norm, weighted
 	{	for (unsigned i= 0; i< vec.Length(); i++)
 			tmpNorm+= Square(vec[i]);
-		return sqrt(tmpNorm/ vec.Length());}
+		return std::sqrt(tmpNorm/ vec.Length());}
 	else if (isinf(p))	//	∞-norm
 	{	for (unsigned i= 0; i< vec.Length(); i++)
 			tmpNorm= std::max(tmpNorm, fabs(vec[i]));

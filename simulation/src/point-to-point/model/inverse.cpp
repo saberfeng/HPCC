@@ -12,9 +12,11 @@
 		L is lower tridiagonal and regular with rank k.
 		The rank-deficient/ rank-revealing complete orthogonal decomposition is in-place and can be recycled.
 */
+#include "matrix.h"
 
+using std::sqrt;
 
-QResult decomposeQRQ(Matrix &A, double aTol= 1e-6)	//	QRQ 
+QResult decomposeQRQ(Matrix &A, double aTol)	//	QRQ 
 {	QResult QRQ; QRQ.Mat= A;			// in-place decomposition. check: Is this A?
 	unsigned maxRank= std::min(QRQ.Mat.cols(), QRQ.Mat.rows());	// maximal rank;
 	QRQ.Rank= 0;
@@ -137,5 +139,5 @@ Matrix SolveQRQ(QResult QRQ, Matrix b)
 	return xRes;}
 
 
-Matrix Inverse(Matrix A, double aTol= 1e-6)	//	pseudoinverse
+Matrix Inverse(Matrix A, double aTol)	//	pseudoinverse
 {	return SolveQRQ(decomposeQRQ(A, aTol), Eye(A.rows()));}

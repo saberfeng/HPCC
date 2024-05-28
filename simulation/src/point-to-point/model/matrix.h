@@ -5,6 +5,7 @@
 #include <cstring>		// enable memcpy
 #include <cassert>		// enable assert
 #include <iostream>
+#include <cmath>
 
 class Matrix;			// forward declaration (see below)
 
@@ -99,9 +100,8 @@ const T Square(const T& a)
 {	return a* a;}
 
 
-#include "vector.cpp"	// detailed definitions
-#include "inverse.cpp"
-#include "matrix.cpp"
-
+QResult decomposeQRQ(Matrix &A, double aTol=1e-6);	//	QRQ 
+Matrix SolveQRQ(QResult QRQ, Matrix b);
+Matrix Inverse(Matrix A, double aTol=1e-6);	//	pseudoinverse
 
 #endif		// matrix_H
