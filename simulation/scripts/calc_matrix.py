@@ -11,15 +11,17 @@ def main():
                         default='', help='input service rate file')
     parser.add_argument('-f', '--flow_num', dest='flow_num', type=int, 
                         default=0, help='number of flows')
-    parser.add_argument('-o', '--output', dest='output', default='', 
-                        help='output matrix file')
+    parser.add_argument('-o1', '--output_rho', dest='output_rho', default='', 
+                        help='output rho file')
+    parser.add_argument('-o2', '--output_nodrop_prob', dest='output_nodrop_prob', default='', 
+                        help='output node drop probability file')
     parser.add_argument('-q', '--queue_size_txt', dest='queue_size_txt', default='',
                         help='queue size file')
     args = parser.parse_args()
 
     if args.routing_matrix_txt is None or args.input_rate_txt is None or\
-        args.service_rate_txt is None or args.size is None or\
-        args.output is None:
+        args.service_rate_txt is None or args.queue_size_txt is None or\
+        args.output_rho is None or args.output_nodrop_prob is None:
         print('Error: input and output file must be specified')
         return
 
@@ -28,26 +30,27 @@ def main():
     service_rate = np.loadtxt(args.service_rate_txt, dtype=float)
     queue_size = np.loadtxt(args.queue_size_txt, dtype=int)
     flow_num = args.flow_num
-    output_file = args.output
 
     row_num, col_num = routing_matrix.shape
     lambda_ = np.zeros(col_num)
     for flow_i in range(flow_num):
         # routing matrices and input rate verticies are vertically stacked
         R_t = routing_matrix[flow_i*col_num:(flow_i+1)*col_num, :] # flow routing matrix
-        gamma_t = input_rate[flow_i, :]
+        if len(input_rate.shape) == 1:
+            gamma_t = input_rate
+        else:
+            gamma_t = input_rate[flow_i, :]
         lambda_t = np.dot(gamma_t, np.linalg.inv(np.eye(col_num)-R_t))
         lambda_ += lambda_t
     
     rho = lambda_ / service_rate
     
-    node_drop_prob = np.zeros(col_num)
-    for flow_i in range(queue_size):
-        rho_power_sum = sum_powers(rho, queue_size)
-        node_drop_prob += (1-rho) * rho_power_sum
+    node_nodrop_prob = np.zeros(col_num)
+    rho_power_sum = sum_powers(rho, queue_size)
+    node_nodrop_prob += (1-rho) * rho_power_sum
 
-    np.savetxt('o_rho.txt',rho, fmt='%1.9e')
-    np.savetxt('o_node_drop_prob.txt', node_drop_prob, fmt='%1.9e')    
+    np.savetxt(args.output_rho,rho, fmt='%1.9e')
+    np.savetxt(args.output_nodrop_prob, node_nodrop_prob, fmt='%1.9e')    
 
 # input:   [1, 1, 2, 3] 
 # output: [[0, 0, 0, 0],
@@ -150,4 +153,5 @@ if __name__ == '__main__':
     # test()
     # test2()
     # test3()
-    test_sum_powers()
+    # test_sum_powers()
+    main()

@@ -1,0 +1,23 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "2n1f test",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "calc_matrix.py",
+            "console": "integratedTerminal",
+            "args": ["-r", "test_2node/R_2n1f.txt",
+                    "-i", "test_2node/Gamma_2n1f.txt",
+                    "-s", "test_2node/Mu_2n1f.txt",
+                    "-f", "1",
+                    "-q", "test_2node/qsz_2n1f.txt",
+                    "-o1", "test_2node/o_2n1f_rho.txt",
+                    "-o2", "test_2node/o_2n1f_nodrop_prob.txt"],
+            "cwd":"${workspaceFolder}/simulation/Scripts"
+        }
+    ]
+}
