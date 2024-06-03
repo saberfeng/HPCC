@@ -18,6 +18,22 @@
                     "-o1", "test_2node/o_2n1f_rho.txt",
                     "-o2", "test_2node/o_2n1f_nodrop_prob.txt"],
             "cwd":"${workspaceFolder}/simulation/Scripts"
+        },
+
+        {
+            "name": "2n2f test",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "calc_matrix.py",
+            "console": "integratedTerminal",
+            "args": ["-r", "test_2node/R_2n2f.txt",
+                    "-i", "test_2node/Gamma_2n2f.txt",
+                    "-s", "test_2node/Mu_2n2f.txt",
+                    "-f", "2",
+                    "-q", "test_2node/qsz_2n2f.txt",
+                    "-o1", "test_2node/o_2n2f_rho.txt",
+                    "-o2", "test_2node/o_2n2f_nodrop_prob.txt"],
+            "cwd":"${workspaceFolder}/simulation/Scripts"
         }
     ]
 }
