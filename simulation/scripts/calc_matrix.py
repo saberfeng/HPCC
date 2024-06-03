@@ -41,27 +41,39 @@ def main():
     
     rho = lambda_ / service_rate
     
-
     node_drop_prob = np.zeros(col_num)
-    queue_size = 100
     for flow_i in range(queue_size):
-        node_drop_prob += (1-rho) * rho**flow_i
-    
-    mat = np.loadtxt(input_file, dtype=int)
-    fmt_1_9e = '%1.9e'
-    np.savetxt(output_file, mat, fmt=fmt_1_9e)    
+        rho_power_sum = sum_powers(rho, queue_size)
+        node_drop_prob += (1-rho) * rho_power_sum
 
-# sum of power of each element in target_vec
-# target_vec**1 + target_vec**2 + ... + target_vec**power
-def sum_powers_v1(target_vec:np.array, power:np.array):
-    res_2d = target_vec[:, np.newaxis]
-    result_elements = target_vec**power
-    print(result_elements)
-    result_sum = np.sum(result_elements)
-    print(result_sum)
-    return result_sum 
+    np.savetxt('o_rho.txt',rho, fmt='%1.9e')
+    np.savetxt('o_node_drop_prob.txt', node_drop_prob, fmt='%1.9e')    
 
+# input:   [1, 1, 2, 3] 
+# output: [[0, 0, 0, 0],
+#          [1, 1, 1, 1], 
+#          [0, 0, 2, 2], 
+#          [0, 0, 0, 3]]
+def column_range_expansion(v:np.array):
+    # Determine the number of rows: maximum number in V
+    num_rows = np.max(v)
+    M = np.zeros((num_rows+1, len(v)), dtype=int)
+    for idx, num in enumerate(v):
+        M[:num+1, idx] = np.arange(0, num + 1)
+    return M
+
+# input: arr: [2, 2, 2, 2]
+#        power: [1, 2, 3, 4]
+# output: [ 2  6 14 30] = 
+#         [2^0+2^1, 2^0+2^1+2^2, 
+#           2^0+2^1+2^2+2^3, 2^0+2^1+2^2+2^3+2^4]
 def sum_powers(arr:np.array, power:np.array):
+    power_expansion = column_range_expansion(power)
+    raw_sum = np.sum(arr**power_expansion, axis=0)
+    rows_num = power_expansion.shape[0]
+    paddings = rows_num - power - 1 # the number of padding zeros
+    return raw_sum - paddings 
+
 
 
 def test():
@@ -130,8 +142,8 @@ def test3():
 
 def test_sum_powers():
     a = np.array([2,2,2,2])
-    print(sum_powers(a, [1,2,1,2]))
-    # print(sum_powers(a, 3))
+    print(sum_powers(a, np.array([1,2,1,2])))
+    print(sum_powers(a, np.array([2,2,4,4])))
 
 if __name__ == '__main__':
     #main()
