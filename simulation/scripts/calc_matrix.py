@@ -28,7 +28,8 @@ def main():
     routing_matrix = np.loadtxt(args.routing_matrix_txt, dtype=float)
     input_rate = np.loadtxt(args.input_rate_txt, dtype=float)
     service_rate = np.loadtxt(args.service_rate_txt, dtype=float)
-    queue_size = np.loadtxt(args.queue_size_txt, dtype=int)
+    queue_size = np.loadtxt(args.queue_size_txt, dtype=float)
+    queue_size = queue_size.astype(int)
     flow_num = args.flow_num
 
     row_num, col_num = routing_matrix.shape
