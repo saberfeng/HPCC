@@ -147,7 +147,8 @@ void OpenJacksonModel::readFlows(ifstream& flow_file, const NodeContainer &node_
                >> flow_input.dst_port >> flow_input.size_byte >> flow_input.start_time_s;
         flow_input.flow_idx = i;
 
-        node2flows[flow_input.src].push_back(flow_input);
+        node2flows[flow_input.src].push_back(
+            std::make_shared<FlowInputEntry>(flow_input));
         if(node2flowsums.find(flow_input.src) == node2flowsums.end()){ 
             // have not created HostFlowSum object at this node
             uint32_t trans_time_s = flow_input.size_byte*8 / node_info[flow_input.src].bandwidth_Bps;
@@ -169,21 +170,21 @@ void OpenJacksonModel::initRoutingMatrix(
     // first iterate through node2flows to get all flows
     for(auto& node2flow : node2flows){
         uint32_t node_id = node2flow.first;
-        vector<FlowInputEntry> &flows = node2flow.second;
+        vector<shared_ptr<FlowInputEntry>> &flows = node2flow.second;
 
-        for(auto& flow : flows){
+        for(auto& flow_ptr : flows){
             Matrix routing_matrix(node_info.size(), node_info.size());
             routing_matrix.Fill(0);
             // get flow path
-            Ptr<Node> src = node_container.Get(flow.src);
-            Ptr<Node> dst = node_container.Get(flow.dst);
+            Ptr<Node> src = node_container.Get(flow_ptr->src);
+            Ptr<Node> dst = node_container.Get(flow_ptr->dst);
             vector<Ptr<Node>> path = next_hop.at(src).at(dst);
             for (uint32_t i = 0; i <= path.size()-2; i++){
                 uint32_t src_id = path[i]->GetId();
                 uint32_t dst_id = path[i+1]->GetId();
                 routing_matrix[src_id][dst_id] = 1;
             }
-            flow2routing_matrix[flow.flow_idx] = routing_matrix;
+            flow2routing_matrix[flow_ptr] = routing_matrix;
         }
     }
 }
@@ -193,11 +194,11 @@ void OpenJacksonModel::initInputRate(){
         NodeId& node_id = node2flows_pair.first;
         HostFlowSum& nodeFlowSum = node2flowsums.at(node_id);
         long long node_transtime = nodeFlowSum.end_time_s - nodeFlowSum.start_time_s;
-        for(auto& flow_input : node2flows_pair.second){
+        for(auto& flow_ptr: node2flows_pair.second){
             // initialize flow i's input as 0
-            flow2input_Bps[flow_input.flow_idx] = 
+            flow2input_Bps[flow_ptr] = 
                     vector<double>(node_container.GetN(), 0);
-            flow2input_Bps[flow_input.flow_idx][node_id] = flow_input.size_byte / node_transtime;
+            flow2input_Bps[flow_ptr][node_id] = flow_ptr->size_byte / node_transtime;
         }
     }
     
