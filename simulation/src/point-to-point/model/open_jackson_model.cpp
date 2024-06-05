@@ -9,6 +9,18 @@ void writeFile(const string& text, const string& path){
     file.close();
 }
 
+vector<long double> readVector(const string& filename){
+    std::ifstream file(filename);
+    assert(file.is_open());
+    vector<long double> vec;
+    while(!file.eof()){
+        long double value;
+        file >> value;
+        vec.push_back(value);
+    }
+    return vec;
+}
+
 void OpenJacksonModel::initialize(ifstream &flow_file, ifstream &topo_file,
                                 const map<Ptr<Node>, 
                                           map<Ptr<Node>, vector<Ptr<Node>>>> &next_hop,
@@ -31,6 +43,13 @@ OpenJacksonModel::calcStateProb(){
     // lambda^t (vector): the sum of the arrival rate of flow t at each node 
     // rho (vector): the utilization of each node
     string write_path("simulation/mix/rand_offset/");
+    string routing_path = write_path + string("routing.txt");
+    string input_rate_path = write_path + string("input_rate.txt");
+    string service_path = write_path + string("service_rate.txt");
+    string queue_size_path = write_path + string("queue_size.txt");
+    string output_rho_path = write_path + string("rho.txt");
+    string output_nodrop_prob_path = write_path + string("node_drop_prob.txt");
+
     // prepare routing matrix, stack matrices vertically
     std::stringstream routing_matrix_ss;
     for (auto& flow_routing_matrix : flow2routing_matrix){
@@ -44,7 +63,7 @@ OpenJacksonModel::calcStateProb(){
             routing_matrix_ss << "\n";
         }
     }
-    writeFile(routing_matrix_ss.str(), write_path + string("routing.txt"));
+    writeFile(routing_matrix_ss.str(), routing_path);
 
     std::stringstream input_rate_ss;
     for (auto& flow2input_pair : flow2input_Bps){
@@ -54,30 +73,37 @@ OpenJacksonModel::calcStateProb(){
         }
         input_rate_ss << "\n"; // stack flows vertically
     }
-    writeFile(input_rate_ss.str(), write_path + string("input_rate.txt"));
+    writeFile(input_rate_ss.str(), input_rate_path);
 
-    vector<long double> rho_vec(node_info.size(), 0);
-    vector<long double> node_drop_prob(node_info.size(), 0);
-    // \lambda^t = \gamma * (I - R^t)-1 = (\lambda_1, lambda_2, ..., lambda_n)
-    Vector<long double> gamma = Vector<long double>(input_rate_Bps);
-    Matrix I = Eye(node_info.size());
-    Vector<long double> lambda = Vector<long double>(node_info.size()).Zeros();
-
-    for (auto& flow_routing_matrix : flow2routing_matrix){
-        FlowId flow_id = flow_routing_matrix.first;
-        Matrix routing_matrix = flow_routing_matrix.second;
-        Matrix lambda_t = gamma * Inverse(I - routing_matrix);
-        std::cout<<lambda<<std::endl;
-        lambda = lambda + lambda_t;
-        for (int i = 0; i < lambda.size(); i++){
-            rho_vec[i] = lambda[i] / service_rate_Bps[i];
-            // p(buffered packets >= queue_size) = (1 - rho) * \sum_n^{queue_size} rho^n
-            for (int n = 0; n < node_info[i].queue_size_byte; n++){
-                node_drop_prob[i] += (1 - rho_vec[i]) * std::pow(rho_vec[i], n);
-            }
-        }
+    std::stringstream service_rate_ss;
+    for (auto& service_rate : service_rate_Bps){
+        service_rate_ss << service_rate << " ";
     }
-    return pair<vector<long double>, vector<long double>>(rho_vec, node_drop_prob); 
+    writeFile(service_rate_ss.str(), service_path);
+
+    std::stringstream queue_size_ss;
+    for (auto& node : node_info){
+        queue_size_ss << node.queue_size_byte << " ";
+    }
+    writeFile(queue_size_ss.str(), queue_size_path);
+
+    stringstream cmd;
+    cmd << "python3 simulation/scripts/calc_matrix.py "
+        << "-r " << routing_path << " "
+        << "-i " << input_rate_path << " "
+        << "-s " << service_path << " "
+        << "-q " << queue_size_path << " "
+        << "-f " << total_flow_num << " "
+        << "-o1 " << output_rho_path << " "
+        << "-o2 " << output_nodrop_prob_path;
+    system(cmd.str());
+
+    // read python script output
+    vector<long double> rho_vec = readVector(output_rho_path);
+    vector<long double> node_drop_prob = readVector(output_nodrop_prob_path);
+
+    return pair<vector<long double>, vector<long double>>(
+        rho_vec, node_drop_prob); 
 }
 
 void OpenJacksonModel::readTopology(
@@ -112,9 +138,10 @@ void OpenJacksonModel::readTopology(
 void OpenJacksonModel::readFlows(ifstream& flow_file, const NodeContainer &node_container){
     std::ifstream flow_f(flow_file);
     assert(flow_f.is_open());
-    uint32_t flow_num;
-    flow_f >> flow_num;
-    for (uint32_t i = 0; i < flow_num; i++){
+    // conversion? 
+    flow_f >> total_flow_num;
+
+    for (uint32_t i = 0; i < total_flow_num; i++){
         FlowInputEntry flow_input;
         flow_f >> flow_input.src >> flow_input.dst >> flow_input.priority_group 
                >> flow_input.dst_port >> flow_input.size_byte >> flow_input.start_time_s;
@@ -182,7 +209,7 @@ void OpenJacksonModel::initInputRate(){
 
 void OpenJacksonModel::initServiceRate(){
     // service rate is the sum of the bandwidth of all links connected to the switch    
-    service_rate_Bps.Zeros();
+    service_rate_Bps = vector<double>(node_info.size(), 0);
     for (auto& src_dst_link : topology){
         uint32_t src = src_dst_link.first;
         for(auto& dst_link : src_dst_link.second){
