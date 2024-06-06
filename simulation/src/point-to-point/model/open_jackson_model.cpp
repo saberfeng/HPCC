@@ -28,10 +28,19 @@ void OpenJacksonModel::initialize(ifstream &flow_file, ifstream &topo_file,
     readTopology(topo_file);
     readFlows(flow_file, node_container);
 
-    initRoutingMatrix(next_hop);
-    initInputRate();
-    initServiceRate();
+    updateRoutingMatrix(next_hop);
+    updateInputRate();
+    updateServiceRate();
 
+}
+
+void appendFlowOffsets(const unordered_map<shared_ptr<FlowInputEntry>, 
+                                           long double>& flow2offsets){
+    for(auto& flow_offset : flow2offsets){
+        shared_ptr<FlowInputEntry> flow_ptr = flow_offset.first;
+        long double offset = flow_offset.second;
+        flow_ptr->start_time_s += offset;
+    }
 }
 
 pair<vector<long double>, vector<long double>> 
@@ -149,22 +158,33 @@ void OpenJacksonModel::readFlows(ifstream& flow_file, const NodeContainer &node_
 
         node2flows[flow_input.src].push_back(
             std::make_shared<FlowInputEntry>(flow_input));
-        if(node2flowsums.find(flow_input.src) == node2flowsums.end()){ 
-            // have not created HostFlowSum object at this node
-            uint32_t trans_time_s = flow_input.size_byte*8 / node_info[flow_input.src].bandwidth_Bps;
-            node2flowsums[flow_input.src] = {flow_input.src, flow_input.size_byte, 
-                                            flow_input.start_time_s, flow_input.start_time_s+trans_time_s};
-        } else{
-            // append new flow to corresponding node 
-            node2flowsums[flow_input.src].sum_flow_size_byte += flow_input.size_byte;
-            node2flowsums[flow_input.src].end_time_s = 
-                std::max(node2flowsums[flow_input.src].end_time_s, 
-                        flow_input.start_time_s + flow_input.size_byte*8 / node_info[flow_input.src].bandwidth_Bps);
+
+    }
+}
+
+void OpenJacksonModel::updateNode2FlowSums(){
+    for(const auto& node2flows_pair : node2flows){
+        NodeId node_id = node2flows_pair.first;
+        for(const auto& flow_ptr : node2flows_pair.second){
+            if(node2flowsums.find(node_id) == node2flowsums.end()){ 
+                // have not created HostFlowSum object at this node
+                uint32_t trans_time_s = flow_ptr->size_byte*8 / node_info[flow_ptr->src].bandwidth_Bps;
+                node2flowsums[node_id] = {node_id, flow_ptr->size_byte, 
+                                                flow_ptr->start_time_s, flow_ptr->start_time_s+trans_time_s};
+
+            } else{
+                // append new flow to corresponding node 
+                node2flowsums[node_id].sum_flow_size_byte += flow_ptr->size_byte;
+                node2flowsums[node_id].end_time_s = 
+                    std::max(node2flowsums[node_id].end_time_s, 
+                            flow_ptr->start_time_s + flow_ptr->size_byte*8 / node_info[node_id].bandwidth_Bps);
+            }       
         }
     }
 }
 
-void OpenJacksonModel::initRoutingMatrix(
+
+void OpenJacksonModel::updateRoutingMatrix(
         const map<Ptr<Node>, map<Ptr<Node>, vector<Ptr<Node>>>> &next_hop,
         const NodeContainer &node_container){
     // first iterate through node2flows to get all flows
@@ -189,7 +209,9 @@ void OpenJacksonModel::initRoutingMatrix(
     }
 }
 
-void OpenJacksonModel::initInputRate(){
+// relies on node2flows and node2flowsums, should be 
+// updated after reading flows and updating node2flowsums
+void OpenJacksonModel::updateInputRate(){
     for(auto& node2flows_pair : node2flows){
         NodeId& node_id = node2flows_pair.first;
         HostFlowSum& nodeFlowSum = node2flowsums.at(node_id);
@@ -203,12 +225,14 @@ void OpenJacksonModel::initInputRate(){
     }
     
     for(auto& node2flowsum : node2flowsums){
+        long double node_trans_time = node2flowsum.second.end_time_s - 
+                                        node2flowsum.second.start_time_s; 
         input_rate_Bps[node2flowsum.second.host_id] = 
-            node2flowsum.second.sum_flow_size_byte / (node2flowsum.second.end_time_s - node2flowsum.second.start_time_s);
+            node2flowsum.second.sum_flow_size_byte / node_trans_time;
     }
 }
 
-void OpenJacksonModel::initServiceRate(){
+void OpenJacksonModel::updateServiceRate(){
     // service rate is the sum of the bandwidth of all links connected to the switch    
     service_rate_Bps = vector<double>(node_info.size(), 0);
     for (auto& src_dst_link : topology){
