@@ -17,7 +17,7 @@
                     "-q", "test_2node/qsz_2n1f.txt",
                     "-o1", "test_2node/o_2n1f_rho.txt",
                     "-o2", "test_2node/o_2n1f_nodrop_prob.txt"],
-            "cwd":"${workspaceFolder}/simulation/Scripts"
+            "cwd":"${workspaceFolder}/simulation/scripts"
         },
 
         {
@@ -33,7 +33,17 @@
                     "-q", "test_2node/qsz_2n2f.txt",
                     "-o1", "test_2node/o_2n2f_rho.txt",
                     "-o2", "test_2node/o_2n2f_nodrop_prob.txt"],
-            "cwd":"${workspaceFolder}/simulation/Scripts"
+            "cwd":"${workspaceFolder}/simulation/scripts"
+        },
+
+        {
+            "name": "gen_net",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/simulation/scripts/gen_net.py",
+            "console": "integratedTerminal",
+            "args": [],
+            "cwd":"${workspaceFolder}"
         }
     ]
 }
