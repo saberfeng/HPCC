@@ -44,7 +44,7 @@ using namespace rand_offset;
 
 NS_LOG_COMPONENT_DEFINE("GENERIC_SIMULATION");
 
-uint32_t cc_mode = 1;
+uint32_t cc_mode = 1; // 1: DCQCN, 3: HPCC, 7: TIMELY, 8: DCTCP, 10: HPCC-PINT, 11:NONE, 12:RAND-OFFSET
 bool enable_qcn = true, use_dynamic_pfc_threshold = true;
 bool enable_qbb = false;
 uint32_t packet_payload_size = 1000, l2_chunk_size = 0, l2_ack_interval = 0;
@@ -696,6 +696,8 @@ int main(int argc, char *argv[])
 		IntHeader::mode = IntHeader::NORMAL;
 	else if (cc_mode == 10) // hpcc-pint
 		IntHeader::mode = IntHeader::PINT;
+	else if (cc_mode == 12)
+		IntHeader::mode = IntHeader::RAND_OFFSET;
 	else // others, no extra header
 		IntHeader::mode = IntHeader::NONE;
 

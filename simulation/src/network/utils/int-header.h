@@ -80,6 +80,7 @@ public:
 		NORMAL = 0,
 		TS = 1,
 		PINT = 2,
+		RAND_OFFSET = 3,
 		NONE
 	};
 	static Mode mode;
