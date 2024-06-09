@@ -79,7 +79,7 @@ uint32_t link_down_A = 0, link_down_B = 0;
 
 uint32_t enable_trace = 1;
 
-uint32_t buffer_size = 16;
+uint32_t buffer_size_MB = 16;
 
 uint32_t qlen_dump_interval = 100000000, qlen_mon_interval = 100;
 uint64_t qlen_mon_start = 2000000000, qlen_mon_end = 2100000000;
@@ -138,7 +138,16 @@ void ReadFlowInput(){
 void ScheduleFlowInputs(){
 	while (flow_input.idx < flow_num && Seconds(flow_input.start_time) == Simulator::Now()){
 		uint32_t port = portNumder[flow_input.src][flow_input.dst]++; // get a new port number 
-		RdmaClientHelper clientHelper(flow_input.pg, serverAddress[flow_input.src], serverAddress[flow_input.dst], port, flow_input.dport, flow_input.writeSizeByte, has_win?(global_t==1?maxBdp:pairBdp[n.Get(flow_input.src)][n.Get(flow_input.dst)]):0, global_t==1?maxRtt:pairRtt[flow_input.src][flow_input.dst]);
+		RdmaClientHelper clientHelper(
+			flow_input.pg, 
+			serverAddress[flow_input.src], 
+			serverAddress[flow_input.dst], port, 
+			flow_input.dport, 
+			flow_input.writeSizeByte, 
+			has_win?(global_t==1?
+						maxBdp:pairBdp[n.Get(flow_input.src)][n.Get(flow_input.dst)]):0, 
+			global_t==1?
+				maxRtt:pairRtt[flow_input.src][flow_input.dst]);
 		ApplicationContainer appCon = clientHelper.Install(n.Get(flow_input.src));
 		appCon.Start(Time(0));
 
@@ -640,8 +649,8 @@ int main(int argc, char *argv[])
 				}
 				std::cout<<'\n';
 			}else if (key.compare("BUFFER_SIZE") == 0){
-				conf >> buffer_size;
-				std::cout << "BUFFER_SIZE\t\t\t\t" << buffer_size << '\n';
+				conf >> buffer_size_MB;
+				std::cout << "BUFFER_SIZE\t\t\t\t" << buffer_size_MB << '\n';
 			}else if (key.compare("QLEN_MON_FILE") == 0){
 				conf >> qlen_mon_file;
 				std::cout << "QLEN_MON_FILE\t\t\t\t" << qlen_mon_file << '\n';
@@ -866,7 +875,7 @@ int main(int argc, char *argv[])
 				}
 			}
 			sw->m_mmu->ConfigNPort(sw->GetNDevices()-1);
-			sw->m_mmu->ConfigBufferSize(buffer_size* 1024 * 1024);
+			sw->m_mmu->ConfigBufferSize(buffer_size_MB* 1024 * 1024);
 			sw->m_mmu->node_id = sw->GetId();
 		}
 	}
