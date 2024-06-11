@@ -17,10 +17,10 @@ public:
     RandOffsetInjector(){
         std::cout<<"RandOffsetInjector constructor"<<std::endl;
     }
-    void initialize(ifstream& flow_file, ifstream& topo_file,
-                    const map<Ptr<Node>, 
-                                        map<Ptr<Node>, 
-                                                      vector<Ptr<Node>>>> &next_hop,
+    void initialize(const vector<shared_ptr<FlowInputEntry>>& flows, 
+                    ifstream& topo_file,
+                    const map<Ptr<Node>, map<Ptr<Node>, 
+                            vector<Ptr<Node>>>> &next_hop,
                     const NodeContainer &node_container);
 
     void set_offset(double offset){
@@ -31,10 +31,14 @@ public:
         return 100;
     }
 
+    void gen_offset();
+
     pair<vector<long double>, vector<long double>> calcStateProb();
 
 private:
-    double offset;
+    void init_flow2range_s();
+    unordered_map<shared_ptr<FlowInputEntry>, 
+                  long double> flow2range_s;
     OpenJacksonModel jackson_model;
 };
 

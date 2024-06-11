@@ -21,12 +21,13 @@ vector<long double> readVector(const string& filename){
     return vec;
 }
 
-void OpenJacksonModel::initialize(ifstream &flow_file, ifstream &topo_file,
+void OpenJacksonModel::initialize(const vector<shared_ptr<FlowInputEntry>>& flows, 
+                                ifstream &topo_file,
                                 const map<Ptr<Node>, 
                                           map<Ptr<Node>, vector<Ptr<Node>>>> &next_hop,
                                 const NodeContainer &node_container){
     readTopology(topo_file);
-    readFlows(flow_file, node_container);
+    buildNode2Flows(flow_file, node_container);
 
     updateRoutingMatrix(next_hop);
     updateInputRate();
@@ -144,21 +145,9 @@ void OpenJacksonModel::readTopology(
     }
 }
 
-void OpenJacksonModel::readFlows(ifstream& flow_file, const NodeContainer &node_container){
-    std::ifstream flow_f(flow_file);
-    assert(flow_f.is_open());
-    // conversion? 
-    flow_f >> total_flow_num;
-
-    for (uint32_t i = 0; i < total_flow_num; i++){
-        FlowInputEntry flow_input;
-        flow_f >> flow_input.src >> flow_input.dst >> flow_input.priority_group 
-               >> flow_input.dst_port >> flow_input.size_byte >> flow_input.start_time_s;
-        flow_input.flow_idx = i;
-
-        node2flows[flow_input.src].push_back(
-            std::make_shared<FlowInputEntry>(flow_input));
-
+void OpenJacksonModel::buildNode2Flows(const vector<shared_ptr<FlowInputEntry>>& flows){
+    for(const auto& flow_ptr : flows){
+        node2flows[flow_ptr->src].push_back(flow_ptr);
     }
 }
 

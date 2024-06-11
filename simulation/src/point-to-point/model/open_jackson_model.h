@@ -31,8 +31,9 @@ typedef uint32_t FlowId;
 struct FlowInputEntry{
     uint32_t src, dst, priority_group, dst_port; // pg: priority group
     uint64_t size_byte;
-	double start_time_s;
+	long double start_time_s;
     FlowId flow_idx;
+    long double offset_s;
 };
 
 struct HostFlowSum{
@@ -65,7 +66,8 @@ public:
         -> reduce the probability calculation time complexity 
     */ 
     // init input_rate_Bps, service_rate_Bps, routing_matrix, node_type
-    void initialize(ifstream& flow_file, ifstream& topo_file, 
+    void initialize(const vector<shared_ptr<FlowInputEntry>>& flows, 
+                    ifstream& topo_file, 
                     const map<Ptr<Node>, map<Ptr<Node>, vector<Ptr<Node>>>>& nextHop,
                     const NodeContainer &nodes);
     
@@ -73,7 +75,7 @@ public:
 
 private:
     void readTopology(ifstream &topo_file);
-    void readFlows(ifstream &flow_file);
+    void buildNode2Flows(const vector<shared_ptr<FlowInputEntry>>& flows);
 
     void initInputRate(); 
     void initServiceRate();

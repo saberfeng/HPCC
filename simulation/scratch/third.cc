@@ -21,6 +21,7 @@
 #include <fstream>
 #include <unordered_map>
 #include <time.h> 
+#include <memory>
 #include "ns3/core-module.h"
 #include "ns3/qbb-helper.h"
 #include "ns3/point-to-point-helper.h"
@@ -121,46 +122,62 @@ std::vector<Ipv4Address> serverAddress;
 // maintain port number for each host pair
 std::unordered_map<uint32_t, unordered_map<uint32_t, uint16_t> > portNumder;
 
-struct FlowInput{
-	uint32_t src, dst, pg, writeSizeByte, port, dport; // pg: priority group
-	double start_time;
-	uint32_t idx;
-};
-FlowInput flow_input = {0};
+FlowInputEntry flow_input = {0};
 uint32_t flow_num;
+vector<shared_ptr<FlowInputEntry>> flows;
+vector<shared_ptr<FlowInputEntry>>::iterator cur_flow_iter;
+
+void readAllFlowInputEntrys(){
+	int read_idx = 0;
+	while (read_idx < flow_num){
+		shared_ptr<FlowInputEntry> flow_ptr = make_shared<FlowInputEntry>();
+		flowf >> flow_ptr->src >> flow_ptr->dst >> flow_ptr->pg 
+			  >> flow_ptr->dport >> flow_ptr->writeSizeByte 
+			  >> flow_ptr->start_time;
+		flows.push_back(flow_ptr);
+	}
+	flowf.close();
+}
+
+void sortFlowsByStartTime(){
+	std::ranges::sort(flows, [](const shared_ptr<FlowInputEntry>& a, 
+								const shared_ptr<FlowInputEntry>& b){
+		return a->start_time+a->offset_s < b->start_time+b->offset_s;
+	});
+}
 
 void ReadFlowInput(){
 	if (flow_input.idx < flow_num){
-		flowf >> flow_input.src >> flow_input.dst >> flow_input.pg >> flow_input.dport >> flow_input.writeSizeByte >> flow_input.start_time;
+		flowf >> flow_input.src >> flow_input.dst >> flow_input.pg 
+			  >> flow_input.dport >> flow_input.writeSizeByte >> flow_input.start_time;
 		NS_ASSERT(n.Get(flow_input.src)->GetNodeType() == 0 && n.Get(flow_input.dst)->GetNodeType() == 0);
 	}
 }
+
 void ScheduleFlowInputs(){
-	while (flow_input.idx < flow_num && Seconds(flow_input.start_time) == Simulator::Now()){
-		uint32_t port = portNumder[flow_input.src][flow_input.dst]++; // get a new port number 
+	while (cur_flow_iter <= flows.end() && 
+		   Seconds(cur_flow_iter->start_time) == Simulator::Now()){
+		uint32_t port = portNumder[cur_flow_iter->src][cur_flow_iter->dst]++; // get a new port number 
 		RdmaClientHelper clientHelper(
-			flow_input.pg, 
-			serverAddress[flow_input.src], 
-			serverAddress[flow_input.dst], port, 
-			flow_input.dport, 
-			flow_input.writeSizeByte, 
+			cur_flow_iter->pg, 
+			serverAddress[cur_flow_iter->src], 
+			serverAddress[cur_flow_iter->dst], port, 
+			cur_flow_iter->dport, 
+			cur_flow_iter->writeSizeByte, 
 			has_win?(global_t==1?
-						maxBdp:pairBdp[n.Get(flow_input.src)][n.Get(flow_input.dst)]):0, 
+						maxBdp:pairBdp[n.Get(cur_flow_iter->src)][n.Get(cur_flow_iter->dst)]):0, 
 			global_t==1?
-				maxRtt:pairRtt[flow_input.src][flow_input.dst]);
-		ApplicationContainer appCon = clientHelper.Install(n.Get(flow_input.src));
+				maxRtt:pairRtt[cur_flow_iter->src][cur_flow_iter->dst]);
+		ApplicationContainer appCon = clientHelper.Install(n.Get(cur_flow_iter->src));
 		appCon.Start(Time(0));
 
-		// get the next flow input
-		flow_input.idx++;
-		ReadFlowInput();
+		cur_flow_iter++;
 	}
 
 	// schedule the next time to run this function
-	if (flow_input.idx < flow_num){
-		Simulator::Schedule(Seconds(flow_input.start_time)-Simulator::Now(), ScheduleFlowInputs);
-	}else { // no more flows, close the file
-		flowf.close();
+	if (cur_flow_iter < flows.end()){
+		Simulator::Schedule(Seconds(cur_flow_iter->start_time)-Simulator::Now(), 
+							ScheduleFlowInputs);
 	}
 }
 
@@ -920,7 +937,8 @@ int main(int argc, char *argv[])
 
 			node->AggregateObject (rdma);
 			rdma->Init();
-			rdma->TraceConnectWithoutContext("QpComplete", MakeBoundCallback (qp_finish, fct_output)); // fct output
+			rdma->TraceConnectWithoutContext("QpComplete", 
+				MakeBoundCallback (qp_finish, fct_output)); // fct output
 		}
 	}
 	#endif
@@ -934,10 +952,14 @@ int main(int argc, char *argv[])
 	// setup routing
 	CalculateRoutes(n);
 	SetRoutingEntries();
-	
+
+	readAllFlowInputEntrys();
+	cur_flow_iter = flows.begin();
 	ifstream topo_file_ROI(topology_file);// topology file for Random Offset Injector (ROI)
-	ifstream flow_file_ROI(flow_file); // flow file for Random Offset Injector
-	rand_offset_injector.initialize(flow_file_ROI, topo_file_ROI, nextHop, n);	
+	rand_offset_injector.initialize(flows, topo_file_ROI, nextHop, n);	
+	rand_offset_injector.gen_offset();
+	sortFlowsByStartTime();
+
 	auto rho_drop_prob_pair = rand_offset_injector.calcStateProb();
 	vector<long double> rho_vec = rho_drop_prob_pair.first;
 	vector<long double> drop_prob_vec = rho_drop_prob_pair.second;
@@ -1027,10 +1049,9 @@ int main(int argc, char *argv[])
 			}
 	}
 
-	flow_input.idx = 0;
 	if (flow_num > 0){
-		ReadFlowInput();
-		Simulator::Schedule(Seconds(flow_input.start_time)-Simulator::Now(), ScheduleFlowInputs);
+		Simulator::Schedule(Seconds(cur_flow_iter->start_time)-Simulator::Now(), 
+							ScheduleFlowInputs);
 	}
 
 	topof.close();
