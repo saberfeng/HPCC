@@ -140,8 +140,9 @@ void readAllFlowInputEntrys(){
 }
 
 void sortFlowsByStartTime(){
-	std::ranges::sort(flows, [](const shared_ptr<FlowInputEntry>& a, 
-								const shared_ptr<FlowInputEntry>& b){
+	std::sort(flows.begin(), flows.end(), 
+				[](const shared_ptr<FlowInputEntry>& a, 
+				   const shared_ptr<FlowInputEntry>& b){
 		return a->start_time+a->offset_s < b->start_time+b->offset_s;
 	});
 }
