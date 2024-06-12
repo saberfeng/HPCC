@@ -65,11 +65,13 @@ if __name__ == "__main__":
 	if args.down != '0 0 0':
 		failure = '_down'
 
-	config_name = "mix/{proj_dir}/config_%s_%s_%s%s.txt"%(topo, trace, args.cc, failure)
-
+	
 	if args.cc == "rand_offset":
 		# python run_rand_offset.py --cc rand_offset --trace 2n1f_flow --bw 50 --topo 2n1f_topo --enable_tr 1
 		proj_dir = 'rand_offset'
+		config_name = "mix/%s/config_%s_%s_%s%s.txt"% \
+						(proj_dir, topo, trace, args.cc, failure)
+
 		enable_qcn = 0
 		dynamic_thresh = 0
 		config = config_template.format(dynamic_thresh=dynamic_thresh, 
@@ -77,6 +79,7 @@ if __name__ == "__main__":
 						mode=12, has_win=0, vwin=0, us=0, ack_prio=1, 
 						link_down=args.down, failure=failure, 
 						buffer_size=bfsz, enable_tr=enable_tr)
+		print(config)
 	else:
 		print "unknown cc:", args.cc
 		sys.exit(1)

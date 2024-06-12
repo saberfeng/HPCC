@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <unordered_map>
+#include <memory>
 #include "open_jackson_model.h"
 
 namespace rand_offset{
@@ -10,6 +11,7 @@ namespace rand_offset{
 using std::unordered_map;
 using std::cout;
 using std::endl;
+using std::shared_ptr;
 using namespace ns3;
 
 class RandOffsetInjector {
@@ -22,10 +24,6 @@ public:
                     const map<Ptr<Node>, map<Ptr<Node>, 
                             vector<Ptr<Node>>>> &next_hop,
                     const NodeContainer &node_container);
-
-    void set_offset(double offset){
-        this->offset = offset;
-    }
 
     double get_offset_ns(uint32_t node_idx){
         return 100;

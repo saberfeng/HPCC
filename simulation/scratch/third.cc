@@ -125,15 +125,16 @@ std::unordered_map<uint32_t, unordered_map<uint32_t, uint16_t> > portNumder;
 FlowInputEntry flow_input = {0};
 uint32_t flow_num;
 vector<shared_ptr<FlowInputEntry>> flows;
-vector<shared_ptr<FlowInputEntry>>::iterator cur_flow_iter;
+// vector<shared_ptr<FlowInputEntry>>::iterator cur_flow_iter;
+uint32_t cur_flow_idx = 0;
 
 void readAllFlowInputEntrys(){
 	int read_idx = 0;
 	while (read_idx < flow_num){
 		shared_ptr<FlowInputEntry> flow_ptr = make_shared<FlowInputEntry>();
-		flowf >> flow_ptr->src >> flow_ptr->dst >> flow_ptr->pg 
-			  >> flow_ptr->dport >> flow_ptr->writeSizeByte 
-			  >> flow_ptr->start_time;
+		flowf >> flow_ptr->src >> flow_ptr->dst >> flow_ptr->priority_group 
+			  >> flow_ptr->dst_port >> flow_ptr->size_byte 
+			  >> flow_ptr->start_time_s;
 		flows.push_back(flow_ptr);
 	}
 	flowf.close();
@@ -143,41 +144,42 @@ void sortFlowsByStartTime(){
 	std::sort(flows.begin(), flows.end(), 
 				[](const shared_ptr<FlowInputEntry>& a, 
 				   const shared_ptr<FlowInputEntry>& b){
-		return a->start_time+a->offset_s < b->start_time+b->offset_s;
+		return a->start_time_s+a->offset_s < b->start_time_s+b->offset_s;
 	});
 }
 
 void ReadFlowInput(){
-	if (flow_input.idx < flow_num){
-		flowf >> flow_input.src >> flow_input.dst >> flow_input.pg 
-			  >> flow_input.dport >> flow_input.writeSizeByte >> flow_input.start_time;
+	if (flow_input.flow_idx < flow_num){
+		flowf >> flow_input.src >> flow_input.dst >> flow_input.priority_group 
+			  >> flow_input.dst_port >> flow_input.size_byte >> flow_input.start_time_s;
 		NS_ASSERT(n.Get(flow_input.src)->GetNodeType() == 0 && n.Get(flow_input.dst)->GetNodeType() == 0);
 	}
 }
 
 void ScheduleFlowInputs(){
-	while (cur_flow_iter <= flows.end() && 
-		   Seconds(cur_flow_iter->start_time) == Simulator::Now()){
-		uint32_t port = portNumder[cur_flow_iter->src][cur_flow_iter->dst]++; // get a new port number 
+	while (cur_flow_idx < flows.size() && 
+		   Seconds(flows[cur_flow_idx]->start_time_s) == Simulator::Now()){
+		shared_ptr<FlowInputEntry>& cur_flow_ptr = flows[cur_flow_idx];
+		uint32_t port = portNumder[cur_flow_ptr->src][cur_flow_ptr->dst]++; // get a new port number 
 		RdmaClientHelper clientHelper(
-			cur_flow_iter->pg, 
-			serverAddress[cur_flow_iter->src], 
-			serverAddress[cur_flow_iter->dst], port, 
-			cur_flow_iter->dport, 
-			cur_flow_iter->writeSizeByte, 
+			cur_flow_ptr->priority_group, 
+			serverAddress[cur_flow_ptr->src], 
+			serverAddress[cur_flow_ptr->dst], port, 
+			cur_flow_ptr->dst_port, 
+			cur_flow_ptr->size_byte, 
 			has_win?(global_t==1?
-						maxBdp:pairBdp[n.Get(cur_flow_iter->src)][n.Get(cur_flow_iter->dst)]):0, 
+						maxBdp:pairBdp[n.Get(cur_flow_ptr->src)][n.Get(cur_flow_ptr->dst)]):0, 
 			global_t==1?
-				maxRtt:pairRtt[cur_flow_iter->src][cur_flow_iter->dst]);
-		ApplicationContainer appCon = clientHelper.Install(n.Get(cur_flow_iter->src));
+				maxRtt:pairRtt[cur_flow_ptr->src][cur_flow_ptr->dst]);
+		ApplicationContainer appCon = clientHelper.Install(n.Get(cur_flow_ptr->src));
 		appCon.Start(Time(0));
 
-		cur_flow_iter++;
+		cur_flow_idx++;
 	}
 
 	// schedule the next time to run this function
-	if (cur_flow_iter < flows.end()){
-		Simulator::Schedule(Seconds(cur_flow_iter->start_time)-Simulator::Now(), 
+	if (cur_flow_idx < flows.size()){
+		Simulator::Schedule(Seconds(flows[cur_flow_idx]->start_time_s)-Simulator::Now(), 
 							ScheduleFlowInputs);
 	}
 }
@@ -197,7 +199,7 @@ void qp_finish(FILE* fout, Ptr<RdmaQueuePair> q){
 	uint32_t total_bytes = q->m_size + ((q->m_size-1) / packet_payload_size + 1) * (CustomHeader::GetStaticWholeHeaderSize() - IntHeader::GetStaticSize()); // translate to the minimum bytes required (with header but no INT)
 	// standalone fct only includes the transmission delay + propagation delay (base_rtt), plus one transmission delay of all data? problem? 
 	uint64_t standalone_fct = base_rtt + total_bytes * 8000000000lu / b; // fct in unit of ns
-	// sip, dip, sport, dport, size (B), start_time, fct (ns), standalone_fct (ns)
+	// sip, dip, src_port, dst_port, size (B), start_time, fct (ns), standalone_fct (ns)
 	fprintf(fout, "%08x %08x %u %u %lu %lu %lu %lu\n", q->sip.Get(), q->dip.Get(), q->sport, q->dport, q->m_size, q->startTime.GetTimeStep(), (Simulator::Now() - q->startTime).GetTimeStep(), standalone_fct);
 	fflush(fout);
 
@@ -955,7 +957,7 @@ int main(int argc, char *argv[])
 	SetRoutingEntries();
 
 	readAllFlowInputEntrys();
-	cur_flow_iter = flows.begin();
+	// cur_flow_iter = flows.begin();
 	ifstream topo_file_ROI(topology_file);// topology file for Random Offset Injector (ROI)
 	rand_offset_injector.initialize(flows, topo_file_ROI, nextHop, n);	
 	rand_offset_injector.gen_offset();
@@ -1051,7 +1053,7 @@ int main(int argc, char *argv[])
 	}
 
 	if (flow_num > 0){
-		Simulator::Schedule(Seconds(cur_flow_iter->start_time)-Simulator::Now(), 
+		Simulator::Schedule(Seconds(flows[cur_flow_idx]->start_time_s)-Simulator::Now(), 
 							ScheduleFlowInputs);
 	}
 

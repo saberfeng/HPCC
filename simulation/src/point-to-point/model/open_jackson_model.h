@@ -24,12 +24,17 @@ using ns3::Ptr;
 using ns3::NodeContainer;
 using std::pair;
 using std::map;
+using std::shared_ptr;
 
 typedef uint32_t NodeId;
 typedef uint32_t FlowId;
-
+// struct FlowInput{
+// 	uint32_t src, dst, pg, writeSizeByte, port, dport; // pg: priority group
+// 	double start_time;
+// 	uint32_t idx;
+// };
 struct FlowInputEntry{
-    uint32_t src, dst, priority_group, dst_port; // pg: priority group
+    uint32_t src, dst, priority_group, src_port, dst_port; // pg: priority group
     uint64_t size_byte;
 	long double start_time_s;
     FlowId flow_idx;
