@@ -6,7 +6,7 @@ void RandOffsetInjector::initialize(const vector<shared_ptr<FlowInputEntry>>& fl
                                 ifstream& topo_file,
                                 const map<Ptr<Node>, map<Ptr<Node>, vector<Ptr<Node>>>> &next_hop,
                                 const NodeContainer &node_container){
-    jackson_model.initialize(flow_file, topo_file, next_hop, node_container);
+    jackson_model.initialize(flows, topo_file, next_hop, node_container);
 }
 
 pair<vector<long double>, vector<long double>> RandOffsetInjector::calcStateProb(){
@@ -17,7 +17,7 @@ void RandOffsetInjector::init_flow2range_s(){
     for(const auto& node_flows_p : jackson_model.getNode2Flows()){
         const auto& flows = node_flows_p.second;
         for(const auto& flow_ptr : flows){
-            # 80Mb, 100Gbps, transtime 0.0008s; offset = 1/2 * transtime
+            // 80Mb, 100Gbps, transtime 0.0008s; offset = 1/2 * transtime
             flow2range_s[flow_ptr] = 0.0004; // 400us
         }
     }

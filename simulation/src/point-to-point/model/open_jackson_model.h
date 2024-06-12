@@ -7,7 +7,8 @@
 #include <fstream>
 #include <string>
 #include <unordered_map>
-#include "matrix.h"
+#include <memory>
+#include <sstream>
 #include "ns3/core-module.h"
 #include "ns3/node.h"
 #include "ns3/ptr.h"
@@ -18,6 +19,8 @@ namespace rand_offset{
 using std::vector;
 using std::string;
 using std::ifstream;
+using std::ofstream;
+using std::stringstream;
 using std::unordered_map;
 using ns3::Node;
 using ns3::Ptr;
@@ -28,6 +31,7 @@ using std::shared_ptr;
 
 typedef uint32_t NodeId;
 typedef uint32_t FlowId;
+typedef vector<vector<uint32_t>> Matrix;
 // struct FlowInput{
 // 	uint32_t src, dst, pg, writeSizeByte, port, dport; // pg: priority group
 // 	double start_time;
@@ -44,8 +48,8 @@ struct FlowInputEntry{
 struct HostFlowSum{
     NodeId host_id;
     uint64_t sum_flow_size_byte;
-    double start_time_s;
-    double end_time_s;
+    long double start_time_s;
+    long double end_time_s;
 };
 
 struct NodeEntry{
@@ -77,28 +81,34 @@ public:
                     const NodeContainer &nodes);
     
     pair<vector<long double>, vector<long double>> calcStateProb(); // return utilization and node drop probability
+    unordered_map<NodeId, vector<shared_ptr<FlowInputEntry>>>& getNode2Flows(){
+        return node2flows;
+    }
 
 private:
     void readTopology(ifstream &topo_file);
     void buildNode2Flows(const vector<shared_ptr<FlowInputEntry>>& flows);
 
-    void initInputRate(); 
-    void initServiceRate();
-    void initRoutingMatrix(
+    void updateInputRate(const NodeContainer &node_container); 
+    void updateServiceRate();
+    void updateRoutingMatrix(
         const map<Ptr<Node>, map<Ptr<Node>, vector<Ptr<Node>>>> &next_hop,
         const NodeContainer &nodes);
+    void updateNode2FlowSums();
 
-    Vector<double> input_rate_Bps; // byte per second
-    Vector<double> service_rate_Bps; // byte per second
+    vector<double> input_rate_Bps; // byte per second
+    unordered_map<shared_ptr<FlowInputEntry>, vector<double>> flow2input_Bps;
+    vector<double> service_rate_Bps; // byte per second
     Matrix routing_matrix;
     vector<NodeEntry> node_info; // 0: host, 1: switch
     
-    unordered_map<NodeId, vector<FlowInputEntry>> node2flows;
+    unordered_map<NodeId, vector<shared_ptr<FlowInputEntry>>> node2flows;
     unordered_map<NodeId, HostFlowSum> node2flowsums;
     
     // routing matrix:
-    unordered_map<FlowId, Matrix> flow2routing_matrix;
+    unordered_map<shared_ptr<FlowInputEntry>, Matrix> flow2routing_matrix;
     Topology topology;
+    uint32_t num_flows;
 };
 
 

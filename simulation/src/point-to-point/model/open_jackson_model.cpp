@@ -26,13 +26,16 @@ void OpenJacksonModel::initialize(const vector<shared_ptr<FlowInputEntry>>& flow
                                 const map<Ptr<Node>, 
                                           map<Ptr<Node>, vector<Ptr<Node>>>> &next_hop,
                                 const NodeContainer &node_container){
+    num_flows = flows.size();
+    input_rate_Bps = vector<double>(node_info.size(), 0);
+    service_rate_Bps = vector<double>(node_info.size(), 0);
+
     readTopology(topo_file);
-    buildNode2Flows(flow_file, node_container);
+    buildNode2Flows(flows);
 
-    updateRoutingMatrix(next_hop);
-    updateInputRate();
+    updateRoutingMatrix(next_hop, node_container);
+    updateInputRate(node_container);
     updateServiceRate();
-
 }
 
 void appendFlowOffsets(const unordered_map<shared_ptr<FlowInputEntry>, 
@@ -63,11 +66,11 @@ OpenJacksonModel::calcStateProb(){
     // prepare routing matrix, stack matrices vertically
     std::stringstream routing_matrix_ss;
     for (auto& flow_routing_matrix : flow2routing_matrix){
-        FlowId flow_id = flow_routing_matrix.first;
+        // FlowId flow_id = flow_routing_matrix.first;
         Matrix routing_matrix = flow_routing_matrix.second;
         // matrix numbers splitted by space
-        for (uint32_t i; i < routing_matrix.rows(); i++){
-            for (uint32_t j; j < routing_matrix.cols(); j++){
+        for (uint32_t i; i < routing_matrix.size(); i++){
+            for (uint32_t j; j < routing_matrix.size(); j++){
                 routing_matrix_ss << routing_matrix[i][j] << " ";
             } 
             routing_matrix_ss << "\n";
@@ -77,7 +80,7 @@ OpenJacksonModel::calcStateProb(){
 
     std::stringstream input_rate_ss;
     for (auto& flow2input_pair : flow2input_Bps){
-        FlowId flow_id = flow2input_pair.first;
+        // FlowId flow_id = flow2input_pair.first;
         for(auto& node_input_rate : flow2input_pair.second){
             input_rate_ss << node_input_rate << " ";
         }
@@ -103,10 +106,10 @@ OpenJacksonModel::calcStateProb(){
         << "-i " << input_rate_path << " "
         << "-s " << service_path << " "
         << "-q " << queue_size_path << " "
-        << "-f " << total_flow_num << " "
+        << "-f " << num_flows << " "
         << "-o1 " << output_rho_path << " "
         << "-o2 " << output_nodrop_prob_path;
-    system(cmd.str());
+    system(cmd.str().c_str());
 
     // read python script output
     vector<long double> rho_vec = readVector(output_rho_path);
@@ -116,10 +119,7 @@ OpenJacksonModel::calcStateProb(){
         rho_vec, node_drop_prob); 
 }
 
-void OpenJacksonModel::readTopology(
-        ifstream& topo_file, 
-        const NodeContainer &node_container){
-    std::ifstream topo_f(topo_file);
+void OpenJacksonModel::readTopology(ifstream& topo_f){
     assert(topo_f.is_open());
     uint32_t num_node, num_switch, num_link;
     topo_f >> num_node >> num_switch >> num_link;
@@ -141,7 +141,7 @@ void OpenJacksonModel::readTopology(
             throw std::runtime_error("unsupported bandwidth unit");
         }
         Link link = {src, dst, bandwidth_Bps};
-        topo[src][dst] = link;      
+        topology[src][dst] = link;      
     }
 }
 
@@ -182,8 +182,9 @@ void OpenJacksonModel::updateRoutingMatrix(
         vector<shared_ptr<FlowInputEntry>> &flows = node2flow.second;
 
         for(auto& flow_ptr : flows){
-            Matrix routing_matrix(node_info.size(), node_info.size());
-            routing_matrix.Fill(0);
+            for(uint32_t i = 0; i < node_container.GetN(); i++){
+                routing_matrix.push_back(vector<uint32_t>(node_container.GetN(), 0));
+            }
             // get flow path
             Ptr<Node> src = node_container.Get(flow_ptr->src);
             Ptr<Node> dst = node_container.Get(flow_ptr->dst);
@@ -200,9 +201,9 @@ void OpenJacksonModel::updateRoutingMatrix(
 
 // relies on node2flows and node2flowsums, should be 
 // updated after reading flows and updating node2flowsums
-void OpenJacksonModel::updateInputRate(){
+void OpenJacksonModel::updateInputRate(const NodeContainer &node_container){
     for(auto& node2flows_pair : node2flows){
-        NodeId& node_id = node2flows_pair.first;
+        const NodeId& node_id = node2flows_pair.first;
         HostFlowSum& nodeFlowSum = node2flowsums.at(node_id);
         long long node_transtime = nodeFlowSum.end_time_s - nodeFlowSum.start_time_s;
         for(auto& flow_ptr: node2flows_pair.second){
@@ -216,14 +217,13 @@ void OpenJacksonModel::updateInputRate(){
     for(auto& node2flowsum : node2flowsums){
         long double node_trans_time = node2flowsum.second.end_time_s - 
                                         node2flowsum.second.start_time_s; 
-        input_rate_Bps[node2flowsum.second.host_id] = 
+        input_rate_Bps[node2flowsum.first] = 
             node2flowsum.second.sum_flow_size_byte / node_trans_time;
     }
 }
 
 void OpenJacksonModel::updateServiceRate(){
     // service rate is the sum of the bandwidth of all links connected to the switch    
-    service_rate_Bps = vector<double>(node_info.size(), 0);
     for (auto& src_dst_link : topology){
         uint32_t src = src_dst_link.first;
         for(auto& dst_link : src_dst_link.second){

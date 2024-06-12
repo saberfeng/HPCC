@@ -23,9 +23,6 @@ def build(bld):
 		'model/switch-mmu.cc',
 		'model/pint.cc',
         'model/rand_offset_injector.cpp',
-        'model/matrix.cpp',
-        'model/vector.cpp',
-        'model/inverse.cpp',
         'model/open_jackson_model.cpp',
         ]
 
