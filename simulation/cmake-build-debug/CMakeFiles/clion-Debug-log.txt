@@ -1,0 +1,51 @@
+/home/xingbo/.cache/JetBrains/RemoteDev/dist/c41015da584c8_CLion-242.14146.22/bin/cmake/linux/x64/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=/home/xingbo/.cache/JetBrains/RemoteDev/dist/c41015da584c8_CLion-242.14146.22/bin/ninja/linux/x64/ninja -G Ninja -S /mnt/hgfs/HPCC/simulation -B /mnt/hgfs/HPCC/simulation/cmake-build-debug
+CMake Deprecation Warning at CMakeLists.txt:17 (cmake_minimum_required):
+  Compatibility with CMake < 3.5 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value or use a ...<max> suffix to tell
+  CMake that the project does not need compatibility with older versions.
+
+
+CMake Warning (dev) at /home/xingbo/.cache/JetBrains/RemoteDev/dist/c41015da584c8_CLion-242.14146.22/bin/cmake/linux/x64/share/cmake-3.29/Modules/FindPackageHandleStandardArgs.cmake:438 (message):
+  The package name passed to `find_package_handle_standard_args` (GTK3_GTK)
+  does not match the name of the calling package (GTK3).  This can lead to
+  problems in calling code that expects `find_package` result variables
+  (e.g., `_FOUND`) to follow a certain pattern.
+Call Stack (most recent call first):
+  buildsupport/3rd_party/FindGTK3.cmake:546 (find_package_handle_standard_args)
+  buildsupport/macros_and_definitions.cmake:407 (find_package)
+  CMakeLists.txt:107 (process_options)
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+-- Some or all of the gtk libraries were not found. (missing: GTK3_GTK_LIBRARY GTK3_GTK_INCLUDE_DIR GTK3_GDK_INCLUDE_DIR GTK3_GDKCONFIG_INCLUDE_DIR GTK3_GDK_LIBRARY) 
+CMake Warning at buildsupport/macros_and_definitions.cmake:409 (message):
+  GTK3 was not found.  Continuing without it.
+Call Stack (most recent call first):
+  CMakeLists.txt:107 (process_options)
+
+
+CMake Warning (dev) at buildsupport/3rd_party/FindHarfBuzz.cmake:106 (if):
+  Policy CMP0057 is not set: Support new IN_LIST if() operator.  Run "cmake
+  --help-policy CMP0057" for policy details.  Use the cmake_policy command to
+  set the policy and suppress this warning.
+
+  IN_LIST will be interpreted as an operator when the policy is set to NEW.
+  Since the policy is not set the OLD behavior will be used.
+Call Stack (most recent call first):
+  buildsupport/macros_and_definitions.cmake:412 (find_package)
+  CMakeLists.txt:107 (process_options)
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Error at buildsupport/3rd_party/FindHarfBuzz.cmake:106 (if):
+  if given arguments:
+
+    "ICU" "IN_LIST" "HarfBuzz_FIND_COMPONENTS"
+
+  Unknown arguments specified
+Call Stack (most recent call first):
+  buildsupport/macros_and_definitions.cmake:412 (find_package)
+  CMakeLists.txt:107 (process_options)
+
+
+-- Configuring incomplete, errors occurred!
