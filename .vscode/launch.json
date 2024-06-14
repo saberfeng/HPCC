@@ -44,6 +44,16 @@
             "console": "integratedTerminal",
             "args": [],
             "cwd":"${workspaceFolder}"
-        }
+        },
+
+        {
+            "name": "cmake_helper",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/simulation/scripts/cmake_helper.py",
+            "console": "integratedTerminal",
+            "args": [],
+            "cwd":"${workspaceFolder}"
+        },
     ]
 }

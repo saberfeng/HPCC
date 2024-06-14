@@ -103,7 +103,8 @@ else ()
     set(HarfBuzz_LIBS_NOT_FOUND "HarfBuzz (required)")
 endif ()
 
-if ("ICU" IN_LIST HarfBuzz_FIND_COMPONENTS)
+list (FIND HarfBuzz_FIND_COMPONENTS "ICU" _index)
+if (${_index} GREATER -1)
     pkg_check_modules(PC_HARFBUZZ_ICU QUIET harfbuzz-icu)
     set(HarfBuzz_ICU_COMPILE_OPTIONS ${PC_HARFBUZZ_ICU_CFLAGS_OTHER})
 

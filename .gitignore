@@ -4,3 +4,4 @@ simulation/waf-tools/*.pyc
 simulation/mix/*.tr
 *.pyc
 simulation/.lock-waf_linux2_build
+simulation/cmake-build-debug
