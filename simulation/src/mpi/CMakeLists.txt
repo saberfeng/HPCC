@@ -16,4 +16,6 @@ set(header_files
 
 set(libraries_to_link ${libcore} ${libnetwork} ${MPI_CXX_LIBRARIES})
 
-build_lib("${name}" "${source_files}" "${header_files}" "${libraries_to_link}")
+set(test_sources)
+
+build_lib("${name}" "${source_files}" "${header_files}" "${libraries_to_link}" "${test_sources}")

@@ -8,11 +8,6 @@ if(${SQLite3_FOUND})
 
   include_directories(${SQLite3_INCLUDE_DIRS})
   set(sqlite_libraries ${SQLite3_LIBRARIES})
-
-  if(HAVE_SEMAPHORE_H)
-    list(APPEND sqlite_sources model/sqlite-output.cc)
-    list(APPEND sqlite_headers model/sqlite-output.h)
-  endif()
 endif()
 
 set(source_files
@@ -40,8 +35,8 @@ set(header_files
 
 set(libraries_to_link ${libcore} ${sqlite_libraries})
 
-set(test_files
+set(test_sources
     test/basic-data-calculators-test-suite.cc
 )
 
-build_lib("${name}" "${source_files}" "${header_files}" "${libraries_to_link}" "${test_files}")
+build_lib("${name}" "${source_files}" "${header_files}" "${libraries_to_link}" "${test_sources}")

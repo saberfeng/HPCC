@@ -12,17 +12,59 @@ if(${ENABLE_MPI})
   set(mpi_include_directories ${MPI_CXX_INCLUDE_DIRS})
 endif()
 
-set(source_files ${mpi_sources} model/point-to-point-net-device.cc model/point-to-point-channel.cc model/ppp-header.cc
-                 helper/point-to-point-helper.cc
+set(source_files
+    model/cn-header.cc
+    model/open_jackson_model.cpp
+    model/pause-header.cc
+    model/pint.cc
+    model/point-to-point-channel.cc
+    model/point-to-point-net-device.cc
+    model/point-to-point-remote-channel.cc
+    model/ppp-header.cc
+    model/qbb-channel.cc
+    model/qbb-header.cc
+    model/qbb-net-device.cc
+    model/qbb-remote-channel.cc
+    model/rand_offset_injector.cpp
+    model/rdma-driver.cc
+    model/rdma-hw.cc
+    model/rdma-queue-pair.cc
+    model/switch-mmu.cc
+    model/switch-node.cc
+    helper/point-to-point-helper.cc
+    helper/qbb-helper.cc
 )
 
-set(header_files ${mpi_headers} model/point-to-point-net-device.h model/point-to-point-channel.h model/ppp-header.h
-                 helper/point-to-point-helper.h
+set(header_files
+    model/cn-header.h
+    model/open_jackson_model.h
+    model/pause-header.h
+    model/pint.h
+    model/point-to-point-channel.h
+    model/point-to-point-net-device.h
+    model/point-to-point-remote-channel.h
+    model/ppp-header.h
+    model/qbb-channel.h
+    model/qbb-header.h
+    model/qbb-net-device.h
+    model/qbb-remote-channel.h
+    model/rand_offset_injector.h
+    model/rdma-driver.h
+    model/rdma-hw.h
+    model/rdma-queue-pair.h
+    model/switch-mmu.h
+    model/switch-node.h
+    model/trace-format.h
+    helper/point-to-point-helper.h
+    helper/qbb-helper.h
+    helper/sim-setting.h
 )
 
 set(libraries_to_link ${libnetwork} ${mpi_libraries})
 
-set(test_sources test/point-to-point-test.cc)
+set(test_sources
+    test/point-to-point-test.cc
+)
 
 build_lib("${name}" "${source_files}" "${header_files}" "${libraries_to_link}" "${test_sources}")
 
