@@ -141,69 +141,69 @@ set(source_files
     ${valgrind_sources}
     ${example_as_test_sources}
     ${embedded_version_sources}
-    model/time.cc
-    model/event-id.cc
-    model/scheduler.cc
-    model/list-scheduler.cc
-    model/map-scheduler.cc
-    model/heap-scheduler.cc
-    model/calendar-scheduler.cc
-    model/priority-queue-scheduler.cc
-    model/event-impl.cc
-    model/simulator.cc
-    model/simulator-impl.cc
-    model/default-simulator-impl.cc
-    model/timer.cc
-    model/watchdog.cc
-    model/synchronizer.cc
-    model/make-event.cc
-    model/log.cc
-    model/breakpoint.cc
-    model/type-id.cc
     model/attribute-construction-list.cc
-    model/object-base.cc
-    model/ref-count-base.cc
-    model/object.cc
-    model/test.cc
-    model/random-variable-stream.cc
-    model/rng-seed-manager.cc
-    model/rng-stream.cc
-    model/command-line.cc
-    model/type-name.cc
     model/attribute.cc
     model/boolean.cc
-    model/integer.cc
-    model/uinteger.cc
-    model/enum.cc
-    model/double.cc
-    model/int64x64.cc
-    model/string.cc
-    model/pointer.cc
-    model/object-ptr-container.cc
-    model/object-factory.cc
-    model/global-value.cc
-    model/trace-source-accessor.cc
-    model/config.cc
+    model/breakpoint.cc
+    model/calendar-scheduler.cc
     model/callback.cc
-    model/names.cc
-    model/vector.cc
+    model/command-line.cc
+    model/config.cc
+    model/default-simulator-impl.cc
+    model/double.cc
+    model/enum.cc
+    model/event-id.cc
+    model/event-impl.cc
     model/fatal-impl.cc
-    model/system-path.cc
-    helper/random-variable-stream-helper.cc
-    helper/event-garbage-collector.cc
+    model/global-value.cc
+    model/hash-fnv.cc
     model/hash-function.cc
     model/hash-murmur3.cc
-    model/hash-fnv.cc
     model/hash.cc
-    model/des-metrics.cc
-    model/ascii-file.cc
-    model/node-printer.cc
-    model/show-progress.cc
-    model/time-printer.cc
-    model/system-wall-clock-timestamp.cc
-    model/length.cc
-    model/trickle-timer.cc
-    helper/csv-reader.cc
+    model/heap-scheduler.cc
+    model/int64x64-128.cc
+    model/int64x64-cairo.cc
+    model/int64x64.cc
+    model/integer.cc
+    model/list-scheduler.cc
+    model/log.cc
+    model/make-event.cc
+    model/map-scheduler.cc
+    model/names.cc
+    model/object-base.cc
+    model/object-factory.cc
+    model/object-ptr-container.cc
+    model/object.cc
+    model/pointer.cc
+    model/random-variable-stream-helper.cc
+    model/random-variable-stream.cc
+    model/random-variable.cc
+    model/realtime-simulator-impl.cc
+    model/ref-count-base.cc
+    model/rng-seed-manager.cc
+    model/rng-stream.cc
+    model/scheduler.cc
+    model/simulator-impl.cc
+    model/simulator.cc
+    model/string.cc
+    model/synchronizer.cc
+    model/system-path.cc
+    model/system-thread.cc
+    model/test.cc
+    model/time.cc
+    model/timer.cc
+    model/trace-source-accessor.cc
+    model/type-id.cc
+    model/type-name.cc
+    model/uinteger.cc
+    model/unix-fd-reader.cc
+    model/unix-system-condition.cc
+    model/unix-system-mutex.cc
+    model/unix-system-wall-clock-ms.cc
+    model/vector.cc
+    model/wall-clock-synchronizer.cc
+    model/watchdog.cc
+    model/win32-system-wall-clock-ms.cc
 )
 
 # Define core lib headers
@@ -213,101 +213,91 @@ set(header_files
     ${thread_headers}
     ${example_as_test_headers}
     ${embedded_version_headers}
-    model/valgrind.h
-    model/nstime.h
+    model/abort.h
+    model/assert.h
+    model/attribute-accessor-helper.h
+    model/attribute-construction-list.h
+    model/attribute-helper.h
+    model/attribute.h
+    model/boolean.h
+    model/breakpoint.h
+    model/cairo-wideint-private.h
+    model/calendar-scheduler.h
+    model/callback.h
+    model/command-line.h
+    model/config.h
+    model/default-deleter.h
+    model/default-simulator-impl.h
+    model/deprecated.h
+    model/double.h
+    model/empty.h
+    model/enum.h
     model/event-id.h
     model/event-impl.h
-    model/simulator.h
-    model/simulator-impl.h
-    model/default-simulator-impl.h
-    model/scheduler.h
-    model/list-scheduler.h
-    model/map-scheduler.h
-    model/heap-scheduler.h
-    model/calendar-scheduler.h
-    model/priority-queue-scheduler.h
-    model/simulation-singleton.h
-    model/singleton.h
-    model/timer.h
-    model/timer-impl.h
-    model/watchdog.h
-    model/synchronizer.h
-    model/make-event.h
-    model/system-wall-clock-ms.h
-    model/system-wall-clock-timestamp.h
-    model/empty.h
-    model/callback.h
-    model/object-base.h
-    model/ref-count-base.h
-    model/simple-ref-count.h
-    model/type-id.h
-    model/attribute-construction-list.h
-    model/ptr.h
-    model/object.h
-    model/log.h
-    model/log-macros-enabled.h
-    model/log-macros-disabled.h
-    model/assert.h
-    model/breakpoint.h
     model/fatal-error.h
-    model/test.h
-    model/random-variable-stream.h
-    model/rng-seed-manager.h
-    model/rng-stream.h
-    model/command-line.h
-    model/type-name.h
-    model/type-traits.h
-    model/int-to-type.h
-    model/attribute.h
-    model/attribute-accessor-helper.h
-    model/attribute-container.h
-    model/attribute-container-accessor-helper.h
-    model/boolean.h
-    model/int64x64.h
-    model/int64x64-double.h
-    model/integer.h
-    model/uinteger.h
-    model/double.h
-    model/enum.h
-    model/string.h
-    model/pointer.h
-    model/object-factory.h
-    model/attribute-helper.h
-    model/global-value.h
-    model/traced-callback.h
-    model/traced-value.h
-    model/trace-source-accessor.h
-    model/config.h
-    model/object-ptr-container.h
-    model/object-vector.h
-    model/object-map.h
-    model/deprecated.h
-    model/abort.h
-    model/names.h
-    model/vector.h
-    model/default-deleter.h
     model/fatal-impl.h
-    model/system-path.h
-    model/unused.h
-    model/math.h
-    helper/event-garbage-collector.h
-    helper/random-variable-stream-helper.h
+    model/global-value.h
+    model/hash-fnv.h
     model/hash-function.h
     model/hash-murmur3.h
-    model/hash-fnv.h
     model/hash.h
-    model/non-copyable.h
-    model/build-profile.h
-    model/des-metrics.h
-    model/ascii-file.h
-    model/ascii-test.h
-    model/node-printer.h
-    model/show-progress.h
-    model/time-printer.h
-    model/pair.h
-    model/length.h
-    model/trickle-timer.h
-    helper/csv-reader.h
+    model/heap-scheduler.h
+    model/int-to-type.h
+    model/int64x64-128.h
+    model/int64x64-cairo.h
+    model/int64x64-double.h
+    model/int64x64.h
+    model/integer.h
+    model/list-scheduler.h
+    model/log.h
+    model/make-event.h
+    model/map-scheduler.h
+    model/math.h
+    model/names.h
+    model/nstime.h
+    model/object-base.h
+    model/object-factory.h
+    model/object-map.h
+    model/object-ptr-container.h
+    model/object-vector.h
+    model/object.h
+    model/pointer.h
+    model/ptr.h
+    model/random-variable-stream-helper.h
+    model/random-variable-stream.h
+    model/random-variable.h
+    model/realtime-simulator-impl.h
+    model/ref-count-base.h
+    model/rng-seed-manager.h
+    model/rng-stream.h
+    model/scheduler.h
+    model/simple-ref-count.h
+    model/simulation-singleton.h
+    model/simulator-impl.h
+    model/simulator.h
+    model/singleton.h
+    model/string.h
+    model/synchronizer.h
+    model/system-condition.h
+    model/system-mutex.h
+    model/system-path.h
+    model/system-thread.h
+    model/system-wall-clock-ms.h
+    model/test.h
+    model/timer-impl.h
+    model/timer.h
+    model/trace-source-accessor.h
+    model/traced-callback.h
+    model/traced-value.h
+    model/type-id.h
+    model/type-name.h
+    model/type-traits.h
+    model/uinteger.h
+    model/unix-fd-reader.h
+    model/unused.h
+    model/vector.h
+    model/wall-clock-synchronizer.h
+    model/watchdog.h
 )
 
 set(test_sources
@@ -315,8 +305,6 @@ set(test_sources
     ${gsl_test_sources}
     ${thread_test_sources}
     test/attribute-test-suite.cc
-    test/attribute-container-test-suite.cc
-    test/build-profile-test-suite.cc
     test/callback-test-suite.cc
     test/command-line-test-suite.cc
     test/config-test-suite.cc
@@ -325,21 +313,17 @@ set(test_sources
     test/names-test-suite.cc
     test/object-test-suite.cc
     test/ptr-test-suite.cc
-    test/event-garbage-collector-test-suite.cc
-    test/many-uniform-random-variables-one-get-value-call-test-suite.cc
-    test/one-uniform-random-variable-many-get-value-calls-test-suite.cc
-    test/pair-value-test-suite.cc
+    test/random-variable-stream-test-suite.cc
+    test/random-variable-test-suite.cc
+    test/rng-test-suite.cc
     test/sample-test-suite.cc
     test/simulator-test-suite.cc
+    test/threaded-test-suite.cc
     test/time-test-suite.cc
     test/timer-test-suite.cc
     test/traced-callback-test-suite.cc
     test/type-traits-test-suite.cc
     test/watchdog-test-suite.cc
-    test/hash-test-suite.cc
-    test/type-id-test-suite.cc
-    test/length-test-suite.cc
-    test/trickle-timer-test-suite.cc
 )
 
 # Build core lib
