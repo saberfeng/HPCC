@@ -38,10 +38,10 @@ include(buildsupport/macros_and_definitions.cmake)
 set(NS3_VER 3-dev)
 
 # common options
-option(NS3_ASSERT "Enable assert on failure" OFF)
+option(NS3_ASSERT "Enable assert on failure" ON)
 option(NS3_EXAMPLES "Enable examples to be built" OFF)
-option(NS3_LOG "Enable logging to be built" OFF)
-option(NS3_TESTS "Enable tests to be built" OFF)
+option(NS3_LOG "Enable logging to be built" ON)
+option(NS3_TESTS "Enable tests to be built" ON)
 
 # fd-net-device options
 option(NS3_EMU "Build with emulation support" ON)
@@ -68,7 +68,7 @@ option(NS3_OPENFLOW "Build with Openflow support" OFF)
 option(NS3_ENABLE_BUILD_VERSION "Embed version info into libraries" OFF)
 option(NS3_GNUPLOT "Build with Gnuplot support" OFF)
 option(NS3_GSL "Build with GSL support" ON)
-option(NS3_GTK3 "Build with GTK3 support" ON)
+option(NS3_GTK3 "Build with GTK3 support" OFF)
 option(NS3_LINK_TIME_OPTIMIZATION "Build with link-time optimization" OFF)
 option(NS3_MPI "Build with MPI support" ON)
 option(NS3_NATIVE_OPTIMIZATIONS "Build with -march=native -mtune=native" OFF)

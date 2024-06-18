@@ -25,3 +25,29 @@ foreach(scratch_src ${scratches})
     set_runtime_outputdirectory(${scratch_name} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/scratch/${scratch_directory})
   endif()
 endforeach()
+
+
+#file(GLOB_RECURSE third_src ${CMAKE_CURRENT_SOURCE_DIR}/third.cc)
+#add_executable(third_exe ${third_src})
+#
+#if(${NS3_STATIC})
+#  target_link_libraries(third_exe ${LIB_AS_NEEDED_PRE_STATIC} ${lib-ns3-static})
+#else()
+#  target_link_libraries(third_exe "${local-ns3-libs}" "${ns3-contrib-libs}")
+#endif()
+#set_runtime_outputdirectory(third_exe ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/scratch/)
+#
+#target_compile_definitions(third_exe
+#  PRIVATE HAVE_PTHREAD_H=1
+#  PRIVATE -DNS3_ASSERT_ENABLE
+#  PRIVATE -DNS3_LOG_ENABLE
+#  PRIVATE -DHAVE___UINT128_T=1
+#  PRIVATE -DINT64X64_USE_128=1
+#  PRIVATE -DHAVE_SYS_TYPES_H=1
+#  PRIVATE -DHAVE_DIRENT_H=1
+#  PRIVATE -DHAVE_STDLIB_H=1
+#  PRIVATE -DHAVE_GETENV=1
+#  PRIVATE -DHAVE_SIGNAL_H=1
+#  PRIVATE -DHAVE_PTHREAD_H=1
+#  PRIVATE -DHAVE_STDINT_H=1
+#  PRIVATE -DHAVE_INTTYPES_H=1)

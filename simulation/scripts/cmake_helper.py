@@ -124,7 +124,7 @@ def main():
     # assert working dir is simulation
     # print(os.getcwd())
     # get_all_cxx_files_in_dir('simulation/src/wifi')
-    dir_path = 'simulation/src/point-to-point'
+    dir_path = 'simulation/src/propagation'
 
     update_cmakelists(dir_path)
 
