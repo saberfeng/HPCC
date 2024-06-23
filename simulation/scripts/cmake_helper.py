@@ -7,6 +7,9 @@ def get_files_in_dir(dir_path:str, sub_dirs:list[str], file_exts:list[str]):
     directory specified by dir_path and sub_dirs.
     '''   
     cxx_sources = []
+    if sub_dirs is None or len(sub_dirs) == 0:
+        # get all subdirs
+        sub_dirs = [d for d in os.listdir(dir_path) if os.path.isdir(os.path.join(dir_path, d))]
     for sub_dir in sub_dirs:
         for root, dirs, files in os.walk(os.path.join(dir_path, sub_dir)):
             for file in files:
@@ -17,6 +20,17 @@ def get_files_in_dir(dir_path:str, sub_dirs:list[str], file_exts:list[str]):
                     path_from_module = path_from_module.replace('\\', '/')
                     cxx_sources.append(path_from_module)
     return cxx_sources
+
+def substitute_all_files_in_dir(dir_path:str, file_exts:list[str],
+                                substitute:str, replace:str):
+    '''Substitutes all files with specified extensions in the directory
+    specified by dir_path.
+    '''
+    for root, dirs, files in os.walk(dir_path):
+        for file in files:
+            if file.endswith(tuple(file_exts)):
+                file_path = os.path.join(root, file)
+                helper.match_and_replace_in_file(file_path, substitute, replace)
 
 def wrap_files_in_cmake_set(files:list[str], set_name:str):
     '''Returns a string that represents a CMake set containing the files in
@@ -120,11 +134,19 @@ def update_cmakelists(dir_path):
     replace_cmake_lists(dir_path, cmake_set_src, cmake_set_hdr, 
         cmake_set_tst, test_src_varname)
 
+def remove_NS_LOG_FUNCTION():
+    dir = 'simulation/src/'
+    pattern = r'\/*NS_LOG_FUNCTION\s*([^)]|\n)*?\)'
+    substitute = '//NS_LOG_FUNCTION'
+    file_exts = ['.cc'] 
+    substitute_all_files_in_dir(dir, file_exts, pattern, substitute)
+
+
 def main():
     # assert working dir is simulation
     # print(os.getcwd())
     # get_all_cxx_files_in_dir('simulation/src/wifi')
-    dir_path = 'simulation/src/propagation'
+    dir_path = 'simulation/src/uan'
 
     update_cmakelists(dir_path)
 
@@ -134,6 +156,7 @@ def main():
     #     get_all_cxx_files_in_dir(dir_path)
     # print(cmake_set_src)
 
+    remove_NS_LOG_FUNCTION()
 
 if __name__ == "__main__":
     main()

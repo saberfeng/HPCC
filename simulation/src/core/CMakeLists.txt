@@ -197,11 +197,9 @@ set(source_files
     model/unix-fd-reader.cc
     model/unix-system-condition.cc
     model/unix-system-mutex.cc
-    model/unix-system-wall-clock-ms.cc
     model/vector.cc
     model/wall-clock-synchronizer.cc
     model/watchdog.cc
-    model/win32-system-wall-clock-ms.cc
 )
 
 # Define core lib headers

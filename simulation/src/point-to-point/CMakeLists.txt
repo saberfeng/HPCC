@@ -5,12 +5,12 @@ set(mpi_headers)
 set(mpi_libraries)
 set(mpi_include_directories)
 
-if(${ENABLE_MPI})
-  set(mpi_sources model/point-to-point-remote-channel.cc)
-  set(mpi_headers model/point-to-point-remote-channel.h)
-  set(mpi_libraries ${libmpi} ${MPI_CXX_LIBRARIES})
-  set(mpi_include_directories ${MPI_CXX_INCLUDE_DIRS})
-endif()
+#if(${ENABLE_MPI})
+#  set(mpi_sources model/point-to-point-remote-channel.cc)
+#  set(mpi_headers model/point-to-point-remote-channel.h)
+#  set(mpi_libraries ${libmpi} ${MPI_CXX_LIBRARIES})
+#  set(mpi_include_directories ${MPI_CXX_INCLUDE_DIRS})
+#endif()
 
 set(source_files
     model/cn-header.cc

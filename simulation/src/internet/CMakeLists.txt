@@ -64,10 +64,6 @@ set(source_files
     model/ipv6.cc
     model/loopback-net-device.cc
     model/ndisc-cache.cc
-    model/nsc-sysctl.cc
-    model/nsc-tcp-l4-protocol.cc
-    model/nsc-tcp-socket-factory-impl.cc
-    model/nsc-tcp-socket-impl.cc
     model/pending-data.cc
     model/rtt-estimator.cc
     model/seq-ts-header.cc
@@ -172,10 +168,6 @@ set(header_files
     model/ipv6.h
     model/loopback-net-device.h
     model/ndisc-cache.h
-    model/nsc-sysctl.h
-    model/nsc-tcp-l4-protocol.h
-    model/nsc-tcp-socket-factory-impl.h
-    model/nsc-tcp-socket-impl.h
     model/pending-data.h
     model/rdma.h
     model/rtt-estimator.h

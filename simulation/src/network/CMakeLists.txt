@@ -22,8 +22,6 @@ set(source_files
     model/tag.cc
     model/trailer.cc
     helper/application-container.cc
-    helper/broadcom-node-container.cc
-    helper/leaky-bucket-helper.cc
     helper/net-device-container.cc
     helper/node-container.cc
     helper/packet-socket-helper.cc
@@ -83,8 +81,6 @@ set(header_files
     model/tag.h
     model/trailer.h
     helper/application-container.h
-    helper/broadcom-node-container.h
-    helper/leaky-bucket-helper.h
     helper/net-device-container.h
     helper/node-container.h
     helper/packet-socket-helper.h
