@@ -1,8 +1,14 @@
 set(name netanim)
 
-set(source_files model/animation-interface.cc)
+set(source_files
+    model/animation-interface.cc
+    helper/animation-interface-helper.cc
+)
 
-set(header_files model/animation-interface.h)
+set(header_files
+    model/animation-interface.h
+    helper/animation-interface-helper.h
+)
 
 set(libraries_to_link
     ${libinternet}
