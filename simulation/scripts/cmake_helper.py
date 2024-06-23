@@ -1,6 +1,8 @@
 import os
 import helper
 import re
+import subprocess
+from datetime import datetime
 
 def get_files_in_dir(dir_path:str, sub_dirs:list[str], file_exts:list[str]):
     '''Returns a list of files with specified extensions in the 
@@ -141,14 +143,51 @@ def remove_NS_LOG_FUNCTION():
     file_exts = ['.cc'] 
     substitute_all_files_in_dir(dir, file_exts, pattern, substitute)
 
+def file_restore(search_dir:str, target_datetime_str:str):
+    def is_git_tracked(file_path):
+        """ Check if the file is tracked by Git. """
+        try:
+            subprocess.run(['git', 'ls-files', '--error-unmatch', file_path], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            return True
+        except subprocess.CalledProcessError:
+            return False
+    
+    def reset_git_file(file_path):
+        """ Reset the file to the last commit state. """
+        subprocess.run(['git', 'checkout', '--', file_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        print(f"Reset: {file_path}")
+    
+    # datetime format: '2024-06-23 03:44:29.000000000'
+    target_datetime = datetime.strptime(target_datetime_str, '%Y-%m-%d %H:%M:%S')\
+                              .replace(microsecond=0)
+    count = 0
+    for root, dirs, files in os.walk(search_dir):
+        for file in files:
+            file_path = os.path.join(root, file)
+            # Get file modification time and compare with the target time
+            modify_time = datetime.fromtimestamp(os.path.getmtime(file_path))\
+                                  .replace(microsecond=0)
+            if modify_time == target_datetime:
+                if is_git_tracked(file_path):
+                    reset_git_file(file_path)
+                    print(f"Restored: {file_path}")
+                    count += 1
+    print(f"Total {count} files restored.")
+                # else:
+                #     print(f"Not tracked by Git: {file_path}")
+
+def get_file_modification_time(file_path):
+    return datetime.fromtimestamp(os.path.getmtime(file_path))
 
 def main():
     # assert working dir is simulation
     # print(os.getcwd())
     # get_all_cxx_files_in_dir('simulation/src/wifi')
-    dir_path = 'simulation/src/uan'
-
-    update_cmakelists(dir_path)
+    # dir_path = 'simulation/src/uan'
+    file_restore(search_dir='simulation/src', target_datetime_str='2024-06-23 18:44:29')
+    # file_path = 'simulation/src/wimax/test/phy-test.cc'
+    # print(get_file_modification_time(file_path))
+    # update_cmakelists(dir_path)
 
     # gen_cmakelists_for_dir(dir_path)
 
@@ -156,7 +195,7 @@ def main():
     #     get_all_cxx_files_in_dir(dir_path)
     # print(cmake_set_src)
 
-    remove_NS_LOG_FUNCTION()
+    # remove_NS_LOG_FUNCTION()
 
 if __name__ == "__main__":
     main()
