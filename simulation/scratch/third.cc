@@ -128,6 +128,13 @@ vector<shared_ptr<FlowInputEntry>> flows;
 // vector<shared_ptr<FlowInputEntry>>::iterator cur_flow_iter;
 uint32_t cur_flow_idx = 0;
 
+void printVec(const vector<long double>& vec){
+    for(const auto& elem : vec){
+        cout << elem << " ";
+    }
+    cout << endl;
+}
+
 void readAllFlowInputEntrys(){
 	int read_idx = 0;
 	while (read_idx < flow_num){
@@ -136,6 +143,7 @@ void readAllFlowInputEntrys(){
 			  >> flow_ptr->dst_port >> flow_ptr->size_byte 
 			  >> flow_ptr->start_time_s;
 		flows.push_back(flow_ptr);
+        read_idx++;
 	}
 	flowf.close();
 }
@@ -371,7 +379,9 @@ int main(int argc, char *argv[])
 {
 	clock_t begint, endt;
 	begint = clock();
-	
+    cout << "argv[1]:" << argv[1] << endl;
+    cout << "argc:" << argc << endl;
+
 	RandOffsetInjector rand_offset_injector = rand_offset::RandOffsetInjector();
 #ifndef PGO_TRAINING
 	if (argc > 1)
@@ -966,6 +976,8 @@ int main(int argc, char *argv[])
 	auto rho_drop_prob_pair = rand_offset_injector.calcStateProb();
 	vector<long double> rho_vec = rho_drop_prob_pair.first;
 	vector<long double> drop_prob_vec = rho_drop_prob_pair.second;
+    printVec(rho_vec);
+    printVec(drop_prob_vec);
 
 	//
 	// get BDP and delay

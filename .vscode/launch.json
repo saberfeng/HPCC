@@ -5,6 +5,17 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "third",
+            "type": "cppdbg", // cppdbg for GDB or LLDB
+            "request": "launch", // "launch" a program or "attach" to an already running instance 
+            "program": "${workspaceFolder}/simulation/build/scratch/third",
+            "args": [
+                "simulation/mix/rand_offset/config_2n1f_topo_2n1f_flow_rand_offset.txt",
+            ],
+            "cwd":"${workspaceFolder}", // cwd:working directory
+        },
+
+        {
             "name": "2n1f test",
             "type": "debugpy",
             "request": "launch",

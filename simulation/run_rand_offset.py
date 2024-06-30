@@ -43,7 +43,7 @@ QLEN_MON_END 3000000000
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser(description='run simulation')
-	parser.add_argument('--cc', dest='cc', action='store', default='rand_offset', help="hp/dcqcn/timely/dctcp/hpccPint")
+	parser.add_argument('--cc', dest='cc', action='store', default='rand_offset', help="rand_offset")
 	parser.add_argument('--trace', dest='trace', action='store', default='flow', help="the name of the flow file")
 	parser.add_argument('--bw', dest="bw", action='store', default='50', help="the NIC bandwidth")
 	parser.add_argument('--down', dest='down', action='store', default='0 0 0', help="link down event")
@@ -81,10 +81,10 @@ if __name__ == "__main__":
 						buffer_size=bfsz, enable_tr=enable_tr)
 		print(config)
 	else:
-		print "unknown cc:", args.cc
+		print("unknown cc:", args.cc)
 		sys.exit(1)
 
 	with open(config_name, "w") as file:
 		file.write(config)
 	
-	os.system("./waf --run 'scratch/third %s'"%(config_name))
+	# os.system("./waf --run 'scratch/third %s'"%(config_name))

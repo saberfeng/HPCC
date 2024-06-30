@@ -270,6 +270,8 @@ macro(
     TARGETS ${lib${name}}
     EXPORT ns3ExportTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}  # Add this line
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
   )
 endmacro()
 

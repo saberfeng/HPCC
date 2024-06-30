@@ -74,5 +74,6 @@
         "optional": "cpp",
         "ranges": "cpp",
         "span": "cpp"
-    }
+    },
+    "cmake.sourceDirectory": "/mnt/hgfs/HPCC/simulation"
 }
