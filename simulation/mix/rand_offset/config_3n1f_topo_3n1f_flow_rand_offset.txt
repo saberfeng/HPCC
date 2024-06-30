@@ -2,12 +2,12 @@ ENABLE_QCN 0
 USE_DYNAMIC_PFC_THRESHOLD 0 
 
 PACKET_PAYLOAD_SIZE 1000
-TOPOLOGY_FILE mix/rand_offset/2n1f_topo.txt
-FLOW_FILE mix/rand_offset/2n1f_flow.txt
-TRACE_FILE mix/rand_offset/trace.txt
-TRACE_OUTPUT_FILE mix/rand_offset/mix_2n1f_topo_2n1f_flow_rand_offset.tr
-FCT_OUTPUT_FILE mix/rand_offset/fct_2n1f_topo_2n1f_flow_rand_offset.txt
-PFC_OUTPUT_FILE mix/rand_offset/pfc_2n1f_topo_2n1f_flow_rand_offset.txt
+TOPOLOGY_FILE simulation/mix/rand_offset/2n1f_topo.txt
+FLOW_FILE simulation/mix/rand_offset/2n1f_flow.txt
+TRACE_FILE simulation/mix/rand_offset/trace.txt
+TRACE_OUTPUT_FILE simulation/mix/rand_offset/mix_2n1f_topo_2n1f_flow_rand_offset.tr
+FCT_OUTPUT_FILE simulation/mix/rand_offset/fct_2n1f_topo_2n1f_flow_rand_offset.txt
+PFC_OUTPUT_FILE simulation/mix/rand_offset/pfc_2n1f_topo_2n1f_flow_rand_offset.txt
 
 SIMULATOR_STOP_TIME 4.00
 

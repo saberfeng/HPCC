@@ -14,6 +14,21 @@
             ],
             "cwd":"${workspaceFolder}", // cwd:working directory
         },
+        {
+            "name": "3n1f gen conf",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "run_rand_offset.py",
+            "console": "integratedTerminal",
+            "args": [
+                "-cc", "rand_offset",
+                "-trace", "3n1f_flow",
+                "-topo", "3n1f_topo",
+                "-enable_tr", "1",
+            ],
+            "cwd":"${workspaceFolder}",
+
+        },
 
         {
             "name": "2n1f test",
