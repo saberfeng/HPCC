@@ -1,0 +1,4 @@
+launch_dir = '/mnt/hgfs/HPCC/simulation'
+run_dir = '/mnt/hgfs/HPCC/simulation'
+top_dir = '/mnt/hgfs/HPCC/simulation'
+out_dir = '/mnt/hgfs/HPCC/simulation/build'
