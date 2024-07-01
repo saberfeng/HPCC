@@ -2,12 +2,12 @@ ENABLE_QCN 0
 USE_DYNAMIC_PFC_THRESHOLD 0 
 
 PACKET_PAYLOAD_SIZE 1000
-TOPOLOGY_FILE simulation/mix/rand_offset/2n1f_topo.txt
-FLOW_FILE simulation/mix/rand_offset/2n1f_flow.txt
+TOPOLOGY_FILE simulation/mix/rand_offset/3n1f_topo.txt
+FLOW_FILE simulation/mix/rand_offset/3n1f_flow.txt
 TRACE_FILE simulation/mix/rand_offset/trace.txt
-TRACE_OUTPUT_FILE simulation/mix/rand_offset/mix_2n1f_topo_2n1f_flow_rand_offset.tr
-FCT_OUTPUT_FILE simulation/mix/rand_offset/fct_2n1f_topo_2n1f_flow_rand_offset.txt
-PFC_OUTPUT_FILE simulation/mix/rand_offset/pfc_2n1f_topo_2n1f_flow_rand_offset.txt
+TRACE_OUTPUT_FILE simulation/mix/rand_offset/mix_3n1f_topo_3n1f_flow_rand_offset.tr
+FCT_OUTPUT_FILE simulation/mix/rand_offset/fct_3n1f_topo_3n1f_flow_rand_offset.txt
+PFC_OUTPUT_FILE simulation/mix/rand_offset/pfc_3n1f_topo_3n1f_flow_rand_offset.txt
 
 SIMULATOR_STOP_TIME 4.00
 
@@ -32,6 +32,6 @@ LINK_DOWN 0 0 0
 ENABLE_TRACE 1
 
 BUFFER_SIZE 16
-QLEN_MON_FILE mix/rand_offset/qlen_2n1f_topo_2n1f_flow_rand_offset.txt
+QLEN_MON_FILE mix/rand_offset/qlen_3n1f_topo_3n1f_flow_rand_offset.txt
 QLEN_MON_START 2000000000
 QLEN_MON_END 3000000000

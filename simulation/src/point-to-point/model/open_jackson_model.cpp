@@ -131,8 +131,8 @@ void OpenJacksonModel::readTopology(ifstream& topo_f){
     }
     for(uint32_t i = 0; i < num_link; i++){
         uint32_t src, dst, bandwidth_Bps;
-        string bandwidth_str;
-        topo_f >> src >> dst >> bandwidth_str; // bandwidth: "100Gbps" -> 100 * 10^9
+        string bandwidth_str, link_delay, error_rate;
+        topo_f >> src >> dst >> bandwidth_str >> link_delay >> error_rate; // bandwidth: "100Gbps" -> 100 * 10^9
         // convert bandwidth to bps
         if(bandwidth_str.find(string("Gbps")) != string::npos){ // unit is Gbps
             bandwidth_str = bandwidth_str.substr(0, bandwidth_str.size() - 4);
@@ -188,12 +188,15 @@ void OpenJacksonModel::updateRoutingMatrix(
             // get flow path
             Ptr<Node> src = node_container.Get(flow_ptr->src);
             Ptr<Node> dst = node_container.Get(flow_ptr->dst);
-            vector<Ptr<Node>> path = next_hop.at(src).at(dst);
-            for (uint32_t i = 0; i <= path.size()-2; i++){
-                uint32_t src_id = path[i]->GetId();
-                uint32_t dst_id = path[i+1]->GetId();
-                routing_matrix[src_id][dst_id] = 1;
+            vector<Ptr<Node>> path = next_hop.at(src).at(dst); // path only contains intermediate nodes
+            uint32_t last_id = src->GetId();
+            uint32_t cur_id = src->GetId();
+            for (uint32_t i = 0; i < path.size(); i++){
+                cur_id = path[i]->GetId();
+                routing_matrix[last_id][cur_id] = 1;
+                last_id = cur_id;
             }
+            routing_matrix[cur_id][dst->GetId()] = 1;
             flow2routing_matrix[flow_ptr] = routing_matrix;
         }
     }
