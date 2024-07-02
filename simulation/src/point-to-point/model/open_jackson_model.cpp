@@ -34,6 +34,7 @@ void OpenJacksonModel::initialize(const vector<shared_ptr<FlowInputEntry>>& flow
     buildNode2Flows(flows);
 
     updateRoutingMatrix(next_hop, node_container);
+    updateNode2FlowSums(node_container, next_hop);
     updateInputRate(node_container);
     updateServiceRate();
 }
@@ -95,8 +96,15 @@ OpenJacksonModel::calcStateProb(){
     writeFile(service_rate_ss.str(), service_path);
 
     std::stringstream queue_size_ss;
-    for (auto& node : node_info){
-        queue_size_ss << node.queue_size_byte << " ";
+    for(auto& node_links : topology){
+        uint32_t src_id = node_links.first;
+        for(auto& dst_link : node_links.second){
+            uint32_t dst_id = dst_link.first;
+            Link& link = dst_link.second;
+            queue_size_ss << src_id << " "
+                          << dst_id << " "
+                          << link.queue_size_byte << "\n";
+        }
     }
     writeFile(queue_size_ss.str(), queue_size_path);
 
@@ -119,11 +127,16 @@ OpenJacksonModel::calcStateProb(){
         rho_vec, node_drop_prob); 
 }
 
+uint64_t getQueSzByteByBw(uint64_t bandwidth_Bps){
+    // queue size usually should provide 50ms line rate transmission
+    return bandwidth_Bps*50/1000;
+}
+
 void OpenJacksonModel::readTopology(ifstream& topo_f){
     assert(topo_f.is_open());
     uint32_t num_node, num_switch, num_link;
     topo_f >> num_node >> num_switch >> num_link;
-    node_info = vector<NodeEntry>(num_node, {0, 0});
+    node_info = vector<NodeEntry>(num_node, {0});
     for(uint32_t i = 0; i < num_switch; i++){
         uint32_t switch_id;
         topo_f >> switch_id;
@@ -140,7 +153,7 @@ void OpenJacksonModel::readTopology(ifstream& topo_f){
         } else {
             throw std::runtime_error("unsupported bandwidth unit");
         }
-        Link link = {src, dst, bandwidth_Bps};
+        Link link = {src, dst, bandwidth_Bps, getQueSzByteByBw(bandwidth_Bps)};
         topology[src][dst] = link;      
     }
 }
@@ -151,22 +164,40 @@ void OpenJacksonModel::buildNode2Flows(const vector<shared_ptr<FlowInputEntry>>&
     }
 }
 
-void OpenJacksonModel::updateNode2FlowSums(){
+uint64_t OpenJacksonModel::getBwByLinkNodeId(
+        uint32_t link_src_id, uint32_t link_dst_id,
+        const NodeContainer &node_container,
+        const map<Ptr<Node>, map<Ptr<Node>, vector<Ptr<Node>>>> &next_hop){
+    // uint64_t bw = topology.at(node_id)
+    Ptr<Node> src_node = node_container.Get(link_src_id);
+    Ptr<Node> dst_node = node_container.Get(link_dst_id);
+    vector<Ptr<Node>> path = next_hop.at(src_node).at(dst_node);
+    Ptr<Node> first_path_sw = path[0];
+    const Link& first_link = topology.at(src_node->GetId()).at(first_path_sw->GetId());
+    uint64_t bandwidth_Bps = first_link.bandwidth_Bps;
+    return bandwidth_Bps;
+}
+
+void OpenJacksonModel::updateNode2FlowSums(
+    const NodeContainer& node_container,
+    const map<Ptr<Node>, map<Ptr<Node>, vector<Ptr<Node>>>> &next_hop){
     for(const auto& node2flows_pair : node2flows){
         NodeId node_id = node2flows_pair.first;
         for(const auto& flow_ptr : node2flows_pair.second){
+            uint64_t bandwidth_Bps = getBwByLinkNodeId(
+                flow_ptr->src, flow_ptr->dst, node_container, next_hop);
+            uint32_t trans_time_s = flow_ptr->size_byte*8 / bandwidth_Bps;
+
             if(node2flowsums.find(node_id) == node2flowsums.end()){ 
                 // have not created HostFlowSum object at this node
-                uint32_t trans_time_s = flow_ptr->size_byte*8 / node_info[flow_ptr->src].bandwidth_Bps;
                 node2flowsums[node_id] = {node_id, flow_ptr->size_byte, 
                                                 flow_ptr->start_time_s, flow_ptr->start_time_s+trans_time_s};
-
             } else{
                 // append new flow to corresponding node 
                 node2flowsums[node_id].sum_flow_size_byte += flow_ptr->size_byte;
                 node2flowsums[node_id].end_time_s = 
                     std::max(node2flowsums[node_id].end_time_s, 
-                            flow_ptr->start_time_s + flow_ptr->size_byte*8 / node_info[node_id].bandwidth_Bps);
+                            flow_ptr->start_time_s + trans_time_s);
             }       
         }
     }
