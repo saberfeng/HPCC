@@ -28,6 +28,8 @@ using ns3::NodeContainer;
 using std::pair;
 using std::map;
 using std::shared_ptr;
+using std::cout;
+using std::endl;
 
 typedef uint32_t NodeId;
 typedef uint32_t FlowId;
@@ -54,13 +56,13 @@ struct HostFlowSum{
 
 struct NodeEntry{
     uint32_t node_type;
-    // uint64_t bandwidth_Bps;
+    // long double bandwidth_Bps;
     // 
 };
 
 struct Link{
     NodeId src, dst;
-    uint64_t bandwidth_Bps;
+    long double bandwidth_Bps;
     uint64_t queue_size_byte;
 };
 
@@ -102,7 +104,7 @@ private:
     uint64_t getBwByLinkNodeId(uint32_t link_src_id, uint32_t link_dst_id,
         const NodeContainer &node_container,
         const map<Ptr<Node>, map<Ptr<Node>, vector<Ptr<Node>>>> &next_hop);
-    uint64_t getQueSzByBw(uint64_t bandwidth_Bps);
+    uint64_t getQueSzByBw(long double bandwidth_Bps);
 
     vector<double> input_rate_Bps; // byte per second
     unordered_map<shared_ptr<FlowInputEntry>, vector<double>> flow2input_Bps;

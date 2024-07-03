@@ -127,7 +127,7 @@ OpenJacksonModel::calcStateProb(){
         rho_vec, node_drop_prob); 
 }
 
-uint64_t getQueSzByteByBw(uint64_t bandwidth_Bps){
+uint64_t getQueSzByteByBw(long double bandwidth_Bps){
     // queue size usually should provide 50ms line rate transmission
     return bandwidth_Bps*50/1000;
 }
@@ -143,7 +143,8 @@ void OpenJacksonModel::readTopology(ifstream& topo_f){
         node_info[switch_id].node_type = 1;
     }
     for(uint32_t i = 0; i < num_link; i++){
-        uint32_t src, dst, bandwidth_Bps;
+        uint32_t src, dst;
+        long double bandwidth_Bps;
         string bandwidth_str, link_delay, error_rate;
         topo_f >> src >> dst >> bandwidth_str >> link_delay >> error_rate; // bandwidth: "100Gbps" -> 100 * 10^9
         // convert bandwidth to bps
@@ -155,6 +156,7 @@ void OpenJacksonModel::readTopology(ifstream& topo_f){
         }
         Link link = {src, dst, bandwidth_Bps, getQueSzByteByBw(bandwidth_Bps)};
         topology[src][dst] = link;      
+        topology[dst][src] = link;
     }
 }
 
@@ -174,8 +176,9 @@ uint64_t OpenJacksonModel::getBwByLinkNodeId(
     vector<Ptr<Node>> path = next_hop.at(src_node).at(dst_node);
     Ptr<Node> first_path_sw = path[0];
     const Link& first_link = topology.at(src_node->GetId()).at(first_path_sw->GetId());
-    uint64_t bandwidth_Bps = first_link.bandwidth_Bps;
+    long double bandwidth_Bps = first_link.bandwidth_Bps;
     return bandwidth_Bps;
+    
 }
 
 void OpenJacksonModel::updateNode2FlowSums(
@@ -184,21 +187,25 @@ void OpenJacksonModel::updateNode2FlowSums(
     for(const auto& node2flows_pair : node2flows){
         NodeId node_id = node2flows_pair.first;
         for(const auto& flow_ptr : node2flows_pair.second){
-            uint64_t bandwidth_Bps = getBwByLinkNodeId(
+            long double bandwidth_Bps = getBwByLinkNodeId(
                 flow_ptr->src, flow_ptr->dst, node_container, next_hop);
-            uint32_t trans_time_s = flow_ptr->size_byte*8 / bandwidth_Bps;
+            long double trans_time_s = flow_ptr->size_byte*8 / bandwidth_Bps;
 
             if(node2flowsums.find(node_id) == node2flowsums.end()){ 
                 // have not created HostFlowSum object at this node
-                node2flowsums[node_id] = {node_id, flow_ptr->size_byte, 
+                node2flowsums[node_id] = {node_id, 0, 
                                                 flow_ptr->start_time_s, flow_ptr->start_time_s+trans_time_s};
-            } else{
-                // append new flow to corresponding node 
-                node2flowsums[node_id].sum_flow_size_byte += flow_ptr->size_byte;
-                node2flowsums[node_id].end_time_s = 
-                    std::max(node2flowsums[node_id].end_time_s, 
-                            flow_ptr->start_time_s + trans_time_s);
-            }       
+            }
+            // append new flow to corresponding node 
+            node2flowsums[node_id].sum_flow_size_byte += flow_ptr->size_byte;
+            node2flowsums[node_id].end_time_s = 
+                std::max(node2flowsums[node_id].end_time_s, 
+                        flow_ptr->start_time_s + trans_time_s);
+
+            cout << "node2flowsums:[" << node_id << "].sum_flow_size_byte: " 
+                 << node2flowsums[node_id].sum_flow_size_byte << endl;
+            cout << "node2flowsums:[" << node_id << "].end_time_s: " 
+                 << node2flowsums[node_id].end_time_s << endl;
         }
     }
 }
@@ -236,10 +243,11 @@ void OpenJacksonModel::updateRoutingMatrix(
 // relies on node2flows and node2flowsums, should be 
 // updated after reading flows and updating node2flowsums
 void OpenJacksonModel::updateInputRate(const NodeContainer &node_container){
+    input_rate_Bps = vector<double>(node_container.GetN(), 0);
     for(auto& node2flows_pair : node2flows){
         const NodeId& node_id = node2flows_pair.first;
         HostFlowSum& nodeFlowSum = node2flowsums.at(node_id);
-        long long node_transtime = nodeFlowSum.end_time_s - nodeFlowSum.start_time_s;
+        long double node_transtime = nodeFlowSum.end_time_s - nodeFlowSum.start_time_s;
         for(auto& flow_ptr: node2flows_pair.second){
             // initialize flow i's input as 0
             flow2input_Bps[flow_ptr] = 
