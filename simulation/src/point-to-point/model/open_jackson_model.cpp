@@ -26,6 +26,7 @@ void OpenJacksonModel::initialize(const vector<shared_ptr<FlowInputEntry>>& flow
                                 const map<Ptr<Node>, 
                                           map<Ptr<Node>, vector<Ptr<Node>>>> &next_hop,
                                 const NodeContainer &node_container){
+    topology.size();
     num_flows = flows.size();
     input_rate_Bps = vector<double>(node_info.size(), 0);
     service_rate_Bps = vector<double>(node_info.size(), 0);
@@ -70,13 +71,14 @@ OpenJacksonModel::calcStateProb(){
         // FlowId flow_id = flow_routing_matrix.first;
         Matrix routing_matrix = flow_routing_matrix.second;
         // matrix numbers splitted by space
-        for (uint32_t i; i < routing_matrix.size(); i++){
-            for (uint32_t j; j < routing_matrix.size(); j++){
+        for (uint32_t i = 0; i < routing_matrix.size(); i++){
+            for (uint32_t j = 0; j < routing_matrix.size(); j++){
                 routing_matrix_ss << routing_matrix[i][j] << " ";
             } 
             routing_matrix_ss << "\n";
         }
     }
+    cout << "routing_matrix:" << routing_matrix_ss.str() << endl;
     writeFile(routing_matrix_ss.str(), routing_path);
 
     std::stringstream input_rate_ss;
@@ -118,6 +120,8 @@ OpenJacksonModel::calcStateProb(){
         << "-o1 " << output_rho_path << " "
         << "-o2 " << output_nodrop_prob_path;
     system(cmd.str().c_str());
+    cout << "python cmd:" << endl
+        << cmd.str() << endl;
 
     // read python script output
     vector<long double> rho_vec = readVector(output_rho_path);
@@ -220,9 +224,7 @@ void OpenJacksonModel::updateRoutingMatrix(
         vector<shared_ptr<FlowInputEntry>> &flows = node2flow.second;
 
         for(auto& flow_ptr : flows){
-            for(uint32_t i = 0; i < node_container.GetN(); i++){
-                routing_matrix.push_back(vector<uint32_t>(node_container.GetN(), 0));
-            }
+            Matrix routing_matrix(node_info.size(), vector<uint32_t>(node_info.size(), 0));
             // get flow path
             Ptr<Node> src = node_container.Get(flow_ptr->src);
             Ptr<Node> dst = node_container.Get(flow_ptr->dst);
@@ -265,6 +267,7 @@ void OpenJacksonModel::updateInputRate(const NodeContainer &node_container){
 }
 
 void OpenJacksonModel::updateServiceRate(){
+    service_rate_Bps = vector<double>(node_info.size(), 0);
     // service rate is the sum of the bandwidth of all links connected to the switch    
     for (auto& src_dst_link : topology){
         uint32_t src = src_dst_link.first;

@@ -109,7 +109,7 @@ private:
     vector<double> input_rate_Bps; // byte per second
     unordered_map<shared_ptr<FlowInputEntry>, vector<double>> flow2input_Bps;
     vector<double> service_rate_Bps; // byte per second
-    Matrix routing_matrix;
+    // Matrix routing_matrix;
     vector<NodeEntry> node_info; // 0: host, 1: switch
     
     unordered_map<NodeId, vector<shared_ptr<FlowInputEntry>>> node2flows;
