@@ -13,6 +13,18 @@
                 "simulation/mix/rand_offset/config_3n1f_topo_3n1f_flow_rand_offset.txt",
             ],
             "cwd":"${workspaceFolder}", // cwd:working directory
+            "setupCommands": [ // important for pretty printing containers: vectors, maps....
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "python import sys;sys.path.insert(0, '/usr/share/gcc-4.8/python');from libstdcxx.v6.printers import register_libstdcxx_printers;register_libstdcxx_printers(None)",
+                    "ignoreFailures": false
+                },
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
         },
         {
             "name": "3n1f gen conf",
