@@ -27,6 +27,26 @@
             ],
         },
         {
+            "name": "calc_matrix test",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/simulation/scripts/calc_matrix.py",
+            "console": "integratedTerminal",
+            "args": [
+                "-r", "simulation/mix/rand_offset/routing.txt",
+                "-i", "simulation/mix/rand_offset/input_rate.txt",
+                "-s", "simulation/mix/rand_offset/service_rate.txt",
+                "-q", "simulation/mix/rand_offset/queue_size.txt",
+                "-f", "1",
+                "-o1", "simulation/mix/rand_offset/rho.txt",
+                "-o2", "simulation/mix/rand_offset/node_drop_prob.txt",
+            ],
+            "cwd":"${workspaceFolder}",
+
+        },
+
+
+        {
             "name": "3n1f gen conf",
             "type": "debugpy",
             "request": "launch",

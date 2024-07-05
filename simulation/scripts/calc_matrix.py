@@ -26,10 +26,12 @@ def main():
         return
 
     routing_matrix = np.loadtxt(args.routing_matrix_txt, dtype=float)
-    input_rate = np.loadtxt(args.input_rate_txt, dtype=float)
-    service_rate = np.loadtxt(args.service_rate_txt, dtype=float)
-    queue_size = np.loadtxt(args.queue_size_txt, dtype=float)
-    queue_size = queue_size.astype(int)
+    input_rate_Bps = np.loadtxt(args.input_rate_txt, dtype=float)
+    input_rate_MBps = input_rate_Bps/10**6
+    service_rate_Bps = np.loadtxt(args.service_rate_txt, dtype=float)
+    service_rate_MBps = service_rate_Bps/10**6
+    queue_size_B = np.loadtxt(args.queue_size_txt, dtype=float)
+    queue_size_MB = queue_size_B.astype(int) / 10**6
     flow_num = args.flow_num
 
     row_num, col_num = routing_matrix.shape
@@ -37,17 +39,17 @@ def main():
     for flow_i in range(flow_num):
         # routing matrices and input rate verticies are vertically stacked
         R_t = routing_matrix[flow_i*col_num:(flow_i+1)*col_num, :] # flow routing matrix
-        if len(input_rate.shape) == 1:
-            gamma_t = input_rate
+        if len(input_rate_MBps.shape) == 1:
+            gamma_t = input_rate_MBps
         else:
-            gamma_t = input_rate[flow_i, :]
+            gamma_t = input_rate_MBps[flow_i, :]
         lambda_t = np.dot(gamma_t, np.linalg.inv(np.eye(col_num)-R_t))
         lambda_ += lambda_t
     
-    rho = lambda_ / service_rate
+    rho = lambda_ / service_rate_MBps
     
     node_nodrop_prob = np.zeros(col_num)
-    rho_power_sum = sum_powers(rho, queue_size)
+    rho_power_sum = sum_powers_lowmem_highcomp(rho, queue_size_MB)
     node_nodrop_prob += (1-rho) * rho_power_sum
 
     np.savetxt(args.output_rho,rho, fmt='%1.9e')
@@ -77,6 +79,21 @@ def sum_powers(arr:np.array, power:np.array):
     rows_num = power_expansion.shape[0]
     paddings = rows_num - power - 1 # the number of padding zeros
     return raw_sum - paddings 
+
+def sum_powers_lowmem_highcomp(arr:np.array, power:np.array):
+    res = np.zeros(arr.shape[0]) 
+    while True:
+        has_nonneg_power = False
+        for i in range(power.shape[0]):
+            if power[i] < 0:
+                continue
+            else:
+                has_nonneg_power = True
+                res[i] += arr[i]**power[i]
+                power[i] -= 1
+        if not has_nonneg_power:
+            break
+    return res
 
 
 
@@ -148,6 +165,9 @@ def test_sum_powers():
     a = np.array([2,2,2,2])
     print(sum_powers(a, np.array([1,2,1,2])))
     print(sum_powers(a, np.array([2,2,4,4])))
+    print(sum_powers_lowmem_highcomp(a, np.array([1,2,1,2])))
+    print(sum_powers_lowmem_highcomp(a, np.array([2,2,4,4])))
+
 
 if __name__ == '__main__':
     #main()
