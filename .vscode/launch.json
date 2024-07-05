@@ -10,7 +10,7 @@
             "request": "launch", // "launch" a program or "attach" to an already running instance 
             "program": "${workspaceFolder}/simulation/build/scratch/third",
             "args": [
-                "simulation/mix/rand_offset/config_3n1f_topo_3n1f_flow_rand_offset.txt",
+                "simulation/mix/rand_offset/config_3n2f_topo_3n2f_flow_rand_offset.txt",
             ],
             "cwd":"${workspaceFolder}", // cwd:working directory
             "setupCommands": [ // important for pretty printing containers: vectors, maps....

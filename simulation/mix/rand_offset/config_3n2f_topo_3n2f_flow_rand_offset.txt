@@ -32,6 +32,6 @@ LINK_DOWN 0 0 0
 ENABLE_TRACE 1
 
 BUFFER_SIZE 16.0
-QLEN_MON_FILE mix/rand_offset/qlen_3n2f_topo_3n2f_flow_rand_offset.txt
+QLEN_MON_FILE simulation/mix/rand_offset/qlen_3n2f_topo_3n2f_flow_rand_offset.txt
 QLEN_MON_START 2000000000
 QLEN_MON_END 3000000000
