@@ -59,7 +59,7 @@ OpenJacksonModel::calcStateProb(){
     // rho (vector): the utilization of each node
     string write_path("simulation/mix/rand_offset/");
     string routing_path = write_path + string("routing.txt");
-    string input_rate_path = write_path + string("input_rate.txt");
+    string input_rate_path = write_path + string("input_rate_Bps.txt");
     string service_path = write_path + string("service_rate.txt");
     string queue_size_path = write_path + string("queue_size.txt");
     string output_rho_path = write_path + string("rho.txt");
@@ -103,9 +103,11 @@ OpenJacksonModel::calcStateProb(){
         for(auto& dst_link : node_links.second){
             uint32_t dst_id = dst_link.first;
             Link& link = dst_link.second;
-            queue_size_ss << src_id << " "
-                          << dst_id << " "
-                          << link.queue_size_byte << "\n";
+            // queue_size_ss << src_id << " "
+            //               << dst_id << " "
+            //               << link.queue_size_byte << "\n";
+            queue_size_ss << link.queue_size_byte << "\n"; 
+            break;// now only output the first link queue size
         }
     }
     writeFile(queue_size_ss.str(), queue_size_path);
