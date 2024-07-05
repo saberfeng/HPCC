@@ -63,7 +63,7 @@ OpenJacksonModel::calcStateProb(){
     string service_path = write_path + string("service_rate.txt");
     string queue_size_path = write_path + string("queue_size.txt");
     string output_rho_path = write_path + string("rho.txt");
-    string output_nodrop_prob_path = write_path + string("node_drop_prob.txt");
+    string output_nodrop_prob_path = write_path + string("node_nodrop_prob.txt");
 
     // prepare routing matrix, stack matrices vertically
     std::stringstream routing_matrix_ss;

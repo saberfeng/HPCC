@@ -31,7 +31,8 @@ def main():
     service_rate_Bps = np.loadtxt(args.service_rate_txt, dtype=float)
     service_rate_MBps = service_rate_Bps/10**6
     queue_size_B = np.loadtxt(args.queue_size_txt, dtype=float)
-    queue_size_MB = queue_size_B.astype(int) / 10**6
+    queue_size_MB = queue_size_B / 10**6
+    queue_size_MB = queue_size_MB.astype(int)
     flow_num = args.flow_num
 
     row_num, col_num = routing_matrix.shape
@@ -49,7 +50,7 @@ def main():
     rho = lambda_ / service_rate_MBps
     
     node_nodrop_prob = np.zeros(col_num)
-    rho_power_sum = sum_powers_lowmem_highcomp(rho, queue_size_MB)
+    rho_power_sum = sum_powers(rho, queue_size_MB)
     node_nodrop_prob += (1-rho) * rho_power_sum
 
     np.savetxt(args.output_rho,rho, fmt='%1.9e')
@@ -168,6 +169,17 @@ def test_sum_powers():
     print(sum_powers_lowmem_highcomp(a, np.array([1,2,1,2])))
     print(sum_powers_lowmem_highcomp(a, np.array([2,2,4,4])))
 
+def test_drop_calc(rho, queue_size):
+    # rho = 0.125
+    # queue_size = 625
+    rho_pow_sum = 0
+    for i in range(queue_size):
+        rho_pow_sum += rho**i
+    print("rho_pow_sum:", rho_pow_sum)
+    prob = (1-rho)*rho_pow_sum
+    print("no drop prob:", prob)
+
+
 
 if __name__ == '__main__':
     #main()
@@ -176,3 +188,5 @@ if __name__ == '__main__':
     # test3()
     # test_sum_powers()
     main()
+    # test_drop_calc(rho=0.125, queue_size=625)
+    # test_drop_calc(rho=0.0625, queue_size=625)
