@@ -26,6 +26,7 @@
                 }
             ],
         },
+
         {
             "name": "calc_matrix test",
             "type": "debugpy",
@@ -47,18 +48,18 @@
 
 
         {
-            "name": "3n1f gen conf",
+            "name": "3n2f gen conf",
             "type": "debugpy",
             "request": "launch",
-            "program": "run_rand_offset.py",
+            "program": "${workspaceFolder}/simulation/run_rand_offset.py",
             "console": "integratedTerminal",
             "args": [
-                "-cc", "rand_offset",
-                "-trace", "3n1f_flow",
-                "-topo", "3n1f_topo",
-                "-enable_tr", "1",
+                "--cc", "rand_offset",
+                "--trace", "3n2f_flow",
+                "--topo", "3n2f_topo",
+                "--enable_tr", "1",
             ],
-            "cwd":"${workspaceFolder}",
+            "cwd":"${workspaceFolder}/simulation",
 
         },
 

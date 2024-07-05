@@ -6,12 +6,12 @@ config_template="""ENABLE_QCN 0
 USE_DYNAMIC_PFC_THRESHOLD {dynamic_thresh} 
 
 PACKET_PAYLOAD_SIZE 1000
-TOPOLOGY_FILE mix/{proj_dir}/{topo}.txt
-FLOW_FILE mix/{proj_dir}/{trace}.txt
-TRACE_FILE mix/{proj_dir}/trace.txt
-TRACE_OUTPUT_FILE mix/{proj_dir}/mix_{topo}_{trace}_{cc}{failure}.tr
-FCT_OUTPUT_FILE mix/{proj_dir}/fct_{topo}_{trace}_{cc}{failure}.txt
-PFC_OUTPUT_FILE mix/{proj_dir}/pfc_{topo}_{trace}_{cc}{failure}.txt
+TOPOLOGY_FILE simulation/mix/{proj_dir}/{topo}.txt
+FLOW_FILE simulation/mix/{proj_dir}/{trace}.txt
+TRACE_FILE simulation/mix/{proj_dir}/trace.txt
+TRACE_OUTPUT_FILE simulation/mix/{proj_dir}/mix_{topo}_{trace}_{cc}{failure}.tr
+FCT_OUTPUT_FILE simulation/mix/{proj_dir}/fct_{topo}_{trace}_{cc}{failure}.txt
+PFC_OUTPUT_FILE simulation/mix/{proj_dir}/pfc_{topo}_{trace}_{cc}{failure}.txt
 
 SIMULATOR_STOP_TIME 4.00
 
