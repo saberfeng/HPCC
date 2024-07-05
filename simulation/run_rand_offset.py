@@ -36,7 +36,7 @@ LINK_DOWN {link_down}
 ENABLE_TRACE {enable_tr}
 
 BUFFER_SIZE {buffer_size}
-QLEN_MON_FILE mix/{proj_dir}/qlen_{topo}_{trace}_{cc}{failure}.txt
+QLEN_MON_FILE simulation/mix/{proj_dir}/qlen_{topo}_{trace}_{cc}{failure}.txt
 QLEN_MON_START 2000000000
 QLEN_MON_END 3000000000
 """
