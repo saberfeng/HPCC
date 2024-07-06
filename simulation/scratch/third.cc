@@ -977,7 +977,7 @@ int main(int argc, char *argv[])
 	// cur_flow_iter = flows.begin();
 	ifstream topo_file_ROI(topology_file);// topology file for Random Offset Injector (ROI)
 	rand_offset_injector.initialize(flows, topo_file_ROI, nextHop, n);	
-	// rand_offset_injector.gen_offset();
+	rand_offset_injector.gen_offset();
 	sortFlowsByStartTime();
 
 	auto rho_drop_prob_pair = rand_offset_injector.calcStateProb();
