@@ -40,7 +40,7 @@ set(NS3_VER 3-dev)
 # common options
 option(NS3_ASSERT "Enable assert on failure" ON)
 option(NS3_EXAMPLES "Enable examples to be built" OFF)
-option(NS3_LOG "Enable logging to be built" OFF)
+option(NS3_LOG "Enable logging to be built" ON)
 option(NS3_TESTS "Enable tests to be built" ON)
 
 # fd-net-device options

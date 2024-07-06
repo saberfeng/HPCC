@@ -13,6 +13,7 @@
 #include "ns3/node.h"
 #include "ns3/ptr.h"
 #include "ns3/node-container.h"
+#include "ns3/nstime.h"
 
 namespace rand_offset{
 
@@ -30,6 +31,7 @@ using std::map;
 using std::shared_ptr;
 using std::cout;
 using std::endl;
+using ns3::Time;
 
 typedef uint32_t NodeId;
 typedef uint32_t FlowId;
@@ -42,16 +44,20 @@ typedef vector<vector<uint32_t>> Matrix;
 struct FlowInputEntry{
     uint32_t src, dst, priority_group, src_port, dst_port; // pg: priority group
     uint64_t size_byte;
-	long double start_time_s;
+	Time start_time;
     FlowId flow_idx;
-    long double offset_s;
+    Time offset;
+public:
+    Time getOffsetStart(){
+        return start_time + offset;
+    }
 };
 
 struct HostFlowSum{
     NodeId host_id;
     uint64_t sum_flow_size_byte;
-    long double start_time_s;
-    long double end_time_s;
+    Time start_time;
+    Time end_time;
 };
 
 struct NodeEntry{

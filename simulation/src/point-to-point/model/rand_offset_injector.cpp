@@ -36,9 +36,9 @@ void RandOffsetInjector::gen_offset(){
     for(const auto& node_flows : node2flows){
         const auto& flows = node_flows.second;
         for(const auto& flow_ptr : flows){
-            long double offset = ((long double)rand() / RAND_MAX)
+            double offset_s = ((double)rand() / RAND_MAX)
                                  * flow2range_s[flow_ptr];
-            flow_ptr->offset_s = offset;
+            flow_ptr->offset = Seconds(offset_s);
         }
     }
 }

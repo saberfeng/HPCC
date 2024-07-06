@@ -139,9 +139,11 @@ void readAllFlowInputEntrys(){
 	int read_idx = 0;
 	while (read_idx < flow_num){
 		shared_ptr<FlowInputEntry> flow_ptr = make_shared<FlowInputEntry>();
+		double start_time_s;
 		flowf >> flow_ptr->src >> flow_ptr->dst >> flow_ptr->priority_group 
 			  >> flow_ptr->dst_port >> flow_ptr->size_byte 
-			  >> flow_ptr->start_time_s;
+			  >> start_time_s;
+		flow_ptr->start_time = Seconds(start_time_s);
 		flows.push_back(flow_ptr);
         read_idx++;
 	}
@@ -152,21 +154,23 @@ void sortFlowsByStartTime(){
 	std::sort(flows.begin(), flows.end(), 
 				[](const shared_ptr<FlowInputEntry>& a, 
 				   const shared_ptr<FlowInputEntry>& b){
-		return a->start_time_s+a->offset_s < b->start_time_s+b->offset_s;
+		return a->getOffsetStart() < b->getOffsetStart();
 	});
 }
 
 void ReadFlowInput(){
 	if (flow_input.flow_idx < flow_num){
+		double start_time_s;
 		flowf >> flow_input.src >> flow_input.dst >> flow_input.priority_group 
-			  >> flow_input.dst_port >> flow_input.size_byte >> flow_input.start_time_s;
+			  >> flow_input.dst_port >> flow_input.size_byte >> start_time_s;
+		flow_input.start_time = Seconds(start_time_s);
 		NS_ASSERT(n.Get(flow_input.src)->GetNodeType() == 0 && n.Get(flow_input.dst)->GetNodeType() == 0);
 	}
 }
 
 void ScheduleFlowInputs(){
 	while (cur_flow_idx < flows.size() && 
-		   Seconds(flows[cur_flow_idx]->start_time_s) == Simulator::Now()){
+		   flows[cur_flow_idx]->getOffsetStart() == Simulator::Now()){
 		shared_ptr<FlowInputEntry>& cur_flow_ptr = flows[cur_flow_idx];
 		uint32_t port = portNumder[cur_flow_ptr->src][cur_flow_ptr->dst]++; // get a new port number 
 		RdmaClientHelper clientHelper(
@@ -187,7 +191,7 @@ void ScheduleFlowInputs(){
 
 	// schedule the next time to run this function
 	if (cur_flow_idx < flows.size()){
-		Simulator::Schedule(Seconds(flows[cur_flow_idx]->start_time_s)-Simulator::Now(), 
+		Simulator::Schedule(flows[cur_flow_idx]->getOffsetStart()-Simulator::Now(), 
 							ScheduleFlowInputs);
 	}
 }
@@ -382,7 +386,7 @@ int main(int argc, char *argv[])
     cout << "argv[1]:" << argv[1] << endl;
     cout << "argc:" << argc << endl;
 
-	RandOffsetInjector rand_offset_injector = rand_offset::RandOffsetInjector();
+	LogComponentEnable("GENERIC_SIMULATION", LOG_LEVEL_LOGIC);
 #ifndef PGO_TRAINING
 	if (argc > 1)
 #else
@@ -968,10 +972,12 @@ int main(int argc, char *argv[])
 	SetRoutingEntries();
 
 	readAllFlowInputEntrys();
+
+	RandOffsetInjector rand_offset_injector = rand_offset::RandOffsetInjector();
 	// cur_flow_iter = flows.begin();
 	ifstream topo_file_ROI(topology_file);// topology file for Random Offset Injector (ROI)
 	rand_offset_injector.initialize(flows, topo_file_ROI, nextHop, n);	
-	rand_offset_injector.gen_offset();
+	// rand_offset_injector.gen_offset();
 	sortFlowsByStartTime();
 
 	auto rho_drop_prob_pair = rand_offset_injector.calcStateProb();
@@ -1066,7 +1072,8 @@ int main(int argc, char *argv[])
 	}
 
 	if (flow_num > 0){
-		Simulator::Schedule(Seconds(flows[cur_flow_idx]->start_time_s)-Simulator::Now(), 
+		Simulator::Schedule(Seconds(flows[cur_flow_idx]->getOffsetStart()) - 
+								Simulator::Now(), 
 							ScheduleFlowInputs);
 	}
 

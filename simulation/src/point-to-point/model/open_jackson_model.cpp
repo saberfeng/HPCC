@@ -40,14 +40,6 @@ void OpenJacksonModel::initialize(const vector<shared_ptr<FlowInputEntry>>& flow
     updateServiceRate();
 }
 
-void appendFlowOffsets(const unordered_map<shared_ptr<FlowInputEntry>, 
-                                           long double>& flow2offsets){
-    for(auto& flow_offset : flow2offsets){
-        shared_ptr<FlowInputEntry> flow_ptr = flow_offset.first;
-        long double offset = flow_offset.second;
-        flow_ptr->start_time_s += offset;
-    }
-}
 
 pair<vector<long double>, vector<long double>> 
 OpenJacksonModel::calcStateProb(){
@@ -195,23 +187,24 @@ void OpenJacksonModel::updateNode2FlowSums(
         for(const auto& flow_ptr : node2flows_pair.second){
             long double bandwidth_Bps = getBwByLinkNodeId(
                 flow_ptr->src, flow_ptr->dst, node_container, next_hop);
-            long double trans_time_s = flow_ptr->size_byte*8 / bandwidth_Bps;
+            double trans_time_s = flow_ptr->size_byte*8 / bandwidth_Bps;
+            Time trans_time(ns3::Seconds(trans_time_s));
 
             if(node2flowsums.find(node_id) == node2flowsums.end()){ 
                 // have not created HostFlowSum object at this node
                 node2flowsums[node_id] = {node_id, 0, 
-                                                flow_ptr->start_time_s, flow_ptr->start_time_s+trans_time_s};
+                                        flow_ptr->start_time, flow_ptr->start_time};
             }
             // append new flow to corresponding node 
             node2flowsums[node_id].sum_flow_size_byte += flow_ptr->size_byte;
-            node2flowsums[node_id].end_time_s = 
-                std::max(node2flowsums[node_id].end_time_s, 
-                        flow_ptr->start_time_s + trans_time_s);
+            node2flowsums[node_id].end_time = 
+                Max(node2flowsums[node_id].end_time, 
+                    flow_ptr->getOffsetStart());
 
             cout << "node2flowsums:[" << node_id << "].sum_flow_size_byte: " 
                  << node2flowsums[node_id].sum_flow_size_byte << endl;
             cout << "node2flowsums:[" << node_id << "].end_time_s: " 
-                 << node2flowsums[node_id].end_time_s << endl;
+                 << node2flowsums[node_id].end_time << endl;
         }
     }
 }
@@ -251,7 +244,7 @@ void OpenJacksonModel::updateInputRate(const NodeContainer &node_container){
     for(auto& node2flows_pair : node2flows){
         const NodeId& node_id = node2flows_pair.first;
         HostFlowSum& nodeFlowSum = node2flowsums.at(node_id);
-        long double node_transtime = nodeFlowSum.end_time_s - nodeFlowSum.start_time_s;
+        double node_transtime = (nodeFlowSum.end_time - nodeFlowSum.start_time).GetSeconds();
         for(auto& flow_ptr: node2flows_pair.second){
             // initialize flow i's input as 0
             flow2input_Bps[flow_ptr] = 
@@ -261,8 +254,8 @@ void OpenJacksonModel::updateInputRate(const NodeContainer &node_container){
     }
     
     for(auto& node2flowsum : node2flowsums){
-        long double node_trans_time = node2flowsum.second.end_time_s - 
-                                        node2flowsum.second.start_time_s; 
+        double node_trans_time = (node2flowsum.second.end_time - 
+                                        node2flowsum.second.start_time).GetSeconds(); 
         input_rate_Bps[node2flowsum.first] = 
             node2flowsum.second.sum_flow_size_byte / node_trans_time;
     }
