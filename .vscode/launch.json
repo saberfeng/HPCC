@@ -114,5 +114,25 @@
             "args": [],
             "cwd":"${workspaceFolder}"
         },
+
+        {
+            "name": "gen llm flows",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/traffic_gen/traffic_gen.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--cdf", "traffic_gen/llm_train_cdf.txt",
+                "--nhost", "320",
+                "--load", "0.3",
+                "--bandwidth", "10G",
+                "--time", "10",
+                "--output", "traffic_gen/llm_flows.txt"
+            ],
+            "cwd":"${workspaceFolder}",
+
+        },
+
+
     ]
 }

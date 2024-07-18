@@ -1,0 +1,2 @@
+[] CCL traffic generator
+    - should mimic AllReduce traffic pattern (spacial and temporal)
