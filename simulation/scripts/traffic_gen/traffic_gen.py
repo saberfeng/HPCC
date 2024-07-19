@@ -1,31 +1,10 @@
 import sys
 import random
-import math
 import heapq
 from optparse import OptionParser
 from custom_rand import CustomRand
+from traffic_gen_base import translate_bandwidth, poisson
 
-class Flow:
-	def __init__(self, src, dst, size, t):
-		self.src, self.dst, self.size, self.t = src, dst, size, t
-	def __str__(self):
-		return "%d %d 3 100 %d %.9f"%(self.src, self.dst, self.size, self.t)
-
-def translate_bandwidth(b):
-	if b == None:
-		return None
-	if type(b)!=str:
-		return None
-	if b[-1] == 'G':
-		return float(b[:-1])*1e9
-	if b[-1] == 'M':
-		return float(b[:-1])*1e6
-	if b[-1] == 'K':
-		return float(b[:-1])*1e3
-	return float(b)
-
-def poisson(lam):
-	return -math.log(1-random.random())*lam
 
 if __name__ == "__main__":
 	port = 80
@@ -70,8 +49,8 @@ if __name__ == "__main__":
 	ofile = open(output, "w")
 
 	# generate flows
-	avg = customRand.getAvg()
-	avg_inter_arrival = 1/(bandwidth*load/8./avg)*1000000000
+	avg_sz = customRand.getAvg()
+	avg_inter_arrival = 1/(bandwidth*load/8./avg_sz)*1000000000
 	n_flow_estimate = int(time / avg_inter_arrival * nhost)
 	n_flow = 0
 	ofile.write("%d \n"%n_flow_estimate)

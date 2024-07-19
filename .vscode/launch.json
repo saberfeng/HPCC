@@ -116,22 +116,40 @@
         },
 
         {
-            "name": "gen llm flows",
+            "name": "test gen_flow",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/traffic_gen/traffic_gen.py",
+            "program": "${workspaceFolder}/simulation/scripts/traffic_gen/traffic_gen.py",
             "console": "integratedTerminal",
             "args": [
-                "--cdf", "traffic_gen/llm_train_cdf.txt",
+                "--cdf", "simulation/scripts/traffic_gen/llm_train_cdf.txt",
                 "--nhost", "320",
                 "--load", "0.3",
                 "--bandwidth", "10G",
                 "--time", "10",
-                "--output", "traffic_gen/llm_flows.txt"
+                "--output", "simulation/scripts/traffic_gen/llm_flows.txt"
             ],
             "cwd":"${workspaceFolder}",
-
         },
+
+        {
+            "name": "gen_llm_flows",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/simulation/scripts/traffic_gen/gen_llm_flows.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--cdf", "simulation/scripts/traffic_gen/llm_train_cdf.txt",
+                "--nhost", "4",
+                "--load", "0.3",
+                "--bandwidth", "10G",
+                "--time", "10",
+                "--output", "simulation/scripts/traffic_gen/llm_flows.txt",
+                "--scenario", "GPT1_data_parallel",
+            ],
+            "cwd":"${workspaceFolder}",
+        },
+
 
 
     ]
