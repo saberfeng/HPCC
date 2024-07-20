@@ -56,10 +56,10 @@ def gen_llm_traffic(nhost, end_time, output, bandwidth, flow_size_bit, interval_
 					continue
 				# add flow from host_idx to dst
 				flow_size_byte = int(flow_size_bit/8)
-				flows += f'{host_idx} {dst} 3 100 {flow_size_byte} {ns_to_s(flow_start_time)}'
+				flows += f'{host_idx} {dst} 3 100 {flow_size_byte} {ns_to_s(flow_start_time)}\n'
 				flow_count += 1
 			flow_start_time += interval_ns
-	return flows, flow_count
+	return flow_count, flows 
 
 if __name__ == "__main__":
 	parser = OptionParser()
@@ -96,7 +96,7 @@ if __name__ == "__main__":
 		if AppScenario[options.scenario] == AppScenario.GPT1_data_parallel:
 			bandwidth = '50G'
 			flow_size_bit = 3540983606  # 48Gbps * 73.77ms =~ 3.54Gbit
-			interval_ns = 106557000 # ns
+			interval_ns = 106557000 # ns ~106ms
 	else:
 		load = float(options.load)
 		bandwidth = translate_bandwidth(options.bandwidth)
@@ -104,7 +104,7 @@ if __name__ == "__main__":
 			print("bandwidth format incorrect") 
 			sys.exit(0)
 
-	flow_count, flows =	gen_llm_traffic(nhost, time, output, bandwidth, flow_size_bit, interval_ns)
+	flow_count, flows =	gen_llm_traffic(nhost, time, output, bandwidth, flow_size_bit, interval_ns, FlowPattern.Incast)
 	with open(output, mode='w') as f:
-		f.write(flow_count)
+		f.write(str(flow_count)+'\n')
 		f.write(flows)
