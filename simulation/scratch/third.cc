@@ -980,11 +980,11 @@ int main(int argc, char *argv[])
 	rand_offset_injector.gen_offset();
 	sortFlowsByStartTime();
 
-	auto rho_drop_prob_pair = rand_offset_injector.calcStateProb();
-	vector<long double> rho_vec = rho_drop_prob_pair.first;
-	vector<long double> drop_prob_vec = rho_drop_prob_pair.second;
-    printVec(rho_vec);
-    printVec(drop_prob_vec);
+	// auto rho_drop_prob_pair = rand_offset_injector.calcStateProb();
+	// vector<long double> rho_vec = rho_drop_prob_pair.first;
+	// vector<long double> drop_prob_vec = rho_drop_prob_pair.second;
+    // printVec(rho_vec);
+    // printVec(drop_prob_vec);
 
 	//
 	// get BDP and delay
