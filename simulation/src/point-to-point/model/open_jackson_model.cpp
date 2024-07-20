@@ -26,8 +26,8 @@ void OpenJacksonModel::initialize(const vector<shared_ptr<FlowInputEntry>>& flow
                                 const map<Ptr<Node>, 
                                           map<Ptr<Node>, vector<Ptr<Node>>>> &next_hop,
                                 const NodeContainer &node_container){
-    topology.size();
-    num_flows = flows.size();
+    // topology.size();
+    
     input_rate_Bps = vector<double>(node_info.size(), 0);
     service_rate_Bps = vector<double>(node_info.size(), 0);
 

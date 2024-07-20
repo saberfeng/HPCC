@@ -1071,6 +1071,7 @@ int main(int argc, char *argv[])
 			}
 	}
 
+	// schedule flows
 	if (flow_num > 0){
 		Simulator::Schedule(Seconds(flows[cur_flow_idx]->getOffsetStart()) - 
 								Simulator::Now(), 
