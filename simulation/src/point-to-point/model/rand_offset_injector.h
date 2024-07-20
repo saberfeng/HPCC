@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <memory>
 #include "open_jackson_model.h"
+#include "netcalc_model.h"
 
 namespace rand_offset{
 
