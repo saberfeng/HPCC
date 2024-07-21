@@ -2,7 +2,16 @@
 
 namespace rand_offset{
 
-void add_curve(std::vector<Point>& aggregate, const std::vector<Point>& curve){
+
+bool operator==(const Curve& curve1, const Curve& curve2) {
+    if (curve1.size() != curve2.size()) return false;
+    for (size_t i = 0; i < curve1.size(); i++) {
+        if (!(curve1[i] == curve2[i])) return false;
+    }
+    return true;
+}
+
+void add_curve(Curve& aggregate, const Curve& curve){
     for (const auto& pt : curve) {
         auto it = std::lower_bound(aggregate.begin(), aggregate.end(), pt);
         if (it != aggregate.end() && it->x == pt.x) {
@@ -31,7 +40,7 @@ double evaluate_at(Curve& curve, double x) {
     return 0; // Default return
 }
 
-void print_curve(const std::vector<Point>& curve) {
+void print_curve(const Curve& curve) {
     for (const auto& pt : curve) {
         std::cout << "(" << pt.x << ", " << pt.y << ") ";
     }
