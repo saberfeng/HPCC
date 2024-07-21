@@ -4,6 +4,7 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+
         {
             "name": "third",
             "type": "cppdbg", // cppdbg for GDB or LLDB
@@ -11,6 +12,28 @@
             "program": "${workspaceFolder}/simulation/build/scratch/third",
             "args": [
                 "simulation/mix/rand_offset/config_3n2f_topo_3n2f_flow_rand_offset.txt",
+            ],
+            "cwd":"${workspaceFolder}", // cwd:working directory
+            "setupCommands": [ // important for pretty printing containers: vectors, maps....
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "python import sys;sys.path.insert(0, '/usr/share/gcc-4.8/python');from libstdcxx.v6.printers import register_libstdcxx_printers;register_libstdcxx_printers(None)",
+                    "ignoreFailures": false
+                },
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+        },
+
+        {
+            "name": "test_rand_Offset",
+            "type": "cppdbg", // cppdbg for GDB or LLDB
+            "request": "launch", // "launch" a program or "attach" to an already running instance 
+            "program": "${workspaceFolder}/simulation/build/scratch/test_rand_offset",
+            "args": [
             ],
             "cwd":"${workspaceFolder}", // cwd:working directory
             "setupCommands": [ // important for pretty printing containers: vectors, maps....

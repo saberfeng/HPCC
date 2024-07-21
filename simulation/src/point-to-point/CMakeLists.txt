@@ -31,6 +31,8 @@ set(source_files
     model/rdma-queue-pair.cc
     model/switch-mmu.cc
     model/switch-node.cc
+    model/net_model.cc
+    model/netcalc_model.cc
     helper/point-to-point-helper.cc
     helper/qbb-helper.cc
 )
@@ -55,6 +57,8 @@ set(header_files
     model/switch-mmu.h
     model/switch-node.h
     model/trace-format.h
+    model/net_model.h
+    model/netcalc_model.h
     helper/point-to-point-helper.h
     helper/qbb-helper.h
     helper/sim-setting.h
