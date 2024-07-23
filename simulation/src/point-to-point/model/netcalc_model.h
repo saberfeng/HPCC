@@ -4,10 +4,11 @@
 #include <memory>
 #include <vector>
 #include <algorithm>
-#include "ns3/net_model.h"
 #include <limits>
 #include <initializer_list>
 #include <cassert>
+#include <iterator>
+#include "ns3/net_model.h"
 
 namespace rand_offset{
 

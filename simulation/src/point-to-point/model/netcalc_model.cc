@@ -44,7 +44,7 @@ void ArrivalCurve::add_curve(const Curve& curve){
     vector<TaggedPoint> merged_pts;
     merged_pts.reserve(this->points.size()+curve.points.size());
     std::merge(taggedPtsThis.begin(), taggedPtsThis.end(), 
-                taggedPtsOther.begin(), taggedPtsOther.end(), merged_pts.begin());
+                taggedPtsOther.begin(), taggedPtsOther.end(), std::back_inserter(merged_pts));
     int left_curve_idx;
     // first two points in merged_pts must be (0,0)
     assert(this->points[0] == Point({0, 0}));
@@ -68,8 +68,13 @@ void ArrivalCurve::add_curve(const Curve& curve){
     }
 
     this->points.clear();
-    for(auto& tag_pt : merged_pts){
-        this->points.emplace_back(tag_pt.pt);
+    this->points.emplace_back(merged_pts[0].pt);
+    for(int32_t i = 1; i < merged_pts.size(); i++){
+        if(merged_pts[i].pt.x == merged_pts[i-1].pt.x){
+            continue;
+        } else {
+            this->points.emplace_back(merged_pts[i].pt);
+        }
     }    
 }
 

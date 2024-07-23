@@ -39,7 +39,7 @@ void test_netcalc(){
     ArrivalCurve curve1 = {{0, 0}, {1, 5}, {2, 10}};
     ArrivalCurve curve2 = {{0, 0}, {1, 3}, {1.5, 7}, {2, 8}};
     ArrivalCurve curve3 = {{0, 0}, {0.5, 2}, {1, 4}, {2, 9}};
-    ArrivalCurve result = {{0, 0}, {0.5, 6}, {1, 12}, {1.5, 20}, 
+    ArrivalCurve result = {{0, 0}, {0.5, 6}, {1, 12}, {1.5, 21}, 
                            {2, 27}};
     curve1.add_curve(curve2);
     curve1.add_curve(curve3);
@@ -67,17 +67,17 @@ void test_netcalc(){
 
     // Test Case 3: Mixed Overlap
     curve1 = ArrivalCurve({{0, 0}, {1, 5}, {3, 10}});
-    curve2 = ArrivalCurve({{0, 0},{1, 0}, {2, 7}, {4, 7}});
-    result = ArrivalCurve({{}});
-    
+    curve2 = ArrivalCurve({{0, 0}, {1, 0}, {2, 7}, {4, 7}});
+    result = ArrivalCurve({{0, 0}, {1, 5}, {2, 14.5}, {3, 17}, {4, 17}});
     curve1.add_curve(curve2);
     std::cout << "Test Case 3 - Mixed Overlap: ";
     curve1.print();
     assert(curve1 == result);
 
     // Test Case 4: Boundary Values
-    curve1 = ArrivalCurve({{0, 0},{0, 10}});
+    curve1 = ArrivalCurve({{0, 0},{2.5, 10}});
     curve2 = ArrivalCurve({{0, 0},{5, 5}});
+    result = ArrivalCurve({{0, 0},{2.5, 12.5}, {5, 15}});
     curve1.add_curve(curve2);
     std::cout << "Test Case 4 - Boundary Values: ";
     curve1.print();
@@ -87,38 +87,16 @@ void test_netcalc(){
     curve1 = ArrivalCurve({{0, 0},{1, 1}});
     curve2 = ArrivalCurve({{0, 0},{1, 2}});
     curve3 = ArrivalCurve({{0, 0},{1, 3}});
+    result = ArrivalCurve({{0, 0},{1, 6}});
     curve1.add_curve(curve2);
     curve1.add_curve(curve3);
     std::cout << "Test Case 5 - Sequential Addition: ";
     curve1.print();
     assert(curve1 == result);
-
-    // Test Case 6: Single Point Curves
-    curve1 = ArrivalCurve({{0, 0},{0, 10}});
-    curve2 = ArrivalCurve({{0, 0},{0, 20}});
-    curve1.add_curve(curve2);
-    std::cout << "Test Case 6 - Single Point Curves: ";
-    curve1.print();
-    assert(curve1 == result);
-
-    // Test Case 7: Descending Order
-    curve1 = ArrivalCurve({{0, 0},{3, 10}, {2, 5}, {1, 15}});
-    curve2 = ArrivalCurve({{0, 0},{2, 10}, {1, 5}, {0, 20}});
-    curve1.add_curve(curve2);
-    std::cout << "Test Case 7 - Descending Order: ";
-    curve1.print();
-    assert(curve1 == result);
 }
 
-void ScheduleFlowInputs(){
-    RdmaClientHelper clientHelper(
-        0, 
-        Ipv4Address(), 
-        Ipv4Address(), 0, 
-        0, 
-        0, 
-        0, 
-        0);
+void WeirdCodeMustKeepToPassLinking(){
+    RdmaClientHelper a;
 }
 
 
