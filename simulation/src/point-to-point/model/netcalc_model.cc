@@ -78,7 +78,21 @@ void ArrivalCurve::add_curve(const Curve& curve){
     }    
 }
 
+double NetCalcModel::max_backlog(const ArrivalCurve& arrival_curve, 
+                        const ServiceCurve& service_curve) const{
+    vector<Point> merged_pts;
+    std::merge(arrival_curve.points.begin(), arrival_curve.points.end(),
+                service_curve.points.begin(), service_curve.points.end(), 
+                std::back_inserter(merged_pts));
+    double max_backlog = .0;
+    for(const auto& pt : merged_pts){
+        if(pt.x == numeric_limits<double>::max()){
+            continue;
+        } else {
 
+        }
+    }
+}
 
 void NetCalcModel::gen_offset(
     const vector<shared_ptr<FlowInputEntry>>& flows,

@@ -117,6 +117,9 @@ public:
                     const map<Ptr<Node>, 
                           map<Ptr<Node>, vector<Ptr<Node>>>> &next_hop,
                     const NodeContainer &node_container);
+    
+    double max_backlog(const ArrivalCurve& arrival_curve, 
+                        const ServiceCurve& service_curve) const;
 private:
 
 };
