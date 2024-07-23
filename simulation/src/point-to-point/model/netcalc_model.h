@@ -5,34 +5,100 @@
 #include <vector>
 #include <algorithm>
 #include "net_model.h"
+#include <limits>
+#include <initializer_list>
 
 namespace rand_offset{
 
 using namespace std;
 
+
+class Curve;
+
 struct Point{
     double x, y;
+    static constexpr double tolerance = 1e-6;
 
-    bool operator<(const Point& other) const {
-        return x < other.x;
-    }
+    Point(double x = 0, double y = 0) : x(x), y(y) {}
 
     bool operator==(const Point& other) const {
-        const double tolerance = 1e-6;
         return std::fabs(this->x - other.x) < tolerance && 
                std::fabs(this->y - other.y) < tolerance;
     }
+
+    bool operator<(const Point& other) const {
+        if(*this == other){
+            // in case the difference is within tolerance
+            return false; 
+        } else {
+            return x < other.x;
+        }
+    }
 };
 
-typedef std::vector<Point> Curve;
-bool operator==(const Curve& curve1, const Curve& curve2);
+struct TaggedPoint {
+    Point pt;
+    int origin;  
 
-// Aggregates the curve values into an existing curve
-void add_curve(Curve& aggregate, const Curve& curve); 
+    TaggedPoint(Point pt, int o) : pt(pt), origin(o) {}
 
-double evaluate_at(Curve& curve, double x); 
+    bool operator<(const TaggedPoint& other) const {
+        return pt < other.pt;
+    }
+};
 
-void print_curve(const Curve& curve);
+class Curve{
+public:
+    Curve(std::initializer_list<Point> init) : points(init) {
+        assert(points[0] == Point({0, 0})); // Curves should start from (0,0)
+        std::sort(points.begin(), points.end());
+    }
+
+    bool operator==(const Curve& other) const; 
+
+    void print() const {
+        for (const auto& point : points) {
+            std::cout << "(" << point.x << ", " << point.y << ") ";
+        }
+        std::cout << std::endl;
+    }
+
+    void clear(){points.clear();}
+
+    virtual void add_curve(const Curve& curve) = 0;
+
+    double evaluate_at(double x) const; 
+
+public:
+    std::vector<Point> points;
+};
+
+class ArrivalCurve: public Curve{
+public:
+    ArrivalCurve(std::initializer_list<Point> init) : Curve(init){
+        assert(points.size()>=2);
+        // for arrival curve, the first point must be (0, 0) 
+        assert(points[0] == Point({0, 0}));
+        // the last point must have infinite x and same y as the next to last point
+        // check if not already have, insert an infinite ponit
+        const vector<Point>::iterator& it_last = points.end() - 1;
+        if(it_last->x != std::numeric_limits<double>::max()){
+            points.insert(points.end(), 
+                          Point({std::numeric_limits<double>::max(), it_last->y}));
+        }
+    }
+
+    virtual void add_curve(const Curve& curve);
+};
+
+class ServiceCurve: public Curve{
+public:
+    ServiceCurve(std::initializer_list<Point> init) : Curve(init){
+        // for service curve, the first point also must be (0, 0) 
+        assert(points[0] == Point({0, 0}));
+    }
+};
+
 
 class NetCalcModel : public NetModel{
 public:
