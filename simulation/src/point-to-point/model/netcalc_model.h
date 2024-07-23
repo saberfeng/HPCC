@@ -4,16 +4,16 @@
 #include <memory>
 #include <vector>
 #include <algorithm>
-#include "net_model.h"
+#include "ns3/net_model.h"
 #include <limits>
 #include <initializer_list>
+#include <cassert>
 
 namespace rand_offset{
 
 using namespace std;
 
 
-class Curve;
 
 struct Point{
     double x, y;
@@ -22,8 +22,8 @@ struct Point{
     Point(double x = 0, double y = 0) : x(x), y(y) {}
 
     bool operator==(const Point& other) const {
-        return std::fabs(this->x - other.x) < tolerance && 
-               std::fabs(this->y - other.y) < tolerance;
+        return std::abs(this->x - other.x) < tolerance && 
+               std::abs(this->y - other.y) < tolerance;
     }
 
     bool operator<(const Point& other) const {

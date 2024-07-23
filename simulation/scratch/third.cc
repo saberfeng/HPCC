@@ -37,6 +37,7 @@
 #include <ns3/rdma-driver.h>
 #include <ns3/switch-node.h>
 #include <ns3/sim-setting.h>
+#include "ns3/netcalc_model.h"
 #include "ns3/rand_offset_injector.h"
 
 using namespace ns3;
@@ -379,8 +380,10 @@ uint64_t get_nic_rate(NodeContainer &n){
 			return DynamicCast<QbbNetDevice>(n.Get(i)->GetDevice(1))->GetDataRate().GetBitRate();
 }
 
+
 int main(int argc, char *argv[])
 {
+	return 0;
 	clock_t begint, endt;
 	begint = clock();
     cout << "argv[1]:" << argv[1] << endl;
