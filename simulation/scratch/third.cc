@@ -125,7 +125,7 @@ std::unordered_map<uint32_t, unordered_map<uint32_t, uint16_t> > portNumder;
 
 FlowInputEntry flow_input = {0};
 uint32_t flow_num;
-vector<shared_ptr<FlowInputEntry>> flows;
+shared_ptr<vector<FlowInputEntry>> flows;
 // vector<shared_ptr<FlowInputEntry>>::iterator cur_flow_iter;
 uint32_t cur_flow_idx = 0;
 
@@ -139,23 +139,23 @@ void printVec(const vector<long double>& vec){
 void readAllFlowInputEntrys(){
 	int read_idx = 0;
 	while (read_idx < flow_num){
-		shared_ptr<FlowInputEntry> flow_ptr = make_shared<FlowInputEntry>();
+		FlowInputEntry flow;
 		double start_time_s;
-		flowf >> flow_ptr->src >> flow_ptr->dst >> flow_ptr->priority_group 
-			  >> flow_ptr->dst_port >> flow_ptr->size_byte 
+		flowf >> flow.src >> flow.dst >> flow.priority_group 
+			  >> flow.dst_port >> flow.size_byte 
 			  >> start_time_s;
-		flow_ptr->start_time = Seconds(start_time_s);
-		flows.push_back(flow_ptr);
+		flow.start_time = Seconds(start_time_s);
+		flows->push_back(flow);
         read_idx++;
 	}
 	flowf.close();
 }
 
 void sortFlowsByStartTime(){
-	std::sort(flows.begin(), flows.end(), 
-				[](const shared_ptr<FlowInputEntry>& a, 
-				   const shared_ptr<FlowInputEntry>& b){
-		return a->getOffsetStart() < b->getOffsetStart();
+	std::sort(flows->begin(), flows->end(), 
+				[](FlowInputEntry& a, 
+				   FlowInputEntry& b){
+		return a.getOffsetStart() < b.getOffsetStart();
 	});
 }
 
@@ -170,29 +170,29 @@ void ReadFlowInput(){
 }
 
 void ScheduleFlowInputs(){
-	while (cur_flow_idx < flows.size() && 
-		   flows[cur_flow_idx]->getOffsetStart() == Simulator::Now()){
-		shared_ptr<FlowInputEntry>& cur_flow_ptr = flows[cur_flow_idx];
-		uint32_t port = portNumder[cur_flow_ptr->src][cur_flow_ptr->dst]++; // get a new port number 
+	while (cur_flow_idx < flows->size() && 
+		   (*flows)[cur_flow_idx].getOffsetStart() == Simulator::Now()){
+		FlowInputEntry& cur_flow = (*flows)[cur_flow_idx];
+		uint32_t port = portNumder[cur_flow.src][cur_flow.dst]++; // get a new port number 
 		RdmaClientHelper clientHelper(
-			cur_flow_ptr->priority_group, 
-			serverAddress[cur_flow_ptr->src], 
-			serverAddress[cur_flow_ptr->dst], port, 
-			cur_flow_ptr->dst_port, 
-			cur_flow_ptr->size_byte, 
+			cur_flow.priority_group, 
+			serverAddress[cur_flow.src], 
+			serverAddress[cur_flow.dst], port, 
+			cur_flow.dst_port, 
+			cur_flow.size_byte, 
 			has_win?(global_t==1?
-						maxBdp:pairBdp[n.Get(cur_flow_ptr->src)][n.Get(cur_flow_ptr->dst)]):0, 
+						maxBdp:pairBdp[n.Get(cur_flow.src)][n.Get(cur_flow.dst)]):0, 
 			global_t==1?
-				maxRtt:pairRtt[cur_flow_ptr->src][cur_flow_ptr->dst]);
-		ApplicationContainer appCon = clientHelper.Install(n.Get(cur_flow_ptr->src));
+				maxRtt:pairRtt[cur_flow.src][cur_flow.dst]);
+		ApplicationContainer appCon = clientHelper.Install(n.Get(cur_flow.src));
 		appCon.Start(Time(0));
 
 		cur_flow_idx++;
 	}
 
 	// schedule the next time to run this function
-	if (cur_flow_idx < flows.size()){
-		Simulator::Schedule(flows[cur_flow_idx]->getOffsetStart()-Simulator::Now(), 
+	if (cur_flow_idx < flows->size()){
+		Simulator::Schedule((*flows)[cur_flow_idx].getOffsetStart()-Simulator::Now(), 
 							ScheduleFlowInputs);
 	}
 }
@@ -755,7 +755,6 @@ int main(int argc, char *argv[])
 	}
 
 	//SeedManager::SetSeed(time(NULL));
-	// topology and flow files used to initialize OpenJacksonModel
 	topof.open(topology_file.c_str());
 	flowf.open(flow_file.c_str());
 	tracef.open(trace_file.c_str());
@@ -974,20 +973,16 @@ int main(int argc, char *argv[])
 	CalculateRoutes(n);
 	SetRoutingEntries();
 
+	// ******************** start ROCC logic *********************
 	readAllFlowInputEntrys();
 
 	RandOffsetInjector rand_offset_injector = rand_offset::RandOffsetInjector();
-	// cur_flow_iter = flows.begin();
-	ifstream topo_file_ROI(topology_file);// topology file for Random Offset Injector (ROI)
-	rand_offset_injector.initialize(flows, topo_file_ROI, nextHop, n);	
-	rand_offset_injector.gen_offset();
+	// cur_flow_iter = flows->begin();
+	ifstream topo_file_ROCC(topology_file);// topology file for Random Offset Injector (ROI)
+	// rand_offset_injector.initialize(flows, topo_file_ROCC, nextHop, n);	
+	// rand_offset_injector.gen_offset();
 	sortFlowsByStartTime();
-
-	// auto rho_drop_prob_pair = rand_offset_injector.calcStateProb();
-	// vector<long double> rho_vec = rho_drop_prob_pair.first;
-	// vector<long double> drop_prob_vec = rho_drop_prob_pair.second;
-    // printVec(rho_vec);
-    // printVec(drop_prob_vec);
+	// ******************** ROCC end *****************************
 
 	//
 	// get BDP and delay
@@ -1076,7 +1071,7 @@ int main(int argc, char *argv[])
 
 	// schedule flows
 	if (flow_num > 0){
-		Simulator::Schedule(Seconds(flows[cur_flow_idx]->getOffsetStart()) - 
+		Simulator::Schedule(Seconds((*flows)[cur_flow_idx].getOffsetStart()) - 
 								Simulator::Now(), 
 							ScheduleFlowInputs);
 	}
