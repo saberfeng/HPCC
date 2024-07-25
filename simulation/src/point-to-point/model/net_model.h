@@ -49,7 +49,7 @@ struct FlowInputEntry{
     FlowId flow_idx;
     Time offset;
 public:
-    Time getOffsetStart(){
+    Time getOffsetStart() const {
         return start_time + offset;
     }
 };

@@ -33,6 +33,7 @@ set(source_files
     model/switch-node.cc
     model/net_model.cc
     model/netcalc_model.cc
+    # model/plain_random_model.cc
     helper/point-to-point-helper.cc
     helper/qbb-helper.cc
 )
@@ -59,6 +60,7 @@ set(header_files
     model/trace-format.h
     model/net_model.h
     model/netcalc_model.h
+    model/plain_random_model.h
     helper/point-to-point-helper.h
     helper/qbb-helper.h
     helper/sim-setting.h

@@ -39,6 +39,7 @@
 #include <ns3/sim-setting.h>
 #include "ns3/netcalc_model.h"
 #include "ns3/rand_offset_injector.h"
+#include "ns3/plain_random_model.h"
 
 using namespace ns3;
 using namespace std;
@@ -153,8 +154,8 @@ void readAllFlowInputEntrys(){
 
 void sortFlowsByStartTime(){
 	std::sort(flows->begin(), flows->end(), 
-				[](FlowInputEntry& a, 
-				   FlowInputEntry& b){
+				[](const FlowInputEntry& a, 
+				   const FlowInputEntry& b){
 		return a.getOffsetStart() < b.getOffsetStart();
 	});
 }
@@ -977,10 +978,9 @@ int main(int argc, char *argv[])
 	readAllFlowInputEntrys();
 
 	RandOffsetInjector rand_offset_injector = rand_offset::RandOffsetInjector();
-	// cur_flow_iter = flows->begin();
 	ifstream topo_file_ROCC(topology_file);// topology file for Random Offset Injector (ROI)
-	// rand_offset_injector.initialize(flows, topo_file_ROCC, nextHop, n);	
-	// rand_offset_injector.gen_offset();
+	PlainRandomModel plain_rand_model(flows, topo_file_ROCC, nextHop, n);
+	plain_rand_model.insert_offsets(flows);
 	sortFlowsByStartTime();
 	// ******************** ROCC end *****************************
 
