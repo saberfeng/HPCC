@@ -41,6 +41,7 @@ public:
 	void ConfigNPort(uint32_t n_port);
 	void ConfigBufferSizeByte(uint32_t size);
 	void ConfigEnablePFC(bool enable_pfc);
+	void NotifyDrop(uint32_t node_id, uint32_t port, uint32_t qIndex);
 
 	// config
 	// when pfc disabled, packets from all ports of all priorities

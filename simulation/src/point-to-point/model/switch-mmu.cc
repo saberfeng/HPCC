@@ -39,19 +39,33 @@ namespace ns3 {
 		memset(egress_bytes, 0, sizeof(egress_bytes));
 	}
 
+	void SwitchMmu::NotifyDrop(uint32_t node_id, uint32_t port, uint32_t qIndex){
+		auto pfc_notify = "Headroom full";
+		auto nonpfc_notify = "Buffer full";
+		printf("Time:%s Node:%u Drop: queue:%u,%u: %s\n(port, ingress_bytes):", Simulator::Now(), node_id, port, qIndex, 
+				enable_pfc?pfc_notify:nonpfc_notify);
+		
+		for (uint32_t i = 1; i < 64; i++){
+			if(enable_pfc){
+				printf("(%u,%u)", hdrm_bytes[i][3], ingress_bytes[i][3]);
+			} else {
+				printf("(p%u, %u)", i, ingress_bytes[i][3]);
+			}
+		}
+		printf("\n");	
+	}
+
 	bool SwitchMmu::CheckIngressAdmission(uint32_t port, uint32_t qIndex, uint32_t psize){
 		if(enable_pfc){
 			if (psize + hdrm_bytes[port][qIndex] > headroom[port] && 
 				psize + GetSharedUsed(port, qIndex) > GetPfcThreshold(port)){
-				printf("%lu %u Drop: queue:%u,%u: Headroom full\n", Simulator::Now().GetTimeStep(), node_id, port, qIndex);
-				for (uint32_t i = 1; i < 64; i++)
-					printf("(%u,%u)", hdrm_bytes[i][3], ingress_bytes[i][3]);
-				printf("\n");
+				NotifyDrop(node_id, port, qIndex);
 				return false;
 			}
 			return true;
 		} else {
 			if(psize + shared_used_bytes > buffer_size){
+				NotifyDrop(node_id, port, qIndex);
 				return false;
 			} else {
 				return true;
