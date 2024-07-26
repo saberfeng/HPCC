@@ -3,6 +3,8 @@ import sys
 import os
 
 config_template="""ENABLE_QCN 0
+ENABLE_PFC {enable_pfc}
+
 USE_DYNAMIC_PFC_THRESHOLD {dynamic_thresh} 
 
 PACKET_PAYLOAD_SIZE 1000
@@ -60,6 +62,7 @@ if __name__ == "__main__":
 	#bfsz = 16 if bw==50 else 32
 	bfsz = 16 * bw / 50
 	enable_tr = args.enable_tr
+	enable_pfc = 0
 
 	failure = ''
 	if args.down != '0 0 0':
@@ -78,7 +81,8 @@ if __name__ == "__main__":
 						proj_dir=proj_dir, bw=bw, trace=trace, topo=topo, cc=args.cc, 
 						mode=12, has_win=0, vwin=0, us=0, ack_prio=1, 
 						link_down=args.down, failure=failure, 
-						buffer_size=bfsz, enable_tr=enable_tr)
+						buffer_size=bfsz, enable_tr=enable_tr,
+						enable_pfc=enable_pfc)
 		print(config)
 	else:
 		print("unknown cc:", args.cc)

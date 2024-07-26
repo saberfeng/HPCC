@@ -49,9 +49,10 @@ NS_LOG_COMPONENT_DEFINE("GENERIC_SIMULATION");
 
 uint32_t cc_mode = 1; // 1: DCQCN, 3: HPCC, 7: TIMELY, 8: DCTCP, 10: HPCC-PINT, 11:NONE, 12:RAND-OFFSET
 bool enable_qcn = true, use_dynamic_pfc_threshold = true;
+bool enable_pfc = true;
 bool enable_qbb = false;
 uint32_t packet_payload_size = 1000, l2_chunk_size = 0, l2_ack_interval = 0;
-double pause_time = 5, simulator_stop_time = 3.01;
+double pause_time = 5, simulator_stop_time = 20.01;
 std::string data_rate, link_delay, topology_file, flow_file, trace_file, trace_output_file;
 std::string fct_output_file = "fct.txt";
 std::string pfc_output_file = "pfc.txt";
@@ -138,6 +139,7 @@ void printVec(const vector<long double>& vec){
 }
 
 void readAllFlowInputEntrys(){
+	flows = make_shared<vector<FlowInputEntry>>();
 	int read_idx = 0;
 	while (read_idx < flow_num){
 		FlowInputEntry flow;
@@ -146,7 +148,8 @@ void readAllFlowInputEntrys(){
 			  >> flow.dst_port >> flow.size_byte 
 			  >> start_time_s;
 		flow.start_time = Seconds(start_time_s);
-		flows->push_back(flow);
+		flow.flow_idx = read_idx;
+		flows->emplace_back(flow);
         read_idx++;
 	}
 	flowf.close();
@@ -193,7 +196,9 @@ void ScheduleFlowInputs(){
 
 	// schedule the next time to run this function
 	if (cur_flow_idx < flows->size()){
-		Simulator::Schedule((*flows)[cur_flow_idx].getOffsetStart()-Simulator::Now(), 
+		FlowInputEntry& cur_flow = (*flows)[cur_flow_idx];
+		NS_LOG_INFO(string("schedule flow:") + cur_flow.get_str());
+		Simulator::Schedule(cur_flow.getOffsetStart()-Simulator::Now(), 
 							ScheduleFlowInputs);
 	}
 }
@@ -381,10 +386,21 @@ uint64_t get_nic_rate(NodeContainer &n){
 			return DynamicCast<QbbNetDevice>(n.Get(i)->GetDevice(1))->GetDataRate().GetBitRate();
 }
 
+void log_flow_schedule(Time now, Time sched_after, FlowInputEntry& flow){
+	stringstream ss;
+	ss << "SimTime:" << now << " After:" << sched_after
+		<< " WillInsertFlow:" << flow;
+	NS_LOG_INFO(ss.str());
+}
+
+void log_cur_time(){
+	stringstream ss;
+	ss << "Sim Time:" << Simulator::Now();
+	NS_LOG_INFO(ss.str());
+}
 
 int main(int argc, char *argv[])
 {
-	return 0;
 	clock_t begint, endt;
 	begint = clock();
     cout << "argv[1]:" << argv[1] << endl;
@@ -430,6 +446,16 @@ int main(int argc, char *argv[])
 					std::cout << "ENABLE_QCN\t\t\t" << "Yes" << "\n";
 				else
 					std::cout << "ENABLE_QCN\t\t\t" << "No" << "\n";
+			}
+			else if (key.compare("ENABLE_PFC") == 0)
+			{
+				uint32_t v;
+				conf >> v;
+				enable_pfc = v;
+				if (enable_pfc)
+					std::cout << "ENABLE_PFC\t\t\t" << "Yes" << "\n";
+				else
+					std::cout << "ENABLE_PFC\t\t\t" << "No" << "\n";
 			}
 			else if (key.compare("USE_DYNAMIC_PFC_THRESHOLD") == 0)
 			{
@@ -913,8 +939,9 @@ int main(int argc, char *argv[])
 				}
 			}
 			sw->m_mmu->ConfigNPort(sw->GetNDevices()-1);
-			sw->m_mmu->ConfigBufferSize(buffer_size_MB* 1024 * 1024);
+			sw->m_mmu->ConfigBufferSizeByte(buffer_size_MB* 1024 * 1024);
 			sw->m_mmu->node_id = sw->GetId();
+			sw->m_mmu->ConfigEnablePFC(enable_pfc);
 		}
 	}
 
@@ -977,7 +1004,7 @@ int main(int argc, char *argv[])
 	// ******************** start ROCC logic *********************
 	readAllFlowInputEntrys();
 
-	RandOffsetInjector rand_offset_injector = rand_offset::RandOffsetInjector();
+	// RandOffsetInjector rand_offset_injector = rand_offset::RandOffsetInjector();
 	ifstream topo_file_ROCC(topology_file);// topology file for Random Offset Injector (ROI)
 	PlainRandomModel plain_rand_model(flows, topo_file_ROCC, nextHop, n);
 	plain_rand_model.insert_offsets(flows);
@@ -1071,9 +1098,11 @@ int main(int argc, char *argv[])
 
 	// schedule flows
 	if (flow_num > 0){
-		Simulator::Schedule(Seconds((*flows)[cur_flow_idx].getOffsetStart()) - 
-								Simulator::Now(), 
-							ScheduleFlowInputs);
+		FlowInputEntry& cur_flow = (*flows)[cur_flow_idx];
+		Time sched_after = cur_flow.getOffsetStart() - 
+								Simulator::Now();
+		log_flow_schedule(Simulator::Now(), sched_after, cur_flow);
+		Simulator::Schedule(sched_after, ScheduleFlowInputs);
 	}
 
 	topof.close();
@@ -1084,20 +1113,21 @@ int main(int argc, char *argv[])
 		Simulator::Schedule(Seconds(2) + MicroSeconds(link_down_time), &TakeDownLink, n, n.Get(link_down_A), n.Get(link_down_B));
 	}
 
-	// schedule buffer monitor
-	FILE* qlen_output = fopen(qlen_mon_file.c_str(), "w");
-	Simulator::Schedule(NanoSeconds(qlen_mon_start), &monitor_buffer, qlen_output, &n);
+	// // schedule buffer monitor
+	// FILE* qlen_output = fopen(qlen_mon_file.c_str(), "w");
+	// Simulator::Schedule(NanoSeconds(qlen_mon_start), &monitor_buffer, qlen_output, &n);
 
 	//
 	// Now, do the actual simulation.
 	//
-	std::cout << "Running Simulation.\n";
+	// std::cout << "Running Simulation.\n";
 	fflush(stdout);
 	NS_LOG_INFO("Run Simulation.");
 	Simulator::Stop(Seconds(simulator_stop_time));
 	Simulator::Run();
 	Simulator::Destroy();
 	NS_LOG_INFO("Done.");
+	log_cur_time();
 	fclose(trace_output);
 
 	endt = clock();

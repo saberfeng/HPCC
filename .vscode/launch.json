@@ -11,7 +11,7 @@
             "request": "launch", // "launch" a program or "attach" to an already running instance 
             "program": "${workspaceFolder}/simulation/build/scratch/third",
             "args": [
-                "simulation/mix/rand_offset/config_3n2f_topo_3n2f_flow_rand_offset.txt",
+                "simulation/mix/rand_offset/config_fat_llm_flows_rand_offset.txt",
             ],
             "cwd":"${workspaceFolder}", // cwd:working directory
             "setupCommands": [ // important for pretty printing containers: vectors, maps....
@@ -26,6 +26,39 @@
                     "ignoreFailures": true
                 }
             ],
+        },
+
+        {
+            "name": "gen llm conf",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/simulation/run_rand_offset.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--cc", "rand_offset",
+                "--trace", "llm_flows",
+                "--topo", "fat",
+                "--enable_tr", "1",
+            ],
+            "cwd":"${workspaceFolder}/simulation",
+        },
+
+        {
+            "name": "gen_llm_flows",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/simulation/scripts/traffic_gen/gen_llm_flows.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--cdf", "simulation/scripts/traffic_gen/llm_train_cdf.txt",
+                "--nhost", "4",
+                "--load", "0.3",
+                "--bandwidth", "10G",
+                "--time", "10",
+                "--output", "simulation/mix/rand_offset/llm_flows.txt",
+                "--scenario", "GPT1_data_parallel",
+            ],
+            "cwd":"${workspaceFolder}",
         },
 
         {
@@ -155,23 +188,7 @@
             "cwd":"${workspaceFolder}",
         },
 
-        {
-            "name": "gen_llm_flows",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "${workspaceFolder}/simulation/scripts/traffic_gen/gen_llm_flows.py",
-            "console": "integratedTerminal",
-            "args": [
-                "--cdf", "simulation/scripts/traffic_gen/llm_train_cdf.txt",
-                "--nhost", "4",
-                "--load", "0.3",
-                "--bandwidth", "10G",
-                "--time", "10",
-                "--output", "simulation/scripts/traffic_gen/llm_flows.txt",
-                "--scenario", "GPT1_data_parallel",
-            ],
-            "cwd":"${workspaceFolder}",
-        },
+        
 
 
 

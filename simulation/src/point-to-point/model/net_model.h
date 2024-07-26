@@ -52,6 +52,21 @@ public:
     Time getOffsetStart() const {
         return start_time + offset;
     }
+
+    friend std::ostream& operator<<(std::ostream& out, FlowInputEntry& flow){
+        out << "F[id" << flow.flow_idx 
+            << " src" << flow.src << " dst" << flow.dst
+            << " p" << flow.priority_group << "sp" << flow.src_port
+            << "dp" << flow.dst_port 
+            << " T" << flow.start_time << " Of" << flow.offset << "]";
+        return out;
+    }
+
+    string get_str(){
+        std::stringstream ss;
+        ss << *this;
+        return ss.str();
+    }
 };
 
 struct NodeEntry{

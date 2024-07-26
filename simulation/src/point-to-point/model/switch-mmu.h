@@ -39,9 +39,13 @@ public:
 	void ConfigEcn(uint32_t port, uint32_t _kmin, uint32_t _kmax, double _pmax);
 	void ConfigHdrm(uint32_t port, uint32_t size);
 	void ConfigNPort(uint32_t n_port);
-	void ConfigBufferSize(uint32_t size);
+	void ConfigBufferSizeByte(uint32_t size);
+	void ConfigEnablePFC(bool enable_pfc);
 
 	// config
+	// when pfc disabled, packets from all ports of all priorities
+	// 		share one large buffer
+	bool enable_pfc;
 	uint32_t node_id;
 	uint32_t buffer_size;
 	uint32_t pfc_a_shift[pCnt];
