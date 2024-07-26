@@ -47,7 +47,7 @@ def gen_llm_traffic(nhost, end_time, output, bandwidth, flow_size_bit, interval_
 	if flow_pattern == FlowPattern.Incast:
 		# pick a host to be the dst
 		dst = random.randint(0, nhost-1)
-		flow_start_time = interval_ns
+		flow_start_time = 0
 		flow_count = 0
 		while flow_start_time <= end_time:
 			for host_idx in range(nhost):

@@ -54,7 +54,7 @@
                 "--nhost", "4",
                 "--load", "0.3",
                 "--bandwidth", "10G",
-                "--time", "10",
+                "--time", "0.1",
                 "--output", "simulation/mix/rand_offset/llm_flows.txt",
                 "--scenario", "GPT1_data_parallel",
             ],
