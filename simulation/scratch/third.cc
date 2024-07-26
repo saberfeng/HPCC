@@ -91,7 +91,7 @@ string qlen_mon_file;
 
 unordered_map<uint64_t, uint32_t> rate2kmax, rate2kmin;
 unordered_map<uint64_t, double> rate2pmax;
-
+uint32_t offset_upbound_us = 0;
 /************************************************
  * Runtime varibles
  ***********************************************/
@@ -740,6 +740,11 @@ int main(int argc, char *argv[])
 			}else if (key.compare("PINT_PROB") == 0){
 				conf >> pint_prob;
 				std::cout << "PINT_PROB\t\t\t\t" << pint_prob << '\n';
+			}else if (key.compare("OFFSET_UPBOUND_US") == 0){
+				int v;
+				conf >> v;
+				offset_upbound_us = v;
+				std::cout << "OFFSET_UPBOUND_US\t\t\t\t" << offset_upbound_us << '\n';
 			}
 			fflush(stdout);
 		}
@@ -1007,7 +1012,7 @@ int main(int argc, char *argv[])
 	// RandOffsetInjector rand_offset_injector = rand_offset::RandOffsetInjector();
 	ifstream topo_file_ROCC(topology_file);// topology file for Random Offset Injector (ROI)
 	PlainRandomModel plain_rand_model(flows, topo_file_ROCC, nextHop, n);
-	plain_rand_model.insert_offsets(flows);
+	plain_rand_model.insert_offsets(flows, offset_upbound_us);
 	sortFlowsByStartTime();
 	// ******************** ROCC end *****************************
 

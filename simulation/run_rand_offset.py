@@ -41,6 +41,8 @@ BUFFER_SIZE {buffer_size}
 QLEN_MON_FILE simulation/mix/{proj_dir}/qlen_{topo}_{trace}_{cc}{failure}.txt
 QLEN_MON_START 2000000000
 QLEN_MON_END 3000000000
+
+OFFSET_UPBOUND_US {offset_upbound_us}
 """
 
 if __name__ == "__main__":
@@ -51,6 +53,7 @@ if __name__ == "__main__":
 	parser.add_argument('--down', dest='down', action='store', default='0 0 0', help="link down event")
 	parser.add_argument('--topo', dest='topo', action='store', default='fat', help="the name of the topology file")
 	parser.add_argument('--enable_tr', dest='enable_tr', action = 'store', type=int, default=0, help="enable packet-level events dump")
+	parser.add_argument('--offset_upbound_us', dest='offset_upbound_us', action = 'store', type=int, default=1000, help="offset upperbound")
 	args = parser.parse_args()
 
 	proj_dir = ''
@@ -63,6 +66,7 @@ if __name__ == "__main__":
 	bfsz = 16 * bw / 50
 	enable_tr = args.enable_tr
 	enable_pfc = 0
+	offset_upbound_us = args.offset_upbound_us
 
 	failure = ''
 	if args.down != '0 0 0':
@@ -82,7 +86,7 @@ if __name__ == "__main__":
 						mode=12, has_win=0, vwin=0, us=0, ack_prio=1, 
 						link_down=args.down, failure=failure, 
 						buffer_size=bfsz, enable_tr=enable_tr,
-						enable_pfc=enable_pfc)
+						enable_pfc=enable_pfc, offset_upbound_us=offset_upbound_us)
 		print(config)
 	else:
 		print("unknown cc:", args.cc)

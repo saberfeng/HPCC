@@ -47,9 +47,9 @@ public:
         readTopology(topo_file);
     }
 
-    void insert_offsets(shared_ptr<vector<FlowInputEntry>> flows_ptr){
+    void insert_offsets(shared_ptr<vector<FlowInputEntry>> flows_ptr, uint32_t offset_upbound_us){
         for(auto& flow : *flows_ptr){
-            flow.offset = ns3::NanoSeconds(get_rand(0, 100));
+            flow.offset = ns3::MicroSeconds(get_rand(0, offset_upbound_us));
         }
     }
 
