@@ -21,8 +21,8 @@ namespace ns3 {
 		return tid;
 	}
 
-	void ConfigEnablePFC(bool enable_pfc){
-		enable_pfc = enable_pfc;
+	void SwitchMmu::ConfigEnablePFC(bool enable){
+		enable_pfc = enable;
 	}
 
 	SwitchMmu::SwitchMmu(void){
@@ -42,14 +42,14 @@ namespace ns3 {
 	void SwitchMmu::NotifyDrop(uint32_t node_id, uint32_t port, uint32_t qIndex){
 		auto pfc_notify = "Headroom full";
 		auto nonpfc_notify = "Buffer full";
-		printf("Time:%s Node:%u Drop: queue:%u,%u: %s\n(port, ingress_bytes):", Simulator::Now(), node_id, port, qIndex, 
-				enable_pfc?pfc_notify:nonpfc_notify);
+		printf("Time:%luus Node:%u Drop: queue:%u,%u: %s total:%ubytes\n(port, ingress_bytes):", Simulator::Now().GetMicroSeconds(), node_id, port, qIndex, 
+				enable_pfc?pfc_notify:nonpfc_notify, buffer_size);
 		
 		for (uint32_t i = 1; i < 64; i++){
 			if(enable_pfc){
 				printf("(%u,%u)", hdrm_bytes[i][3], ingress_bytes[i][3]);
 			} else {
-				printf("(p%u, %u)", i, ingress_bytes[i][3]);
+				printf("(p%u, %u, %.2f)", i, ingress_bytes[i][3], (double)ingress_bytes[i][3]/(double)buffer_size);
 			}
 		}
 		printf("\n");	
