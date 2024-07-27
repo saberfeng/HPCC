@@ -220,9 +220,9 @@ void qp_finish(FILE* fout, Ptr<RdmaQueuePair> q){
 	// total payload size plus the header size
 	uint32_t total_bytes = q->m_size + ((q->m_size-1) / packet_payload_size + 1) * (CustomHeader::GetStaticWholeHeaderSize() - IntHeader::GetStaticSize()); // translate to the minimum bytes required (with header but no INT)
 	// standalone fct only includes the transmission delay + propagation delay (base_rtt), plus one transmission delay of all data? problem? 
-	uint64_t standalone_fct = base_rtt + total_bytes * 8000000000lu / b; // fct in unit of ns
+	uint64_t standalone_fct_ns = base_rtt + total_bytes * 8000000000lu / b; // fct in unit of ns
 	// sip, dip, src_port, dst_port, size (B), start_time, fct (ns), standalone_fct (ns)
-	fprintf(fout, "%08x %08x %u %u %lu %lu %lu %lu\n", q->sip.Get(), q->dip.Get(), q->sport, q->dport, q->m_size, q->startTime.GetTimeStep(), (Simulator::Now() - q->startTime).GetTimeStep(), standalone_fct);
+	fprintf(fout, "%08x,%08x,%u,%u,%lu,%lu,%lu,%lu\n", q->sip.Get(), q->dip.Get(), q->sport, q->dport, q->m_size, q->startTime.GetTimeStep(), (Simulator::Now() - q->startTime).GetTimeStep(), standalone_fct_ns);
 	fflush(fout);
 
 	// remove rxQp from the receiver
@@ -265,13 +265,14 @@ void monitor_buffer(FILE* qlen_output, NodeContainer *n){
 	}
 
 	if (Simulator::Now().GetTimeStep() % qlen_dump_interval == 0){
-		fprintf(qlen_output, "time: %lu\n", Simulator::Now().GetTimeStep());
+		fprintf(qlen_output, "Node Port KB:Count\n");
+		fprintf(qlen_output, "time: %lu us\n", Simulator::Now().GetMicroSeconds());
 		for (auto &it0 : queue_result)
 			for (auto &it1 : it0.second){
 				fprintf(qlen_output, "%u %u", it0.first, it1.first);
 				auto &dist = it1.second.cnt;
 				for (uint32_t i = 0; i < dist.size(); i++)
-					fprintf(qlen_output, " %u", dist[i]);
+					fprintf(qlen_output, " %u:%u", i, dist[i]);
 				fprintf(qlen_output, "\n");
 			}
 		fflush(qlen_output);
@@ -592,6 +593,7 @@ int main(int argc, char *argv[])
 				monitor_file = v;
 				std::cout << "QUEUE_MONITOR_FILE\t\t\t" << monitor_file << "\n";
 			}
+			
 			else if (key.compare("TRACE_OUTPUT_FILE") == 0)
 			{
 				std::string v;
@@ -766,6 +768,16 @@ int main(int argc, char *argv[])
 			}else if (key.compare("QLEN_MON_END") == 0){
 				conf >> qlen_mon_end;
 				std::cout << "QLEN_MON_END\t\t\t\t" << qlen_mon_end << '\n';
+			}else if (key.compare("QLEN_MON_INTV_NS") == 0){
+				uint32_t v;
+				conf >> v;
+				qlen_monitor_interval_ns = v;
+				std::cout << "QLEN_MON_INTV_NS\t\t\t" << qlen_monitor_interval_ns << "\n";
+			}else if (key.compare("QLEN_MON_DUMP_INTV_NS") == 0){
+				uint32_t v;
+				conf >> v;
+				qlen_dump_interval = v;
+				std::cout << "QLEN_MON_DUMP_INTV_NS\t\t\t" << qlen_dump_interval << "\n";
 			}else if (key.compare("MULTI_RATE") == 0){
 				int v;
 				conf >> v;
@@ -997,6 +1009,7 @@ int main(int argc, char *argv[])
 
 	#if ENABLE_QP
 	FILE *fct_output = fopen(fct_output_file.c_str(), "w");
+	fprintf(fct_output, "src_ip,dst_ip,sport,dport,m_size(bytes),start(ns),complete_fct(ns),standalone_fct(ns)\n");
 	//
 	// install RDMA driver
 	//

@@ -14,7 +14,7 @@ TRACE_FILE simulation/mix/{proj_dir}/trace.txt
 QUEUE_MONITOR_FILE simulation/mix/{proj_dir}/qmonitor.txt
 
 TRACE_OUTPUT_FILE simulation/mix/{proj_dir}/mix_{topo}_{trace}_{cc}{failure}.tr
-FCT_OUTPUT_FILE simulation/mix/{proj_dir}/fct_{topo}_{trace}_{cc}{failure}.txt
+FCT_OUTPUT_FILE simulation/mix/{proj_dir}/fct_{topo}_{trace}_{cc}{failure}.csv
 PFC_OUTPUT_FILE simulation/mix/{proj_dir}/pfc_{topo}_{trace}_{cc}{failure}.txt
 
 SIMULATOR_STOP_TIME 4.00
@@ -41,8 +41,10 @@ ENABLE_TRACE {enable_tr}
 
 BUFFER_SIZE {buffer_size}
 QLEN_MON_FILE simulation/mix/{proj_dir}/qlen_{topo}_{trace}_{cc}{failure}.txt
-QLEN_MON_START 2000000000
-QLEN_MON_END 3000000000
+QLEN_MON_START {qlen_mon_start_ns}
+QLEN_MON_END {qlen_mon_end_ns}
+QLEN_MON_INTV_NS {qlen_mon_intv_ns}
+QLEN_MON_DUMP_INTV_NS {qlen_mon_dump_intv_ns}
 
 OFFSET_UPBOUND_US {offset_upbound_us}
 """
@@ -69,6 +71,10 @@ if __name__ == "__main__":
 	enable_tr = args.enable_tr
 	enable_pfc = 0
 	offset_upbound_us = args.offset_upbound_us
+	qlen_mon_intv_ns = 100000 # 0.1 ms
+	qlen_mon_dump_intv_ns = 1000000 # 1ms
+	qlen_mon_start_ns = 300000 # 0.3ms
+	qlen_mon_end_ns = 37000000 # 37ms
 
 	failure = ''
 	if args.down != '0 0 0':
@@ -88,7 +94,11 @@ if __name__ == "__main__":
 						mode=12, has_win=0, vwin=0, us=0, ack_prio=1, 
 						link_down=args.down, failure=failure, 
 						buffer_size=bfsz, enable_tr=enable_tr,
-						enable_pfc=enable_pfc, offset_upbound_us=offset_upbound_us)
+						enable_pfc=enable_pfc, offset_upbound_us=offset_upbound_us,
+						qlen_mon_intv_ns=qlen_mon_intv_ns, 
+						qlen_mon_dump_intv_ns=qlen_mon_dump_intv_ns,
+						qlen_mon_start_ns=qlen_mon_start_ns,
+						qlen_mon_end_ns=qlen_mon_end_ns)
 		print(config)
 	else:
 		print("unknown cc:", args.cc)

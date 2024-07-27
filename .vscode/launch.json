@@ -38,7 +38,7 @@
                 "--cc", "rand_offset",
                 "--trace", "llm_flows",
                 "--topo", "fat",
-                "--enable_tr", "1",
+                "--enable_tr", "0",
             ],
             "cwd":"${workspaceFolder}/simulation",
         },
