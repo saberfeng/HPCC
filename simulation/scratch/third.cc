@@ -271,8 +271,13 @@ void monitor_buffer(FILE* qlen_output, NodeContainer *n){
 			for (auto &it1 : it0.second){
 				fprintf(qlen_output, "%u %u", it0.first, it1.first);
 				auto &dist = it1.second.cnt;
-				for (uint32_t i = 0; i < dist.size(); i++)
-					fprintf(qlen_output, " %u:%u", i, dist[i]);
+				for (uint32_t i = 0; i < dist.size(); i++){
+					if(dist[i] == 0){
+						continue;
+					} else {
+						fprintf(qlen_output, " %u:%u", i, dist[i]);
+					}
+				}
 				fprintf(qlen_output, "\n");
 			}
 		fflush(qlen_output);
