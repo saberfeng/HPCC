@@ -11,6 +11,8 @@ PACKET_PAYLOAD_SIZE 1000
 TOPOLOGY_FILE simulation/mix/{proj_dir}/{topo}.txt
 FLOW_FILE simulation/mix/{proj_dir}/{trace}.txt
 TRACE_FILE simulation/mix/{proj_dir}/trace.txt
+QUEUE_MONITOR_FILE simulation/mix/{proj_dir}/qmonitor.txt
+
 TRACE_OUTPUT_FILE simulation/mix/{proj_dir}/mix_{topo}_{trace}_{cc}{failure}.tr
 FCT_OUTPUT_FILE simulation/mix/{proj_dir}/fct_{topo}_{trace}_{cc}{failure}.txt
 PFC_OUTPUT_FILE simulation/mix/{proj_dir}/pfc_{topo}_{trace}_{cc}{failure}.txt

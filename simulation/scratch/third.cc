@@ -22,6 +22,7 @@
 #include <unordered_map>
 #include <time.h> 
 #include <memory>
+#include <unordered_set>
 #include "ns3/core-module.h"
 #include "ns3/qbb-helper.h"
 #include "ns3/point-to-point-helper.h"
@@ -53,7 +54,8 @@ bool enable_pfc = true;
 bool enable_qbb = false;
 uint32_t packet_payload_size = 1000, l2_chunk_size = 0, l2_ack_interval = 0;
 double pause_time = 5, simulator_stop_time = 20.01;
-std::string data_rate, link_delay, topology_file, flow_file, trace_file, trace_output_file;
+std::string data_rate, link_delay, topology_file, flow_file, 
+	trace_file, monitor_file, trace_output_file;
 std::string fct_output_file = "fct.txt";
 std::string pfc_output_file = "pfc.txt";
 
@@ -85,7 +87,7 @@ uint32_t enable_trace = 1;
 
 uint32_t buffer_size_MB = 16;
 
-uint32_t qlen_dump_interval = 100000000, qlen_mon_interval = 100;
+uint32_t qlen_dump_interval = 100000000, qlen_monitor_interval_ns = 100;
 uint64_t qlen_mon_start = 2000000000, qlen_mon_end = 2100000000;
 string qlen_mon_file;
 
@@ -95,7 +97,7 @@ uint32_t offset_upbound_us = 0;
 /************************************************
  * Runtime varibles
  ***********************************************/
-std::ifstream topof, flowf, tracef;
+std::ifstream topof, flowf, tracef, qmonitorf;
 
 NodeContainer n;
 
@@ -119,6 +121,7 @@ map<Ptr<Node>, map<Ptr<Node>, uint64_t> > pairTxDelay; // accumulated transmissi
 map<uint32_t, map<uint32_t, uint64_t> > pairBw; // smallest bandwidth between two nodes (on shortest path)
 map<Ptr<Node>, map<Ptr<Node>, uint64_t> > pairBdp;
 map<uint32_t, map<uint32_t, uint64_t> > pairRtt;
+unordered_set<uint32_t> monitor_nodeids;
 
 std::vector<Ipv4Address> serverAddress;
 
@@ -242,10 +245,13 @@ struct QlenDistribution{
 		cnt[kb]++;
 	}
 };
+
 map<uint32_t, map<uint32_t, QlenDistribution> > queue_result;
 void monitor_buffer(FILE* qlen_output, NodeContainer *n){
 	for (uint32_t i = 0; i < n->GetN(); i++){
-		if (n->Get(i)->GetNodeType() == 1){ // is switch
+		if (n->Get(i)->GetNodeType() == 1 && 
+			monitor_nodeids.find(i) != monitor_nodeids.end()){ 
+			// is switch and is registed as need to monitor
 			Ptr<SwitchNode> sw = DynamicCast<SwitchNode>(n->Get(i));
 			if (queue_result.find(i) == queue_result.end())
 				queue_result[i];
@@ -257,6 +263,7 @@ void monitor_buffer(FILE* qlen_output, NodeContainer *n){
 			}
 		}
 	}
+
 	if (Simulator::Now().GetTimeStep() % qlen_dump_interval == 0){
 		fprintf(qlen_output, "time: %lu\n", Simulator::Now().GetTimeStep());
 		for (auto &it0 : queue_result)
@@ -270,7 +277,7 @@ void monitor_buffer(FILE* qlen_output, NodeContainer *n){
 		fflush(qlen_output);
 	}
 	if (Simulator::Now().GetTimeStep() < qlen_mon_end)
-		Simulator::Schedule(NanoSeconds(qlen_mon_interval), &monitor_buffer, qlen_output, n);
+		Simulator::Schedule(NanoSeconds(qlen_monitor_interval_ns), &monitor_buffer, qlen_output, n);
 }
 
 void CalculateRoute(Ptr<Node> host){
@@ -397,6 +404,34 @@ void log_cur_time(){
 	stringstream ss;
 	ss << "Sim Time:" << Simulator::Now();
 	NS_LOG_INFO(ss.str());
+}
+
+NodeContainer get_node_container_from_file(ifstream& ifs, uint32_t node_num){
+	NodeContainer nodes;
+	for (uint32_t i = 0; i < node_num; i++)
+	{
+		uint32_t nid;
+		ifs >> nid;
+		if (nid >= n.GetN()){
+			continue;
+		}
+		nodes = NodeContainer(nodes, n.Get(nid));
+	}
+	return nodes;
+}
+
+unordered_set<uint32_t> get_nodeid_set_from_file(ifstream& ifs, uint32_t node_num){
+	unordered_set<uint32_t> nodeid_set;
+	for (uint32_t i = 0; i < node_num; i++)
+	{
+		uint32_t nid;
+		ifs >> nid;
+		if (nid >= n.GetN()){
+			continue;
+		}
+		nodeid_set.insert(nid);
+	}
+	return nodeid_set;
 }
 
 int main(int argc, char *argv[])
@@ -549,6 +584,13 @@ int main(int argc, char *argv[])
 				conf >> v;
 				trace_file = v;
 				std::cout << "TRACE_FILE\t\t\t" << trace_file << "\n";
+			}
+			else if (key.compare("QUEUE_MONITOR_FILE") == 0)
+			{
+				std::string v;
+				conf >> v;
+				monitor_file = v;
+				std::cout << "QUEUE_MONITOR_FILE\t\t\t" << monitor_file << "\n";
 			}
 			else if (key.compare("TRACE_OUTPUT_FILE") == 0)
 			{
@@ -790,10 +832,13 @@ int main(int argc, char *argv[])
 	topof.open(topology_file.c_str());
 	flowf.open(flow_file.c_str());
 	tracef.open(trace_file.c_str());
-	uint32_t node_num, switch_num, link_num, trace_num;
+	qmonitorf.open(monitor_file.c_str());
+
+	uint32_t node_num, switch_num, link_num, trace_num, monitor_num;
 	topof >> node_num >> switch_num >> link_num;
 	flowf >> flow_num;
 	tracef >> trace_num;
+	qmonitorf >> monitor_num;
 
 
 	//n.Create(node_num);
@@ -1056,16 +1101,8 @@ int main(int argc, char *argv[])
 	// add trace
 	//
 
-	NodeContainer trace_nodes;
-	for (uint32_t i = 0; i < trace_num; i++)
-	{
-		uint32_t nid;
-		tracef >> nid;
-		if (nid >= n.GetN()){
-			continue;
-		}
-		trace_nodes = NodeContainer(trace_nodes, n.Get(nid));
-	}
+	NodeContainer trace_nodes = get_node_container_from_file(tracef, trace_num);
+	monitor_nodeids = get_nodeid_set_from_file(qmonitorf, monitor_num);
 
 	FILE *trace_output = fopen(trace_output_file.c_str(), "w");
 	if (enable_trace)
@@ -1119,8 +1156,8 @@ int main(int argc, char *argv[])
 	}
 
 	// // schedule buffer monitor
-	// FILE* qlen_output = fopen(qlen_mon_file.c_str(), "w");
-	// Simulator::Schedule(NanoSeconds(qlen_mon_start), &monitor_buffer, qlen_output, &n);
+	FILE* qlen_output = fopen(qlen_mon_file.c_str(), "w");
+	Simulator::Schedule(NanoSeconds(qlen_mon_start), &monitor_buffer, qlen_output, &n);
 
 	//
 	// Now, do the actual simulation.
