@@ -34,4 +34,13 @@ void NetModel::readTopology(ifstream& topo_f){
         topology[dst][src] = link;
     }
 }   
+
+Time transTime(long double bandwidth_Bps, uint64_t size_byte){
+    long double test_trans_s = (long double)size_byte/bandwidth_Bps;
+    uint64_t test_trans_ns = test_trans_s * 1e9;
+    Time res = ns3::Seconds((size_byte)/bandwidth_Bps);
+    assert(res.GetNanoSeconds() == test_trans_ns);
+    return res;
+}
+
 }

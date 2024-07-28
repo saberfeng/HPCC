@@ -46,7 +46,7 @@ struct FlowInputEntry{
     uint32_t src, dst, priority_group, src_port, dst_port; // pg: priority group
     uint64_t size_byte;
 	Time start_time;
-    FlowId flow_idx;
+    uint32_t flow_idx;
     Time offset;
 public:
     Time getOffsetStart() const {
@@ -98,5 +98,6 @@ protected:
 
 };
 
+Time transTime(long double bandwidth_Bps, uint64_t size_byte);
 } // namespace rand_offset
 #endif /* NET_MODEL_H */

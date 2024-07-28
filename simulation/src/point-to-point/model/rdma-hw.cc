@@ -406,7 +406,7 @@ int RdmaHw::ReceiveAck(Ptr<Packet> p, CustomHeader &ch){
 		if (!m_backto0){
 			qp->Acknowledge(seq);
 		}else {
-			uint32_t goback_seq = seq / m_chunk * m_chunk;
+			uint32_t goback_seq = seq / m_chunk * m_chunk; // round down to the nearest lowest multiply of m_chunk
 			qp->Acknowledge(goback_seq);
 		}
 		if (qp->IsFinished()){
