@@ -14,6 +14,16 @@ void PlainRandomModel::print_sw2wins(unordered_map<uint32_t, vector<Window>> sw2
     sw2wins_file.close();
 }
 
+void PlainRandomModel::read_param_file(string& rand_param_file){
+    ifstream ifs(rand_param_file);
+    // one param, shift_gap_ns
+    uint64_t shift_gap_ns;
+    ifs >> shift_gap_ns; 
+    ifs.close();
+
+    this->shift_gap = ns3::NanoSeconds(shift_gap_ns);
+}
+
 void PlainRandomModel::shift_arr_curve_algo(shared_ptr<vector<FlowInputEntry>>& flows,
                             const map<Ptr<Node>, map<Ptr<Node>, vector<Ptr<Node>>>>& nextHop,
                             const NodeContainer &nodes,
@@ -88,8 +98,7 @@ void PlainRandomModel::shift_arr_curve_algo(shared_ptr<vector<FlowInputEntry>>& 
                     }
                 } else {
                     // insert additional gap
-                    Time gap = ns3::NanoSeconds(10*1000);
-                    flow.offset += overlap_size + gap;
+                    flow.offset += overlap_size + this->shift_gap;
                     break;
                 }
             }

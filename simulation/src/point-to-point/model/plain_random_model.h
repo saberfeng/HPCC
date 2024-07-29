@@ -78,9 +78,13 @@ public:
     PlainRandomModel(shared_ptr<vector<FlowInputEntry>>& flows, 
                     ifstream& topo_file, 
                     const map<Ptr<Node>, map<Ptr<Node>, vector<Ptr<Node>>>>& nextHop,
-                    const NodeContainer &nodes){
+                    const NodeContainer &nodes,
+                    string& rand_param_file){
         readTopology(topo_file);
+        read_param_file(rand_param_file);
     }
+
+    void read_param_file(string& rand_param_file);
 
     pair<uint32_t, uint32_t> get_first_period_flow_range(shared_ptr<vector<FlowInputEntry>>& flows){
         return pair<uint32_t, uint32_t>(0, flows->size()); // now just the entire array
@@ -104,7 +108,7 @@ private:
 
     void print_sw2wins(unordered_map<uint32_t, vector<Window>> sw2wins);
 
-    // shared_ptr<vector<FlowInputEntry>>& flows_ptr;
+    Time shift_gap;
 };
 
 } // namespace rand_offset

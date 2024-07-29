@@ -55,7 +55,7 @@ bool enable_qbb = false;
 uint32_t packet_payload_size = 1000, l2_chunk_size = 0, l2_ack_interval = 0;
 double pause_time = 5, simulator_stop_time = 20.01;
 std::string data_rate, link_delay, topology_file, flow_file, 
-	trace_file, monitor_file, trace_output_file;
+	trace_file, monitor_file, trace_output_file, rand_param_file;
 std::string fct_output_file = "fct.txt";
 std::string pfc_output_file = "pfc.txt";
 
@@ -600,6 +600,13 @@ int main(int argc, char *argv[])
 				monitor_file = v;
 				std::cout << "QUEUE_MONITOR_FILE\t\t\t" << monitor_file << "\n";
 			}
+			else if (key.compare("RANDOM_PARAM_FILE") == 0)
+			{
+				std::string v;
+				conf >> v;
+				rand_param_file = v;
+				std::cout << "RANDOM_PARAM_FILE\t\t\t" << rand_param_file << "\n";
+			}
 			
 			else if (key.compare("TRACE_OUTPUT_FILE") == 0)
 			{
@@ -1076,7 +1083,7 @@ int main(int argc, char *argv[])
 
 	// RandOffsetInjector rand_offset_injector = rand_offset::RandOffsetInjector();
 	ifstream topo_file_ROCC(topology_file);// topology file for Random Offset Injector (ROI)
-	PlainRandomModel plain_rand_model(flows, topo_file_ROCC, nextHop, n);
+	PlainRandomModel plain_rand_model(flows, topo_file_ROCC, nextHop, n, rand_param_file);
 	plain_rand_model.insert_offsets(flows, nextHop, n, packet_payload_size);
 	sortFlowsByStartTime();
 	// ******************** ROCC end *****************************
