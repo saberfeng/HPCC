@@ -11,7 +11,7 @@
             "request": "launch", // "launch" a program or "attach" to an already running instance 
             "program": "${workspaceFolder}/simulation/build/scratch/third",
             "args": [
-                "simulation/mix/rand_offset/config_fat_llm_flows_rand_offset.txt",
+                "simulation/mix/rand_offset/config_fat_llm16_rand_offset.txt",
             ],
             "cwd":"${workspaceFolder}", // cwd:working directory
             "setupCommands": [ // important for pretty printing containers: vectors, maps....
@@ -34,7 +34,7 @@
             "request": "launch", // "launch" a program or "attach" to an already running instance 
             "program": "${workspaceFolder}/simulation/build/scratch/third",
             "args": [
-                "simulation/mix/config_fat_llm_flows_hp95ai50.txt",
+                "simulation/mix/config_fat_llm16_hp95ai50.txt",
             ],
             "cwd":"${workspaceFolder}", // cwd:working directory
             "setupCommands": [ // important for pretty printing containers: vectors, maps....
@@ -60,7 +60,7 @@
             "console": "integratedTerminal",
             "args": [
                 "--cc", "rand_offset",
-                "--trace", "llm_flows",
+                "--trace", "llm16",
                 "--topo", "fat",
                 "--enable_tr", "0",
             ],
@@ -75,7 +75,7 @@
             "console": "integratedTerminal",
             "args": [
                 "--cc", "hp",
-                "--trace", "llm_flows",
+                "--trace", "llm16",
                 "--topo", "fat",
                 "--enable_tr", "0",
             ],
