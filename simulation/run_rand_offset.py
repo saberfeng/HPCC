@@ -105,6 +105,7 @@ if __name__ == "__main__":
 		print("unknown cc:", args.cc)
 		sys.exit(1)
 
+	print(config_name)
 	with open(config_name, "w") as file:
 		file.write(config)
 	

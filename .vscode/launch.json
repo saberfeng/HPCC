@@ -6,12 +6,12 @@
     "configurations": [
 
         {
-            "name": "third",
+            "name": "third ROCC",
             "type": "cppdbg", // cppdbg for GDB or LLDB
             "request": "launch", // "launch" a program or "attach" to an already running instance 
             "program": "${workspaceFolder}/simulation/build/scratch/third",
             "args": [
-                "simulation/mix/rand_offset/config_fat_llm16_rand_offset.txt",
+                "simulation/mix/rand_offset/config_fat_llmTest_rand_offset.txt",
             ],
             "cwd":"${workspaceFolder}", // cwd:working directory
             "setupCommands": [ // important for pretty printing containers: vectors, maps....
@@ -51,16 +51,38 @@
             ],
         },
 
+        {
+            "name": "third hpccPint",
+            "type": "cppdbg", // cppdbg for GDB or LLDB
+            "request": "launch", // "launch" a program or "attach" to an already running instance 
+            "program": "${workspaceFolder}/simulation/build/scratch/third",
+            "args": [
+                "simulation/mix/rand_offset/config_fat_llm_flows_hpccPint95ai50log1.050p1.000.txt",
+            ],
+            "cwd":"${workspaceFolder}", // cwd:working directory
+            "setupCommands": [ // important for pretty printing containers: vectors, maps....
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "python import sys;sys.path.insert(0, '/usr/share/gcc-4.8/python');from libstdcxx.v6.printers import register_libstdcxx_printers;register_libstdcxx_printers(None)",
+                    "ignoreFailures": false
+                },
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+        },
 
         {
-            "name": "gen llm conf",
+            "name": "gen conf ROCC",
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/simulation/run_rand_offset.py",
             "console": "integratedTerminal",
             "args": [
                 "--cc", "rand_offset",
-                "--trace", "llm16",
+                "--trace", "llmTest",
                 "--topo", "fat",
                 "--enable_tr", "0",
             ],
@@ -68,7 +90,7 @@
         },
 
         {
-            "name": "gen hp conf",
+            "name": "gen conf hp",
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/simulation/run.py",
@@ -78,6 +100,23 @@
                 "--trace", "llm16",
                 "--topo", "fat",
                 "--enable_tr", "0",
+            ],
+            "cwd":"${workspaceFolder}/simulation",
+        },
+
+        {
+            "name": "gen conf hpccPint",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/simulation/run.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--cc", "hpccPint",
+                "--trace", "llm_flows",
+                "--topo", "fat",
+                "--enable_tr", "0",
+                "--pint_log_base", "1.05",
+                "--pint_prob", "1",
             ],
             "cwd":"${workspaceFolder}/simulation",
         },
@@ -94,7 +133,7 @@
                 "--load", "0.3",
                 "--bandwidth", "10G",
                 "--end_time", "0.1",
-                "--output", "simulation/mix/rand_offset/llm16.txt",
+                "--output", "simulation/mix/rand_offset/llmTest.txt",
                 "--scenario", "GPT1_data_parallel",
             ],
             "cwd":"${workspaceFolder}",

@@ -105,6 +105,7 @@ if __name__ == "__main__":
 			sys.exit(0)
 
 	flow_count, flows =	gen_llm_traffic(nhost, end_time, output, bandwidth, flow_size_bit, interval_ns, FlowPattern.Incast)
+	print(output)
 	with open(output, mode='w') as f:
 		f.write(str(flow_count)+'\n')
 		f.write(flows)

@@ -335,6 +335,24 @@ void CalculateRoute(Ptr<Node> host){
 		pairBw[it.first->GetId()][host->GetId()] = it.second;
 }
 
+void print_route(map<Ptr<Node>, map<Ptr<Node>, vector<Ptr<Node> > > >& nextHop){
+	for(const auto& src_dst_path_pair : nextHop){
+		for(const auto& dst_path_pair : src_dst_path_pair.second){
+			uint32_t src_id = src_dst_path_pair.first->GetId();
+			uint32_t dst_id = dst_path_pair.first->GetId();
+			if(src_id == 0){
+				cout <<  src_id << "->"
+				 << dst_id << ": ";	
+			for(const auto& path_node : dst_path_pair.second){
+				cout << path_node->GetId() << " "; 
+			}
+			cout << endl;
+			}
+			
+		}
+	}
+}
+
 void CalculateRoutes(NodeContainer &n){
 	for (int i = 0; i < (int)n.GetN(); i++){
 		Ptr<Node> node = n.Get(i);
@@ -1076,6 +1094,7 @@ int main(int argc, char *argv[])
 
 	// setup routing
 	CalculateRoutes(n);
+	print_route(nextHop);
 	SetRoutingEntries();
 
 	readAllFlowInputEntrys();

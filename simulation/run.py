@@ -57,10 +57,13 @@ KMAX_MAP {kmax_map}
 KMIN_MAP {kmin_map}
 PMAX_MAP {pmax_map}
 BUFFER_SIZE {buffer_size}
-QLEN_MON_FILE simulation/mix/qlen_{topo}_{trace}_{cc}{failure}.txt
-QLEN_MON_START 2000000000
-QLEN_MON_END 3000000000
+QLEN_MON_FILE simulation/mix/rand_offset/qlen_{topo}_{trace}_{cc}{failure}.txt
+QLEN_MON_START 300000
+QLEN_MON_END 561000000
+QLEN_MON_INTV_NS 100000
+QLEN_MON_DUMP_INTV_NS 1000000
 """
+
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser(description='run simulation')
 	parser.add_argument('--cc', dest='cc', action='store', default='hp', help="hp/dcqcn/timely/dctcp/hpccPint")
@@ -91,7 +94,7 @@ if __name__ == "__main__":
 	if args.down != '0 0 0':
 		failure = '_down'
 
-	config_name = "mix/config_%s_%s_%s%s.txt"%(topo, trace, args.cc, failure)
+	config_name = "mix/rand_offset/config_%s_%s_%s%s.txt"%(topo, trace, args.cc, failure)
 
 	kmax_map = "2 %d %d %d %d"%(bw*1000000000, 400*bw/25, bw*4*1000000000, 400*bw*4/25)
 	kmin_map = "2 %d %d %d %d"%(bw*1000000000, 100*bw/25, bw*4*1000000000, 100*bw*4/25)
@@ -158,6 +161,7 @@ if __name__ == "__main__":
 		print("unknown cc:", args.cc)
 		sys.exit(1)
 
+	print(config_name)
 	with open(config_name, "w") as file:
 		file.write(config)
 	
