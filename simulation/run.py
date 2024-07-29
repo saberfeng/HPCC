@@ -7,12 +7,12 @@ USE_DYNAMIC_PFC_THRESHOLD 1
 
 PACKET_PAYLOAD_SIZE 1000
 
-TOPOLOGY_FILE mix/{topo}.txt
-FLOW_FILE mix/{trace}.txt
-TRACE_FILE mix/trace.txt
-TRACE_OUTPUT_FILE mix/mix_{topo}_{trace}_{cc}{failure}.tr
-FCT_OUTPUT_FILE mix/fct_{topo}_{trace}_{cc}{failure}.txt
-PFC_OUTPUT_FILE mix/pfc_{topo}_{trace}_{cc}{failure}.txt
+TOPOLOGY_FILE simulation/mix/rand_offset/{topo}.txt
+FLOW_FILE simulation/mix/rand_offset/{trace}.txt
+TRACE_FILE simulation/mix/rand_offset/trace.txt
+TRACE_OUTPUT_FILE simulation/mix/rand_offset/mix_{topo}_{trace}_{cc}{failure}.tr
+FCT_OUTPUT_FILE simulation/mix/rand_offset/fct_{topo}_{trace}_{cc}{failure}.csv
+PFC_OUTPUT_FILE simulation/mix/rand_offset/pfc_{topo}_{trace}_{cc}{failure}.txt
 
 SIMULATOR_STOP_TIME 4.00
 
@@ -57,7 +57,7 @@ KMAX_MAP {kmax_map}
 KMIN_MAP {kmin_map}
 PMAX_MAP {pmax_map}
 BUFFER_SIZE {buffer_size}
-QLEN_MON_FILE mix/qlen_{topo}_{trace}_{cc}{failure}.txt
+QLEN_MON_FILE simulation/mix/qlen_{topo}_{trace}_{cc}{failure}.txt
 QLEN_MON_START 2000000000
 QLEN_MON_END 3000000000
 """
@@ -65,12 +65,12 @@ if __name__ == "__main__":
 	parser = argparse.ArgumentParser(description='run simulation')
 	parser.add_argument('--cc', dest='cc', action='store', default='hp', help="hp/dcqcn/timely/dctcp/hpccPint")
 	parser.add_argument('--trace', dest='trace', action='store', default='flow', help="the name of the flow file")
-	parser.add_argument('--bw', dest="bw", action='store', default='50', help="the NIC bandwidth")
+	parser.add_argument('--bw', dest="bw", action='store', default='100', help="the NIC bandwidth")
 	parser.add_argument('--down', dest='down', action='store', default='0 0 0', help="link down event")
 	parser.add_argument('--topo', dest='topo', action='store', default='fat', help="the name of the topology file")
 	parser.add_argument('--utgt', dest='utgt', action='store', type=int, default=95, help="eta of HPCC")
 	parser.add_argument('--mi', dest='mi', action='store', type=int, default=0, help="MI_THRESH")
-	parser.add_argument('--hpai', dest='hpai', action='store', type=int, default=0, help="AI for HPCC")
+	parser.add_argument('--hpai', dest='hpai', action='store', type=int, default=50, help="AI for HPCC")
 	parser.add_argument('--pint_log_base', dest='pint_log_base', action = 'store', type=float, default=1.01, help="PINT's log_base")
 	parser.add_argument('--pint_prob', dest='pint_prob', action = 'store', type=float, default=1.0, help="PINT's sampling probability")
 	parser.add_argument('--enable_tr', dest='enable_tr', action = 'store', type=int, default=0, help="enable packet-level events dump")
@@ -155,10 +155,10 @@ if __name__ == "__main__":
 	elif args.cc == "rand_offset":
 		pass
 	else:
-		print "unknown cc:", args.cc
+		print("unknown cc:", args.cc)
 		sys.exit(1)
 
 	with open(config_name, "w") as file:
 		file.write(config)
 	
-	os.system("./waf --run 'scratch/third %s'"%(config_name))
+	# os.system("./waf --run 'scratch/third %s'"%(config_name))

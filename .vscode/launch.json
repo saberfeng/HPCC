@@ -29,6 +29,30 @@
         },
 
         {
+            "name": "third hp",
+            "type": "cppdbg", // cppdbg for GDB or LLDB
+            "request": "launch", // "launch" a program or "attach" to an already running instance 
+            "program": "${workspaceFolder}/simulation/build/scratch/third",
+            "args": [
+                "simulation/mix/config_fat_llm_flows_hp95ai50.txt",
+            ],
+            "cwd":"${workspaceFolder}", // cwd:working directory
+            "setupCommands": [ // important for pretty printing containers: vectors, maps....
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "python import sys;sys.path.insert(0, '/usr/share/gcc-4.8/python');from libstdcxx.v6.printers import register_libstdcxx_printers;register_libstdcxx_printers(None)",
+                    "ignoreFailures": false
+                },
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+        },
+
+
+        {
             "name": "gen llm conf",
             "type": "debugpy",
             "request": "launch",
@@ -44,6 +68,21 @@
         },
 
         {
+            "name": "gen hp conf",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/simulation/run.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--cc", "hp",
+                "--trace", "llm_flows",
+                "--topo", "fat",
+                "--enable_tr", "0",
+            ],
+            "cwd":"${workspaceFolder}/simulation",
+        },
+
+        {
             "name": "gen_llm_flows",
             "type": "debugpy",
             "request": "launch",
@@ -51,11 +90,11 @@
             "console": "integratedTerminal",
             "args": [
                 "--cdf", "simulation/scripts/traffic_gen/llm_train_cdf.txt",
-                "--nhost", "4",
+                "--nhost", "16",
                 "--load", "0.3",
                 "--bandwidth", "10G",
-                "--time", "0.1",
-                "--output", "simulation/mix/rand_offset/llm_flows.txt",
+                "--end_time", "0.1",
+                "--output", "simulation/mix/rand_offset/llm16.txt",
                 "--scenario", "GPT1_data_parallel",
             ],
             "cwd":"${workspaceFolder}",
@@ -81,25 +120,6 @@
                     "ignoreFailures": true
                 }
             ],
-        },
-
-        {
-            "name": "calc_matrix test",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "${workspaceFolder}/simulation/scripts/calc_matrix.py",
-            "console": "integratedTerminal",
-            "args": [
-                "-r", "simulation/mix/rand_offset/routing.txt",
-                "-i", "simulation/mix/rand_offset/input_rate.txt",
-                "-s", "simulation/mix/rand_offset/service_rate.txt",
-                "-q", "simulation/mix/rand_offset/queue_size.txt",
-                "-f", "1",
-                "-o1", "simulation/mix/rand_offset/rho.txt",
-                "-o2", "simulation/mix/rand_offset/node_drop_prob.txt",
-            ],
-            "cwd":"${workspaceFolder}",
-
         },
 
 

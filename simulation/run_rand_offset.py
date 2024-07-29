@@ -12,6 +12,7 @@ TOPOLOGY_FILE simulation/mix/{proj_dir}/{topo}.txt
 FLOW_FILE simulation/mix/{proj_dir}/{trace}.txt
 TRACE_FILE simulation/mix/{proj_dir}/trace.txt
 QUEUE_MONITOR_FILE simulation/mix/{proj_dir}/qmonitor.txt
+RANDOM_PARAM_FILE simulation/mix/{proj_dir}/plain_rand_model.txt
 
 TRACE_OUTPUT_FILE simulation/mix/{proj_dir}/mix_{topo}_{trace}_{cc}{failure}.tr
 FCT_OUTPUT_FILE simulation/mix/{proj_dir}/fct_{topo}_{trace}_{cc}{failure}.csv
@@ -53,7 +54,7 @@ if __name__ == "__main__":
 	parser = argparse.ArgumentParser(description='run simulation')
 	parser.add_argument('--cc', dest='cc', action='store', default='rand_offset', help="rand_offset")
 	parser.add_argument('--trace', dest='trace', action='store', default='flow', help="the name of the flow file")
-	parser.add_argument('--bw', dest="bw", action='store', default='50', help="the NIC bandwidth")
+	parser.add_argument('--bw', dest="bw", action='store', default='100', help="the NIC bandwidth (Gbps)")
 	parser.add_argument('--down', dest='down', action='store', default='0 0 0', help="link down event")
 	parser.add_argument('--topo', dest='topo', action='store', default='fat', help="the name of the topology file")
 	parser.add_argument('--enable_tr', dest='enable_tr', action = 'store', type=int, default=0, help="enable packet-level events dump")

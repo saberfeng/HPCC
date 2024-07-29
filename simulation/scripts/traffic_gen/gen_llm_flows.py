@@ -73,7 +73,7 @@ if __name__ == "__main__":
 	parser.add_option("-b", "--bandwidth", dest = "bandwidth", 
 				   help = "the bandwidth of host link (G/M/K), by default 10G", 
 				   default = "10G")
-	parser.add_option("-t", "--time", dest = "time", 
+	parser.add_option("-t", "--end_time", dest = "end_time", 
 				   help = "the total run time (s), by default 10", default = "10")
 	parser.add_option("-o", "--output", dest = "output", 
 				   help = "the output file", default = "tmp_traffic.txt")
@@ -89,7 +89,7 @@ if __name__ == "__main__":
 		print("please use -n to enter number of hosts")
 		sys.exit(0)
 	nhost = int(options.nhost)
-	time = float(options.time)*1e9 # translates to ns
+	end_time = float(options.end_time)*1e9 # translates to ns
 	output = options.output
 
 	if options.scenario:
@@ -104,7 +104,7 @@ if __name__ == "__main__":
 			print("bandwidth format incorrect") 
 			sys.exit(0)
 
-	flow_count, flows =	gen_llm_traffic(nhost, time, output, bandwidth, flow_size_bit, interval_ns, FlowPattern.Incast)
+	flow_count, flows =	gen_llm_traffic(nhost, end_time, output, bandwidth, flow_size_bit, interval_ns, FlowPattern.Incast)
 	with open(output, mode='w') as f:
 		f.write(str(flow_count)+'\n')
 		f.write(flows)

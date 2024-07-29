@@ -1078,14 +1078,15 @@ int main(int argc, char *argv[])
 	CalculateRoutes(n);
 	SetRoutingEntries();
 
-	// ******************** start ROCC logic *********************
 	readAllFlowInputEntrys();
-
-	// RandOffsetInjector rand_offset_injector = rand_offset::RandOffsetInjector();
-	ifstream topo_file_ROCC(topology_file);// topology file for Random Offset Injector (ROI)
-	PlainRandomModel plain_rand_model(flows, topo_file_ROCC, nextHop, n, rand_param_file);
-	plain_rand_model.insert_offsets(flows, nextHop, n, packet_payload_size);
-	sortFlowsByStartTime();
+	// ******************** start ROCC logic *********************
+	if(cc_mode == 12){
+		// RandOffsetInjector rand_offset_injector = rand_offset::RandOffsetInjector();
+		ifstream topo_file_ROCC(topology_file);// topology file for Random Offset Injector (ROI)
+		PlainRandomModel plain_rand_model(flows, topo_file_ROCC, nextHop, n, rand_param_file);
+		plain_rand_model.insert_offsets(flows, nextHop, n, packet_payload_size);
+		sortFlowsByStartTime();
+	}
 	// ******************** ROCC end *****************************
 
 	//
