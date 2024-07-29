@@ -62,7 +62,7 @@ struct Window{
         }
     }
 
-    void appendWin(Window& rhs){
+    void mergeWin(Window& rhs){
         assert(this->end <= rhs.start);
         this->end = rhs.end;
     }

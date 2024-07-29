@@ -34,6 +34,7 @@ void PlainRandomModel::shift_arr_curve_algo(shared_ptr<vector<FlowInputEntry>>& 
 
     // assign offset order the same as flows vector (time tabling)
     unordered_map<uint32_t, vector<Window>> sw2wins;
+    unordered_map<uint32_t, Window> sw2merged_win;
     for(uint32_t flow_id = 0; flow_id < flows->size(); flow_id++){
         FlowInputEntry& flow = (*flows)[flow_id];
         Ptr<Node> src_ptr = nodes.Get(flow.src);
@@ -62,6 +63,7 @@ void PlainRandomModel::shift_arr_curve_algo(shared_ptr<vector<FlowInputEntry>>& 
 
                 if(sw2wins.find(sw_id) == sw2wins.end()){
                     sw2wins[sw_id] = vector<Window>();
+                    sw2merged_win[sw_id] = Window({Time(0), Time{0}});
                 }
                 Link ingress_link = topology.at(prev_id).at(sw_id);
                 Link out_link = topology.at(sw_id).at(next_id);
@@ -84,15 +86,18 @@ void PlainRandomModel::shift_arr_curve_algo(shared_ptr<vector<FlowInputEntry>>& 
                 Time start_time = recv_time;
                 Window cur_win({start_time, start_time+flow_trans_time_out, flow.flow_idx});
                 vector<Window>& cur_sw_wins = sw2wins.at(sw_id);
+                Window& cur_sw_merged_win = sw2merged_win.at(sw_id);
 
-                Time overlap_size;
-                if(cur_sw_wins.empty()){
-                    overlap_size = Time(0);
-                } else {
-                    overlap_size = cur_sw_wins.back().overlapSize(cur_win);
-                }
+                // Time overlap_size;
+                // if(cur_sw_wins.empty()){
+                //     overlap_size = Time(0);
+                // } else {
+                //     overlap_size = cur_sw_wins.back().overlapSize(cur_win);
+                // }
+                Time overlap_size = cur_sw_merged_win.overlapSize(cur_win);
                 if(overlap_size == Time(0)){
                     cur_sw_wins.push_back(cur_win);
+                    cur_sw_merged_win.mergeWin(cur_win);
                     if(i == path_nodes.size()-1){
                         alloc_succ = true;
                     }
