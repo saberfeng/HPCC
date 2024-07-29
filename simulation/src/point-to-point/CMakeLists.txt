@@ -33,7 +33,7 @@ set(source_files
     model/switch-node.cc
     model/net_model.cc
     model/netcalc_model.cc
-    # model/plain_random_model.cc
+    model/plain_random_model.cc
     helper/point-to-point-helper.cc
     helper/qbb-helper.cc
 )

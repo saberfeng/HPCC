@@ -51,7 +51,7 @@ struct Window{
     }
 
     Time overlapSize(Window& rhs){
-        if((this->start < rhs.start) && (this->end > rhs.start)){
+        if((this->start <= rhs.start) && (this->end > rhs.start)){
             return this->end - rhs.start; // return overlap size
         } else if ((this->start < rhs.start) && (this->end > rhs.end)){
             throw runtime_error("this win totally cover rhs");
@@ -65,6 +65,11 @@ struct Window{
     void appendWin(Window& rhs){
         assert(this->end <= rhs.start);
         this->end = rhs.end;
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const Window& win){
+        os << "[" << win.flow_id << " " 
+            << win.start << "-" << win.end << "]";
     }
 };
 
@@ -86,13 +91,18 @@ public:
                             const NodeContainer &nodes,
                             uint32_t mtu_byte);
                             
-    void insert_offsets(shared_ptr<vector<FlowInputEntry>> flows_ptr, uint32_t offset_upbound_us);
+    void insert_offsets(shared_ptr<vector<FlowInputEntry>>& flows,
+                            const map<Ptr<Node>, map<Ptr<Node>, vector<Ptr<Node>>>>& nextHop,
+                            const NodeContainer &nodes,
+                            uint32_t mtu_byte);
     
 
 private:
     uint64_t get_rand(uint64_t range_start, uint64_t range_end){
         return range_start + (rand() % range_end);
     }
+
+    void print_sw2wins(unordered_map<uint32_t, vector<Window>> sw2wins);
 
     // shared_ptr<vector<FlowInputEntry>>& flows_ptr;
 };

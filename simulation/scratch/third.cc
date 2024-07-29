@@ -221,8 +221,10 @@ void qp_finish(FILE* fout, Ptr<RdmaQueuePair> q){
 	uint32_t total_bytes = q->m_size + ((q->m_size-1) / packet_payload_size + 1) * (CustomHeader::GetStaticWholeHeaderSize() - IntHeader::GetStaticSize()); // translate to the minimum bytes required (with header but no INT)
 	// standalone fct only includes the transmission delay + propagation delay (base_rtt), plus one transmission delay of all data? problem? 
 	uint64_t standalone_fct_ns = base_rtt + total_bytes * 8000000000lu / b; // fct in unit of ns
-	// sip, dip, src_port, dst_port, size (B), start_time, fct (ns), standalone_fct (ns)
-	fprintf(fout, "%08x,%08x,%u,%u,%lu,%lu,%lu,%lu\n", q->sip.Get(), q->dip.Get(), q->sport, q->dport, q->m_size, q->startTime.GetTimeStep(), (Simulator::Now() - q->startTime).GetTimeStep(), standalone_fct_ns);
+	// sip, dip, src_port, dst_port, size (B), start_time, fct (ns), standalone_fct (ns), end(ns)
+	fprintf(fout, "%08x,%08x,%u,%u,%lu,%lu,%lu,%lu,%lu\n", 
+					q->sip.Get(), q->dip.Get(), q->sport, q->dport, q->m_size, q->startTime.GetNanoSeconds(), 
+					(Simulator::Now() - q->startTime).GetNanoSeconds(), standalone_fct_ns, Simulator::Now().GetNanoSeconds());
 	fflush(fout);
 
 	// remove rxQp from the receiver
@@ -1014,7 +1016,7 @@ int main(int argc, char *argv[])
 
 	#if ENABLE_QP
 	FILE *fct_output = fopen(fct_output_file.c_str(), "w");
-	fprintf(fct_output, "src_ip,dst_ip,sport,dport,m_size(bytes),start(ns),complete_fct(ns),standalone_fct(ns)\n");
+	fprintf(fct_output, "src_ip,dst_ip,sport,dport,m_size(bytes),start(ns),complete_fct(ns),standalone_fct(ns),end(ns)\n");
 	//
 	// install RDMA driver
 	//
@@ -1075,7 +1077,7 @@ int main(int argc, char *argv[])
 	// RandOffsetInjector rand_offset_injector = rand_offset::RandOffsetInjector();
 	ifstream topo_file_ROCC(topology_file);// topology file for Random Offset Injector (ROI)
 	PlainRandomModel plain_rand_model(flows, topo_file_ROCC, nextHop, n);
-	plain_rand_model.insert_offsets(flows, offset_upbound_us);
+	plain_rand_model.insert_offsets(flows, nextHop, n, packet_payload_size);
 	sortFlowsByStartTime();
 	// ******************** ROCC end *****************************
 

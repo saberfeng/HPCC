@@ -2,6 +2,18 @@
 
 namespace rand_offset{
 
+void PlainRandomModel::print_sw2wins(unordered_map<uint32_t, vector<Window>> sw2wins){
+    ofstream sw2wins_file("simulation/mix/rand_offset/sw2wins.txt");
+    for(const auto& sw_wins_pair : sw2wins){
+        sw2wins_file << "sw:" << sw_wins_pair.first << " ";
+        for(const auto& win : sw_wins_pair.second){
+            sw2wins_file << win << " ";
+        }
+        sw2wins_file << endl;
+    }
+    sw2wins_file.close();
+}
+
 void PlainRandomModel::shift_arr_curve_algo(shared_ptr<vector<FlowInputEntry>>& flows,
                             const map<Ptr<Node>, map<Ptr<Node>, vector<Ptr<Node>>>>& nextHop,
                             const NodeContainer &nodes,
@@ -13,7 +25,7 @@ void PlainRandomModel::shift_arr_curve_algo(shared_ptr<vector<FlowInputEntry>>& 
     // assign offset order the same as flows vector (time tabling)
     unordered_map<uint32_t, vector<Window>> sw2wins;
     for(uint32_t flow_id = 0; flow_id < flows->size(); flow_id++){
-        auto flow = (*flows)[flow_id];
+        FlowInputEntry& flow = (*flows)[flow_id];
         Ptr<Node> src_ptr = nodes.Get(flow.src);
         Ptr<Node> dst_ptr = nodes.Get(flow.dst);
 
@@ -62,29 +74,35 @@ void PlainRandomModel::shift_arr_curve_algo(shared_ptr<vector<FlowInputEntry>>& 
                 Time start_time = recv_time;
                 Window cur_win({start_time, start_time+flow_trans_time_out, flow.flow_idx});
                 vector<Window>& cur_sw_wins = sw2wins.at(sw_id);
-                Time overlap_size = cur_sw_wins.back().overlapSize(cur_win);
+
+                Time overlap_size;
+                if(cur_sw_wins.empty()){
+                    overlap_size = Time(0);
+                } else {
+                    overlap_size = cur_sw_wins.back().overlapSize(cur_win);
+                }
                 if(overlap_size == Time(0)){
                     cur_sw_wins.push_back(cur_win);
                     if(i == path_nodes.size()-1){
                         alloc_succ = true;
                     }
                 } else {
-                    flow.offset += overlap_size;
+                    // insert additional gap
+                    Time gap = ns3::NanoSeconds(10*1000);
+                    flow.offset += overlap_size + gap;
                     break;
                 }
             }
         }
-        
     }  
+    print_sw2wins(sw2wins);
 }
 
-void PlainRandomModel::insert_offsets(shared_ptr<vector<FlowInputEntry>> flows_ptr, uint32_t offset_upbound_us){
-    for(auto& flow : *flows_ptr){
-        if(flow.flow_idx == 1){
-
-        }
-        flow.offset = ns3::MicroSeconds(get_rand(0, offset_upbound_us));
-    }
+void PlainRandomModel::insert_offsets(shared_ptr<vector<FlowInputEntry>>& flows,
+                            const map<Ptr<Node>, map<Ptr<Node>, vector<Ptr<Node>>>>& nextHop,
+                            const NodeContainer &nodes,
+                            uint32_t mtu_byte){
+    shift_arr_curve_algo(flows, nextHop, nodes, mtu_byte);
 }
 
 }
