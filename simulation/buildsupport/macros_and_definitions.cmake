@@ -520,6 +520,8 @@ macro(process_options)
     else()
       add_definitions(-DNS3_MPI -DNS3_OPENMPI)
       set(ENABLE_MPI TRUE)
+      include_directories(${MPI_INCLUDE_PATH})
+      message(STATUS "MPI include path: ${MPI_INCLUDE_PATH}")
     endif()
   endif()
 

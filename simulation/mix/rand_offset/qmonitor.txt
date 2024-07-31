@@ -1,0 +1,5 @@
+1
+320
+
+First line: monitor node #
+Node IDs...
