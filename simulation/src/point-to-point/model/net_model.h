@@ -99,5 +99,10 @@ protected:
 };
 
 Time transTime(long double bandwidth_Bps, uint64_t size_byte);
+
+vector<Ptr<Node>> getPathFromNextHop(
+    const map<Ptr<Node>, map<Ptr<Node>, vector<Ptr<Node>>>>& nextHop,
+    Ptr<Node> src, Ptr<Node> dst);
+                            
 } // namespace rand_offset
 #endif /* NET_MODEL_H */

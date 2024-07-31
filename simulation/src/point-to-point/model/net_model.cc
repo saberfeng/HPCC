@@ -41,4 +41,16 @@ Time transTime(long double bandwidth_Bps, uint64_t size_byte){
     return ns3::NanoSeconds(trans_ns);
 }
 
+vector<Ptr<Node>> getPathFromNextHop(
+    const map<Ptr<Node>, map<Ptr<Node>, vector<Ptr<Node>>>>& nextHop,
+    Ptr<Node> src, Ptr<Node> dst){
+    vector<Ptr<Node>> path;
+    Ptr<Node> next_hop = nextHop.at(src).at(dst).front();
+    while(next_hop != dst){
+        path.push_back(next_hop);
+        next_hop = nextHop.at(next_hop).at(dst).front();
+    }
+    return path;
+}
+
 }

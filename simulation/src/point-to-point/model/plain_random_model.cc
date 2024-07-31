@@ -40,7 +40,7 @@ void PlainRandomModel::shift_arr_curve_algo(shared_ptr<vector<FlowInputEntry>>& 
         Ptr<Node> src_ptr = nodes.Get(flow.src);
         Ptr<Node> dst_ptr = nodes.Get(flow.dst);
 
-        const vector<Ptr<Node>>& path_nodes = nextHop.at(src_ptr).at(dst_ptr);
+        const vector<Ptr<Node>> path_nodes = getPathFromNextHop(nextHop, src_ptr, dst_ptr);
         bool alloc_succ = false;
         while(!alloc_succ){
             for(uint32_t i = 0; i < path_nodes.size(); i++){
