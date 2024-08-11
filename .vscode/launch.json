@@ -247,7 +247,14 @@
             "cwd":"${workspaceFolder}",
         },
 
-        
+        {
+            "name": "Python:cur file",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "cwd":"${workspaceFolder}",
+        }       
 
 
 
