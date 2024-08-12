@@ -3,30 +3,24 @@ from scipy.optimize import minimize, LinearConstraint
 import matplotlib.pyplot as plt
 
 fig_save_dir = "simulation/scripts"
+m_bytes = 1500  # packet size
+nic_bw = 100*10**9  # 100 Gbps
+smallest_a = m_bytes*8/nic_bw
 
 def incast_1f_chernoff_at_t(t):
-    m_bytes = 1500  # packet size
-    nic_bw = 100*10**9  # 100 Gbps
-    smallest_a = m_bytes*8/nic_bw
-    print("smallest a:", smallest_a)
     initial_guess = [smallest_a, smallest_a*2]
 
     def backlog_bound(params):
         a, b = params
-        theta = 1  # example value
+        theta = 1.5  # example value
         k = 3 # sigma factor: 2:95.45%, 3:99.73%, 4:99.99366% 
         x_bytes = 32*10**6  # buffer size
-        return np.exp(theta * k * np.sqrt(m_bytes**2 * t * (b - a)**2 / (6 * (a + b)**2)) - x_bytes)
+        return np.exp(theta * (k * np.sqrt(m_bytes**2 * t * (b - a)**2 / (6 * (a + b)**2)) - x_bytes))
     
     # Objective function to minimize (we want this to be <= 0.01 for 99% assurance)
     def objective(params):
         return backlog_bound(params) - 0.01
 
-       
-    # todo: add constraints
-    # 1. a<b
-    # 2. a>smallest_a
-    # 3. A(t)<=D 
     con_a_lt_b = LinearConstraint([[1, -1]], lb=[-np.inf], ub=[0]) # a < b
     con_a_gt_smallest_a = LinearConstraint([[1, 0]], lb=[smallest_a], ub=[np.inf]) # a > smallest_a
     constraints = [con_a_lt_b, con_a_gt_smallest_a]
@@ -35,7 +29,7 @@ def incast_1f_chernoff_at_t(t):
     # Check results
     if result.success:
         optimized_a, optimized_b = result.x
-        print(f"Optimized a: {optimized_a}, Optimized b: {optimized_b}")
+        print(f"Optimized a: {optimized_a}, Optimized b: {optimized_b}, bound_prob: {backlog_bound(result.x)}")
         return optimized_a, optimized_b
     else:
         print("Optimization failed:", result.message)
@@ -57,10 +51,67 @@ def incast_1f_chernoff():
     plt.legend()
     plt.savefig(f'{fig_save_dir}/incast_1f_chernoff.png')
     plt.show()
+
+def incast_2f_chernoff_at_t(t):
+    initial_guess = [smallest_a, smallest_a*2, smallest_a, smallest_a*2]
+
+    def backlog_bound(params):
+        a1, b1, a2, b2 = params
+        theta = 1  # example value
+        k1, k2 = 3, 3 # sigma factor: 2:95.45%, 3:99.73%, 4:99.99366% 
+        x_bytes = 32*10**6  # buffer size
+        bound_comp1 = k1 * np.sqrt(m_bytes**2 * t * (b1 - a1)**2 / (6 * (a1 + b1)**2))
+        bound_comp2 = k2 * np.sqrt(m_bytes**2 * t * (b2 - a2)**2 / (6 * (a2 + b2)**2))
+        return np.exp(theta * (bound_comp1 - bound_comp2 - x_bytes))
+    
+    # Objective function to minimize (we want this to be <= 0.01 for 99% assurance)
+    def objective(params):
+        return backlog_bound(params) - 0.01
+
+    con_a1_lt_b1 = LinearConstraint([[1, -1, 0, 0]], lb=[-np.inf], ub=[0]) # a1 < b1
+    con_a1_gt_smallest_a = LinearConstraint([[1, 0, 0, 0]], lb=[smallest_a], ub=[np.inf]) # a1 > smallest_a
+    con_a2_lt_b2 = LinearConstraint([[0, 0, 1, -1]], lb=[-np.inf], ub=[0]) # a2 < b2
+    con_a2_gt_smallest_a = LinearConstraint([[0, 0, 1, 0]], lb=[smallest_a], ub=[np.inf]) # a1 > smallest_a
+    constraints = [con_a1_lt_b1, con_a1_gt_smallest_a, con_a2_lt_b2, con_a2_gt_smallest_a]
+    result = minimize(objective, initial_guess, constraints=constraints)
+
+    # Check results
+    if result.success:
+        opt_a1, opt_b1, opt_a2, opt_b2 = result.x
+        print(f"Optimized a1: {opt_a1}, Optimized b1: {opt_b1},"
+              f"Optimized a2: {opt_a2}, Optimized b2: {opt_b2},"
+              f"bound_prob: {backlog_bound(result.x)}")
+        return result.x
+    else:
+        print("Optimization failed:", result.message)
+
+def incast_2f_chernoff():
+    t_step = 0.0001 # 1ms
+    opt_a1, opt_b1, opt_a2, opt_b2 = \
+        np.array([]), np.array([]), np.array([]), np.array([])
+    t_range = np.arange(0.0001, 0.1, t_step)
+    for t in t_range:
+        opt = incast_2f_chernoff_at_t(t)
+        opt_a1 = np.append(opt_a1, opt[0])
+        opt_b1 = np.append(opt_b1, opt[1])
+        opt_a2 = np.append(opt_a2, opt[2])
+        opt_b2 = np.append(opt_b2, opt[3])
+
+    # plot a, b vs t
+    plt.plot(t_range, opt_a1, label='a1')
+    plt.plot(t_range, opt_b1, label='b1')
+    plt.plot(t_range, opt_a2, label='a2')
+    plt.plot(t_range, opt_b2, label='b2')
+    plt.xlabel('Time (s)')
+    plt.ylabel('a, b')
+    plt.legend()
+    plt.savefig(f'{fig_save_dir}/incast_2f_chernoff.png')
+    plt.show() 
     
 
 def main():
-    incast_1f_chernoff()
+    # incast_1f_chernoff()
+    incast_2f_chernoff()
     pass
 
 
