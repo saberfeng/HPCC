@@ -62,7 +62,7 @@ def incast_2f_chernoff_at_t(t):
         x_bytes = 32*10**6  # buffer size
         bound_comp1 = k1 * np.sqrt(m_bytes**2 * t * (b1 - a1)**2 / (6 * (a1 + b1)**2))
         bound_comp2 = k2 * np.sqrt(m_bytes**2 * t * (b2 - a2)**2 / (6 * (a2 + b2)**2))
-        return np.exp(theta * (bound_comp1 - bound_comp2 - x_bytes))
+        return np.exp(theta * (bound_comp1 + bound_comp2 - x_bytes))
     
     # Objective function to minimize (we want this to be <= 0.01 for 99% assurance)
     def objective(params):
@@ -107,11 +107,70 @@ def incast_2f_chernoff():
     plt.legend()
     plt.savefig(f'{fig_save_dir}/incast_2f_chernoff.png')
     plt.show() 
+
+
+def incast_Nf_chernoff_at_t(t, N):
+    init_guess_a = np.array(smallest_a*np.ones(N))
+    init_guess_b = np.array(smallest_a*2*np.ones(N))
+    init_guess = np.concatenate((init_guess_a, init_guess_b))
+
+    def backlog_bound(params):
+        a, b = params[:N], params[N:]
+        theta = 1  # example value
+        k = np.array([3]*N) # sigma factor: 2:95.45%, 3:99.73%, 4:99.99366%
+        x_bytes = 32*10**6  # buffer size
+        sum = (k * np.sqrt(m_bytes**2 * t * (b-a)**2 / (6*(a+b)**2))).sum()
+        return np.exp(theta * (sum - x_bytes))
     
+    # Objective function to minimize (we want this to be <= 0.01 for 99% assurance)
+    def objective(params):
+        return backlog_bound(params) - 0.01
+
+    # [[ 1.,  0., -1., -0.],
+    #  [ 0.,  1., -0., -1.]]
+    con_a_lt_b_mat = np.concatenate((np.eye(N), -np.eye(N)), axis=1)
+    con_a_lt_b = LinearConstraint(con_a_lt_b_mat, lb=-np.inf, ub=np.zeros(N)) # a < b <-> a - b < 0
+    # [[1. 0. 0. 0.]
+    #  [0. 1. 0. 0.]]
+    con_a1_gt_smallest_a_mat = np.concatenate((np.eye(N), np.zeros((N, N))), axis=1)
+    con_a1_gt_smallest_a = LinearConstraint(con_a1_gt_smallest_a_mat, lb=[smallest_a]*N, ub=np.inf) # a > smallest_a
+    constraints = [con_a_lt_b, con_a1_gt_smallest_a]
+    result = minimize(objective, init_guess, constraints=constraints)
+
+    # Check results
+    if result.success:
+        a, b = result.x[:N], result.x[N:]
+        print(f"Optimized a: {a}, Optimized b: {b},"
+              f"bound_prob: {backlog_bound(result.x)}")
+        return result.x
+    else:
+        print("Optimization failed:", result.message)   
+
+
+def incast_Nf_chernoff(N=2):
+    t_step = 0.0001 # 1ms
+    opt_a, opt_b = np.array([]), np.array([])
+    t_range = np.arange(0.0001, 0.1, t_step)
+    for t in t_range:
+        opt = incast_Nf_chernoff_at_t(t, N)
+        opt_a = np.append(opt_a, opt[0])
+        opt_b = np.append(opt_b, opt[1])
+
+    # plot a, b vs t
+    # plt.plot(t_range, opt_a1, label='a1')
+    # plt.plot(t_range, opt_b1, label='b1')
+    # plt.plot(t_range, opt_a2, label='a2')
+    # plt.plot(t_range, opt_b2, label='b2')
+    # plt.xlabel('Time (s)')
+    # plt.ylabel('a, b')
+    # plt.legend()
+    # plt.savefig(f'{fig_save_dir}/incast_Nf_chernoff.png')
+    # plt.show()
 
 def main():
     # incast_1f_chernoff()
-    incast_2f_chernoff()
+    # incast_2f_chernoff()
+    incast_Nf_chernoff(5)
     pass
 
 
