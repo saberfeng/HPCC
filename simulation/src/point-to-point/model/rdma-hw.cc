@@ -2,6 +2,7 @@
 #include <ns3/seq-ts-header.h>
 #include <ns3/udp-header.h>
 #include <ns3/ipv4-header.h>
+#include "ns3/log.h"
 #include "ns3/ppp-header.h"
 #include "ns3/boolean.h"
 #include "ns3/uinteger.h"
@@ -12,6 +13,8 @@
 #include "ppp-header.h"
 #include "qbb-header.h"
 #include "cn-header.h"
+
+NS_LOG_COMPONENT_DEFINE("RdmaHW");
 
 namespace ns3{
 
@@ -594,6 +597,8 @@ void RdmaHw::UpdateNextAvail(Ptr<RdmaQueuePair> qp, Time interframeGap, uint32_t
 		sendingTime = interframeGap + Seconds(qp->m_rate.CalculateTxTime(pkt_size));
 	else
 		sendingTime = interframeGap + Seconds(qp->m_max_rate.CalculateTxTime(pkt_size));
+	NS_LOG_INFO("sendingTime: " << sendingTime << " = " << interframeGap 
+								<< " + " << Seconds(qp->m_rate.CalculateTxTime(pkt_size)));
 	qp->m_nextAvail = Simulator::Now() + sendingTime;
 }
 

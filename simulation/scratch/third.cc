@@ -134,6 +134,8 @@ shared_ptr<vector<FlowInputEntry>> flows;
 // vector<shared_ptr<FlowInputEntry>>::iterator cur_flow_iter;
 uint32_t cur_flow_idx = 0;
 
+std::unordered_map<uint32_t, std::vector<uint64_t>> node2params; // node to ROCC parameters
+
 void printVec(const vector<long double>& vec){
     for(const auto& elem : vec){
         cout << elem << " ";
@@ -456,6 +458,21 @@ unordered_set<uint32_t> get_nodeid_set_from_file(ifstream& ifs, uint32_t node_nu
 		nodeid_set.insert(nid);
 	}
 	return nodeid_set;
+}
+
+std::unordered_map<uint32_t, std::vector<long double>> 
+read_ROCC_param_file(ifstream& ifs){
+	uint32_t node_num, param_num;
+	ifs >> node_num >> param_num;
+	for(uint32_t i=0; i<node_num; i++){
+		uint32_t node_id;
+		ifs >> node_id;
+		for(uint32_t j=0; j<param_num; j++){
+			uint64_t param;
+			ifs >> param;
+			node2params[node_id].push_back(param);
+		}
+	}
 }
 
 int main(int argc, char *argv[])
@@ -1071,15 +1088,16 @@ int main(int argc, char *argv[])
 			rdmaHw->SetAttribute("DctcpRateAI", DataRateValue(DataRate(dctcp_rate_ai)));
 			rdmaHw->SetPintSmplThresh(pint_prob);
 			// create and install RdmaDriver
-			Ptr<RdmaDriver> rdma = CreateObject<RdmaDriver>();
+			Ptr<RdmaDriver> rdma_driver = CreateObject<RdmaDriver>();
 			Ptr<Node> node = n.Get(i);
-			rdma->SetNode(node);
-			rdma->SetRdmaHw(rdmaHw);
+			rdma_driver->SetNode(node);
+			rdma_driver->SetRdmaHw(rdmaHw);
 
-			node->AggregateObject (rdma);
-			rdma->Init();
-			rdma->TraceConnectWithoutContext("QpComplete", 
+			node->AggregateObject (rdma_driver);
+			rdma_driver->Init();
+			rdma_driver->TraceConnectWithoutContext("QpComplete", 
 				MakeBoundCallback (qp_finish, fct_output)); // fct output
+			rdma_driver->m_rdma->m_nic[0].dev->SetRocc(1, 0, node2params[i]); // set rocc parameters
 		}
 	}
 	#endif
@@ -1099,9 +1117,11 @@ int main(int argc, char *argv[])
 	if(cc_mode == 12){
 		// RandOffsetInjector rand_offset_injector = rand_offset::RandOffsetInjector();
 		ifstream topo_file_ROCC(topology_file);// topology file for Random Offset Injector (ROI)
-		PlainRandomModel plain_rand_model(flows, topo_file_ROCC, nextHop, n, rand_param_file);
-		plain_rand_model.insert_offsets(flows, nextHop, n, packet_payload_size);
-		sortFlowsByStartTime();
+		ifstream param_file_ROCC(rand_param_file);// parameter file for Random Offset Injector (ROI)
+		read_ROCC_param_file(param_file_ROCC);
+		// PlainRandomModel plain_rand_model(flows, topo_file_ROCC, nextHop, n, rand_param_file);
+		// plain_rand_model.insert_offsets(flows, nextHop, n, packet_payload_size);
+		// sortFlowsByStartTime();
 	}
 	// ******************** ROCC end *****************************
 

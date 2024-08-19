@@ -170,7 +170,7 @@ def incast_Nf_chernoff(N=2):
 def main():
     # incast_1f_chernoff()
     # incast_2f_chernoff()
-    incast_Nf_chernoff(5)
+    incast_Nf_chernoff(1)
     pass
 
 

@@ -245,6 +245,7 @@ namespace ns3 {
 	void
 		QbbNetDevice::TransmitComplete(void)
 	{
+		NS_LOG_INFO("TransmitComplete at " << Simulator::Now().GetSeconds());
 		NS_LOG_FUNCTION(this);
 		NS_ASSERT_MSG(m_txMachineState == BUSY, "Must be BUSY if transmitting");
 		m_txMachineState = READY;
@@ -258,6 +259,7 @@ namespace ns3 {
 		QbbNetDevice::DequeueAndTransmit(void)
 	{
 		NS_LOG_FUNCTION(this);
+		// Simulator::Schedule(getRandomDelay(), &QbbNetDevice::DequeueAndTransmit, this);
 		if (!m_linkUp) return; // if link is down, return
 		if (m_txMachineState == BUSY) return;	// Quit if channel busy
 		Ptr<Packet> p;
@@ -276,6 +278,9 @@ namespace ns3 {
 
 				// transmit
 				m_traceQpDequeue(p, lastQp);
+				NS_LOG_INFO("Dequeue a packet from qp " << qIndex << " at node " 
+														<< m_node->GetId() << " at " 
+														<< Simulator::Now().GetSeconds());
 				TransmitStart(p);
 
 				// update for the next avail time
@@ -294,6 +299,7 @@ namespace ns3 {
 				}
 			}
 			return;
+
 		}else{   //switch, doesn't care about qcn, just send
 			p = m_queue->DequeueRR(m_paused);		//this is round-robin
 			if (p != 0){
@@ -321,6 +327,7 @@ namespace ns3 {
 				if (m_node->GetNodeType() == 0 && m_qcnEnabled){ //nothing to send, possibly due to qcn flow control, if so reschedule sending
 					Time t = Simulator::GetMaximumSimulationTime();
 					for (uint32_t i = 0; i < m_rdmaEQ->GetFlowCount(); i++){
+					// under current scheduling policy, only one flow per rdma device
 						Ptr<RdmaQueuePair> qp = m_rdmaEQ->GetQp(i);
 						if (qp->GetBytesLeft() == 0)
 							continue;
