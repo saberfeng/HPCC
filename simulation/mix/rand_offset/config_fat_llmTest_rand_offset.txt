@@ -8,7 +8,7 @@ TOPOLOGY_FILE simulation/mix/rand_offset/fat.txt
 FLOW_FILE simulation/mix/rand_offset/llmTest.txt
 TRACE_FILE simulation/mix/rand_offset/trace.txt
 QUEUE_MONITOR_FILE simulation/mix/rand_offset/qmonitor.txt
-RANDOM_PARAM_FILE simulation/mix/rand_offset/plain_rand_model.txt
+RANDOM_PARAM_FILE simulation/mix/rand_offset/rocc_param.txt
 
 TRACE_OUTPUT_FILE simulation/mix/rand_offset/mix_fat_llmTest_rand_offset.tr
 FCT_OUTPUT_FILE simulation/mix/rand_offset/fct_fat_llmTest_rand_offset.csv
