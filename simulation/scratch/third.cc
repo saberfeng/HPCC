@@ -460,8 +460,7 @@ unordered_set<uint32_t> get_nodeid_set_from_file(ifstream& ifs, uint32_t node_nu
 	return nodeid_set;
 }
 
-std::unordered_map<uint32_t, std::vector<long double>> 
-read_ROCC_param_file(ifstream& ifs){
+void read_ROCC_param_file(ifstream& ifs){
 	uint32_t node_num, param_num;
 	ifs >> node_num >> param_num;
 	for(uint32_t i=0; i<node_num; i++){
@@ -1097,7 +1096,9 @@ int main(int argc, char *argv[])
 			rdma_driver->Init();
 			rdma_driver->TraceConnectWithoutContext("QpComplete", 
 				MakeBoundCallback (qp_finish, fct_output)); // fct output
-			rdma_driver->m_rdma->m_nic[0].dev->SetRocc(1, 0, node2params[i]); // set rocc parameters
+			if(node2params.find(i) != node2params.end()){
+				rdma_driver->m_rdma->m_nic[0].dev->SetRocc(1, 0, node2params[i]); // set rocc parameters
+			}
 		}
 	}
 	#endif
