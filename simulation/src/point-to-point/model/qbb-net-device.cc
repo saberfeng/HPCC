@@ -252,7 +252,8 @@ namespace ns3 {
 		NS_ASSERT_MSG(m_currentPkt != 0, "QbbNetDevice::TransmitComplete(): m_currentPkt zero");
 		m_phyTxEndTrace(m_currentPkt);
 		m_currentPkt = 0;
-		DequeueAndTransmit();
+		// DequeueAndTransmit(); // add delay
+		Simulator::Schedule(getRandomDelay(), &QbbNetDevice::DequeueAndTransmit, this);
 	}
 
 	void
@@ -281,6 +282,10 @@ namespace ns3 {
 				NS_LOG_INFO("Dequeue a packet from qp " << qIndex << " at node " 
 														<< m_node->GetId() << " at " 
 														<< Simulator::Now().GetSeconds());
+				std::cout << "Dequeue a packet from qp " << qIndex << " at node " 
+														<< m_node->GetId() << " at " 
+														<< Simulator::Now().GetNanoSeconds() << "ns" 
+														<< std::endl;
 				TransmitStart(p);
 
 				// update for the next avail time
@@ -479,8 +484,10 @@ namespace ns3 {
    }
 
    void QbbNetDevice::NewQp(Ptr<RdmaQueuePair> qp){
-	   qp->m_nextAvail = Simulator::Now();
-	   DequeueAndTransmit();
+		qp->m_nextAvail = Simulator::Now();
+	//    DequeueAndTransmit(); // reschedule the sending, add delay
+		Time rand_delay = getRandomDelay();
+		Simulator::Schedule(rand_delay, &QbbNetDevice::DequeueAndTransmit, this);
    }
    void QbbNetDevice::ReassignedQp(Ptr<RdmaQueuePair> qp){
 	   DequeueAndTransmit();

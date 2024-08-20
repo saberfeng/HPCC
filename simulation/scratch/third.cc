@@ -1097,7 +1097,8 @@ int main(int argc, char *argv[])
 			rdma_driver->TraceConnectWithoutContext("QpComplete", 
 				MakeBoundCallback (qp_finish, fct_output)); // fct output
 			if(node2params.find(i) != node2params.end()){
-				rdma_driver->m_rdma->m_nic[0].dev->SetRocc(1, 0, node2params[i]); // set rocc parameters
+				Time pkt_trans_time = Seconds(packet_payload_size * 8 / nic_rate);
+				rdma_driver->m_rdma->m_nic[0].dev->SetRocc(1, 0, node2params[i], pkt_trans_time); // set rocc parameters
 			}
 		}
 	}

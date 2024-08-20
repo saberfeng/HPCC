@@ -3,7 +3,7 @@ from scipy.optimize import minimize, LinearConstraint
 import matplotlib.pyplot as plt
 
 fig_save_dir = "simulation/scripts"
-m_bytes = 1500  # packet size
+m_bytes = 1048  # packet size
 nic_bw = 100*10**9  # 100 Gbps
 smallest_a = m_bytes*8/nic_bw
 
