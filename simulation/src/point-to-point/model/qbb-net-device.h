@@ -193,40 +193,12 @@ protected:
   std::mt19937 gen;
   std::uniform_int_distribution<std::mt19937::result_type> dist;
 
-  ns3::Time getRandomDelay(){
-    if(!enable_rocc){
-      return ns3::Time(0);
-    }
-    if(rocc_dist_type == 0){
-      return ns3::MicroSeconds(dist(gen)) - pkt_trans_time;
-    } else {
-      throw std::invalid_argument("Invalid distribution type");
-    }
-  }
-
+  ns3::Time getRandomDelay();
 public:
 
   void SetRocc(bool enable, uint32_t dist_type, 
               const std::vector<uint64_t>& dist_params,
-              Time trans_time){
-    enable_rocc = enable;
-    rocc_dist_type = dist_type;
-    rocc_dist_params = dist_params;
-    pkt_trans_time = trans_time;
-
-    if(!enable_rocc){
-      return;
-    }
-
-    if(rocc_dist_type == 0){
-      std::random_device rand_dev;
-      gen = std::mt19937(rand_dev());
-      dist = std::uniform_int_distribution<std::mt19937::result_type>(
-          rocc_dist_params[0], rocc_dist_params[1]);
-    } else {
-      throw std::invalid_argument("Invalid distribution type");
-    }
-  }
+              Time trans_time);
 
   void logTransmit();
 

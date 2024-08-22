@@ -252,8 +252,15 @@ namespace ns3 {
 		NS_ASSERT_MSG(m_currentPkt != 0, "QbbNetDevice::TransmitComplete(): m_currentPkt zero");
 		m_phyTxEndTrace(m_currentPkt);
 		m_currentPkt = 0;
-		// DequeueAndTransmit(); // add delay
-		Simulator::Schedule(getRandomDelay(), &QbbNetDevice::DequeueAndTransmit, this);
+		if (m_node->GetNodeType() == 0){ // is server
+			Time rand_delay = getRandomDelay();
+			if(rand_delay != Time(0)){
+				std::cout << "rand_delay:" << rand_delay.GetNanoSeconds() << "ns" << std::endl;
+			}
+			Simulator::Schedule(rand_delay, &QbbNetDevice::DequeueAndTransmit, this);
+		} else {
+			DequeueAndTransmit();
+		}
 	}
 
 	void
@@ -543,4 +550,39 @@ namespace ns3 {
 			m_nextSend = Simulator::Schedule(delta, &QbbNetDevice::DequeueAndTransmit, this);
 		}
 	}
+
+	ns3::Time QbbNetDevice::getRandomDelay(){
+		if(!enable_rocc){
+			return ns3::Time(0);
+		}
+		if(rocc_dist_type == 0){
+			ns3::Time raw_rand_delay = ns3::NanoSeconds(dist(gen));
+			return raw_rand_delay - pkt_trans_time;
+		} else {
+			throw std::invalid_argument("Invalid distribution type");
+		}
+	}
+
+	void QbbNetDevice::SetRocc(bool enable, uint32_t dist_type, 
+				const std::vector<uint64_t>& dist_params,
+				Time trans_time){
+		enable_rocc = enable;
+		rocc_dist_type = dist_type;
+		rocc_dist_params = dist_params;
+		pkt_trans_time = trans_time;
+
+		if(!enable_rocc){
+			return;
+		}
+
+		if(rocc_dist_type == 0){
+			std::random_device rand_dev;
+			gen = std::mt19937(rand_dev());
+			dist = std::uniform_int_distribution<std::mt19937::result_type>(
+				rocc_dist_params[0], rocc_dist_params[1]);
+		} else {
+			throw std::invalid_argument("Invalid distribution type");
+		}
+	}
+
 } // namespace ns3

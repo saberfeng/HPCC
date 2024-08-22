@@ -474,6 +474,18 @@ void read_ROCC_param_file(ifstream& ifs){
 	}
 }
 
+
+Ptr<QbbNetDevice> getQbbDevFromRdmaDriver(Ptr<RdmaDriver> driver){
+	Ptr<QbbNetDevice> dev = NULL;
+	for (uint32_t i = 0; i < driver->m_node->GetNDevices(); i++){
+		if (driver->m_node->GetDevice(i)->IsQbb()){
+			dev = DynamicCast<QbbNetDevice>(driver->m_node->GetDevice(i));
+			break;
+		}
+	}
+	return dev;
+}	
+
 int main(int argc, char *argv[])
 {
 	clock_t begint, endt;
@@ -1053,6 +1065,11 @@ int main(int argc, char *argv[])
 		}
 	}
 
+	if(cc_mode == 12){
+		ifstream param_file_ROCC(rand_param_file);// parameter file for Random Offset Injector (ROI)
+		read_ROCC_param_file(param_file_ROCC);
+	}
+
 	#if ENABLE_QP
 	FILE *fct_output = fopen(fct_output_file.c_str(), "w");
 	fprintf(fct_output, "src_ip,dst_ip,sport,dport,m_size(bytes),start(ns),complete_fct(ns),standalone_fct(ns),end(ns)\n");
@@ -1097,8 +1114,9 @@ int main(int argc, char *argv[])
 			rdma_driver->TraceConnectWithoutContext("QpComplete", 
 				MakeBoundCallback (qp_finish, fct_output)); // fct output
 			if(node2params.find(i) != node2params.end()){
-				Time pkt_trans_time = Seconds(packet_payload_size * 8 / nic_rate);
-				rdma_driver->m_rdma->m_nic[0].dev->SetRocc(1, 0, node2params[i], pkt_trans_time); // set rocc parameters
+				Time pkt_trans_time = NanoSeconds(packet_payload_size * 8 * 1e9/ nic_rate);
+				Ptr<QbbNetDevice> qbb_net_dev = getQbbDevFromRdmaDriver(rdma_driver);
+				qbb_net_dev->SetRocc(1, 0, node2params[i], pkt_trans_time); // set rocc parameters
 			}
 		}
 	}
@@ -1117,13 +1135,7 @@ int main(int argc, char *argv[])
 	readAllFlowInputEntrys();
 	// ******************** start ROCC logic *********************
 	if(cc_mode == 12){
-		// RandOffsetInjector rand_offset_injector = rand_offset::RandOffsetInjector();
 		ifstream topo_file_ROCC(topology_file);// topology file for Random Offset Injector (ROI)
-		ifstream param_file_ROCC(rand_param_file);// parameter file for Random Offset Injector (ROI)
-		read_ROCC_param_file(param_file_ROCC);
-		// PlainRandomModel plain_rand_model(flows, topo_file_ROCC, nextHop, n, rand_param_file);
-		// plain_rand_model.insert_offsets(flows, nextHop, n, packet_payload_size);
-		// sortFlowsByStartTime();
 	}
 	// ******************** ROCC end *****************************
 

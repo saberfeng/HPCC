@@ -1,7 +1,10 @@
 1
 2
-1 1.2e-07 2.4e-07
+1 83 167
 
 node_num
 param_num_each_node
 node_id param1 param2
+
+if dist == uniform:
+    param1, param2 is ns
