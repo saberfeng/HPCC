@@ -11,6 +11,7 @@
 #include <sstream>
 #include <utility>
 #include <cassert>
+#include <random>
 #include "ns3/core-module.h"
 #include "ns3/node.h"
 #include "ns3/ptr.h"
@@ -100,6 +101,14 @@ public:
                             const NodeContainer &nodes,
                             uint32_t mtu_byte);
     
+    // given an interval and number of slots to divide,
+    //      assign a random slot offset to each flow 
+    void rand_slot_offset(shared_ptr<vector<FlowInputEntry>>& flows,
+                            const map<Ptr<Node>, map<Ptr<Node>, vector<Ptr<Node>>>>& nextHop,
+                            const NodeContainer &nodes,
+                            uint32_t mtu_byte,
+                            uint32_t slot_num,
+                            Time slot_interval);
 
 private:
     uint64_t get_rand(uint64_t range_start, uint64_t range_end){

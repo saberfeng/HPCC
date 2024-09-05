@@ -254,9 +254,10 @@ namespace ns3 {
 		m_currentPkt = 0;
 		if (m_node->GetNodeType() == 0){ // is server
 			Time rand_delay = getRandomDelay();
-			if(rand_delay != Time(0)){
-				std::cout << "rand_delay:" << rand_delay.GetNanoSeconds() << "ns" << std::endl;
-			}
+			// if(rand_delay != Time(0)){
+			// 	std::cout << "    rand_delay:" << rand_delay.GetNanoSeconds() << "ns"
+			// 			<< " at node " << m_node->GetId() << std::endl;
+			// }
 			Simulator::Schedule(rand_delay, &QbbNetDevice::DequeueAndTransmit, this);
 		} else {
 			DequeueAndTransmit();

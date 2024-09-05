@@ -116,7 +116,26 @@ void PlainRandomModel::insert_offsets(shared_ptr<vector<FlowInputEntry>>& flows,
                             const map<Ptr<Node>, map<Ptr<Node>, vector<Ptr<Node>>>>& nextHop,
                             const NodeContainer &nodes,
                             uint32_t mtu_byte){
-    shift_arr_curve_algo(flows, nextHop, nodes, mtu_byte);
+    // shift_arr_curve_algo(flows, nextHop, nodes, mtu_byte);
+    rand_slot_offset(flows, nextHop, nodes, mtu_byte, 100, ns3::MilliSeconds(500*3));
 }
 
+void rand_slot_offset(shared_ptr<vector<FlowInputEntry>>& flows,
+                            const map<Ptr<Node>, map<Ptr<Node>, vector<Ptr<Node>>>>& nextHop,
+                            const NodeContainer &nodes,
+                            uint32_t mtu_byte,
+                            uint32_t slot_num,
+                            Time slot_interval){
+    // get a random number between 0 and slot_num
+    std::random_device dev;
+    std::mt19937 rng(dev());
+    std::uniform_int_distribution<std::mt19937::result_type> rand_dist(0,slot_num-1); // distribution in range [1, 6]
+
+    for (uint32_t flow_id = 0; flow_id < flows->size(); flow_id++){
+        FlowInputEntry& flow = (*flows)[flow_id];
+        uint32_t slot_offset = rand_dist(rng);
+        flow.offset = ns3::NanoSeconds(
+            slot_interval.GetNanoSeconds() * (slot_offset / slot_num));
+    }
+}
 }

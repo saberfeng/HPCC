@@ -49,6 +49,7 @@ using namespace rand_offset;
 NS_LOG_COMPONENT_DEFINE("GENERIC_SIMULATION");
 
 uint32_t cc_mode = 1; // 1: DCQCN, 3: HPCC, 7: TIMELY, 8: DCTCP, 10: HPCC-PINT, 11:NONE, 12:RAND-OFFSET
+uint32_t enable_randoffset = 0;
 bool enable_qcn = true, use_dynamic_pfc_threshold = true;
 bool enable_pfc = true;
 bool enable_qbb = false;
@@ -722,6 +723,10 @@ int main(int argc, char *argv[])
 			else if (key.compare("CC_MODE") == 0){
 				conf >> cc_mode;
 				std::cout << "CC_MODE\t\t" << cc_mode << '\n';
+			} 
+			else if (key.compare("ENABLE_RANDOFFSET") == 0){
+				conf >> enable_randoffset;
+				std::cout << "ENABLE_RANDOFFSET\t\t" << enable_randoffset << '\n';
 			}else if (key.compare("RATE_DECREASE_INTERVAL") == 0){
 				double v;
 				conf >> v;
@@ -887,7 +892,8 @@ int main(int argc, char *argv[])
 	else if (cc_mode == 10) // hpcc-pint
 		IntHeader::mode = IntHeader::PINT;
 	else if (cc_mode == 12)
-		IntHeader::mode = IntHeader::RAND_OFFSET;
+		// IntHeader::mode = IntHeader::RAND_OFFSET;
+		throw runtime_error("RAND_OFFSET not a cc mode");
 	else // others, no extra header
 		IntHeader::mode = IntHeader::NONE;
 
@@ -1134,10 +1140,14 @@ int main(int argc, char *argv[])
 
 	readAllFlowInputEntrys();
 	// ******************** start ROCC logic *********************
-	if(cc_mode == 12){
-		ifstream topo_file_ROCC(topology_file);// topology file for Random Offset Injector (ROI)
+	if(enable_randoffset){
+		// RandOffsetInjector rand_offset_injector = rand_offset::RandOffsetInjector();
+		ifstream topo_file_randoffset(topology_file);// topology file for Random Offset Injector (ROI)
+		PlainRandomModel plain_rand_model(flows, topo_file_randoffset, nextHop, n, rand_param_file);
+		plain_rand_model.insert_offsets(flows, nextHop, n, packet_payload_size);
+		sortFlowsByStartTime();
 	}
-	// ******************** ROCC end *****************************
+	// // ******************** ROCC end *****************************
 
 	//
 	// get BDP and delay

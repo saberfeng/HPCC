@@ -75,13 +75,13 @@
         },
 
         {
-            "name": "gen conf ROCC",
+            "name": "gen conf LlmTstDCQCN",
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/simulation/run_rand_offset.py",
             "console": "integratedTerminal",
             "args": [
-                "--cc", "rand_offset",
+                "--cc", "1",
                 "--trace", "llmTest",
                 "--topo", "fat",
                 "--enable_tr", "0",
@@ -89,6 +89,20 @@
             "cwd":"${workspaceFolder}/simulation",
         },
 
+        {
+            "name": "gen conf LlmTstHPCC",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/simulation/run_rand_offset.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--cc", "3",
+                "--trace", "llmTest",
+                "--topo", "fat",
+                "--enable_tr", "0",
+            ],
+            "cwd":"${workspaceFolder}/simulation",
+        },
         {
             "name": "gen conf hp",
             "type": "debugpy",

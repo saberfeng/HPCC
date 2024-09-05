@@ -598,9 +598,9 @@ void RdmaHw::UpdateNextAvail(Ptr<RdmaQueuePair> qp, Time interframeGap, uint32_t
 		sendingTime = interframeGap + Seconds(qp->m_rate.CalculateTxTime(pkt_size));
 	else
 		sendingTime = interframeGap + Seconds(qp->m_max_rate.CalculateTxTime(pkt_size));
-	std::cout << "pkt size:" << pkt_size << "Bytes sendingTime: " << sendingTime 
-				<< " = " << interframeGap.GetNanoSeconds()
-				<< " + " << Seconds(qp->m_rate.CalculateTxTime(pkt_size)).GetNanoSeconds() << std::endl;
+	// std::cout << "    pkt size:" << pkt_size << "Bytes sendingTime: " << sendingTime 
+	// 			<< " = " << interframeGap.GetNanoSeconds()
+	// 			<< " + " << Seconds(qp->m_rate.CalculateTxTime(pkt_size)).GetNanoSeconds() << std::endl;
 	qp->m_nextAvail = Simulator::Now() + sendingTime;
 }
 

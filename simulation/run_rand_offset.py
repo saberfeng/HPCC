@@ -21,6 +21,7 @@ PFC_OUTPUT_FILE simulation/mix/{proj_dir}/pfc_{topo}_{trace}_{cc}{failure}.txt
 SIMULATOR_STOP_TIME 4.00
 
 CC_MODE {mode}
+ENABLE_RANDOFFSET {enable_randoffset}
 
 ERROR_RATE_PER_LINK 0.0000
 L2_CHUNK_SIZE 4000
@@ -52,7 +53,9 @@ OFFSET_UPBOUND_US {offset_upbound_us}
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser(description='run simulation')
-	parser.add_argument('--cc', dest='cc', action='store', default='rand_offset', help="rand_offset")
+	parser.add_argument('--enable_randoffset', dest='enable_randoffset', action='store', default=1, help="enable rand_offset")
+	#cc_mode 1: DCQCN, 3: HPCC, 7: TIMELY, 8: DCTCP, 10: HPCC-PINT, 11:NONE,
+	parser.add_argument('--cc', dest='cc', action='store', default=1, help="the name of the congestion control algorithm")
 	parser.add_argument('--trace', dest='trace', action='store', default='flow', help="the name of the flow file")
 	parser.add_argument('--bw', dest="bw", action='store', default='100', help="the NIC bandwidth (Gbps)")
 	parser.add_argument('--down', dest='down', action='store', default='0 0 0', help="link down event")
@@ -82,28 +85,27 @@ if __name__ == "__main__":
 		failure = '_down'
 
 	
-	if args.cc == "rand_offset":
-		# python run_rand_offset.py --cc rand_offset --trace 2n1f_flow --bw 50 --topo 2n1f_topo --enable_tr 1
-		proj_dir = 'rand_offset'
-		config_name = "mix/%s/config_%s_%s_%s%s.txt"% \
-						(proj_dir, topo, trace, args.cc, failure)
+	# python run_rand_offset.py --cc rand_offset --trace 2n1f_flow --bw 50 --topo 2n1f_topo --enable_tr 1
+	proj_dir = 'rand_offset'
+	cc_code_to_name_map = {1: 'dcqcn', 3: 'hpcc', 7: 'timely', 8: 'dctcp', 10: 'hpcc-pint', 11: 'none'}
+	config_name = "mix/%s/config_%s_%s_%s%s.txt"% \
+					(proj_dir, topo, trace, cc_code_to_name_map[int(args.cc)], failure)
 
-		enable_qcn = 0
-		dynamic_thresh = 0
-		config = config_template.format(dynamic_thresh=dynamic_thresh, 
-						proj_dir=proj_dir, bw=bw, trace=trace, topo=topo, cc=args.cc, 
-						mode=12, has_win=0, vwin=0, us=0, ack_prio=1, 
-						link_down=args.down, failure=failure, 
-						buffer_size=bfsz, enable_tr=enable_tr,
-						enable_pfc=enable_pfc, offset_upbound_us=offset_upbound_us,
-						qlen_mon_intv_ns=qlen_mon_intv_ns, 
-						qlen_mon_dump_intv_ns=qlen_mon_dump_intv_ns,
-						qlen_mon_start_ns=qlen_mon_start_ns,
-						qlen_mon_end_ns=qlen_mon_end_ns)
-		print(config)
-	else:
-		print("unknown cc:", args.cc)
-		sys.exit(1)
+	enable_qcn = 0
+	dynamic_thresh = 0
+	config = config_template.format(dynamic_thresh=dynamic_thresh, 
+					proj_dir=proj_dir, bw=bw, trace=trace, topo=topo, cc=args.cc, 
+					mode=args.cc, has_win=0, vwin=0, us=0, ack_prio=1, 
+					link_down=args.down, failure=failure, 
+					buffer_size=bfsz, enable_tr=enable_tr,
+					enable_pfc=enable_pfc, offset_upbound_us=offset_upbound_us,
+					qlen_mon_intv_ns=qlen_mon_intv_ns, 
+					qlen_mon_dump_intv_ns=qlen_mon_dump_intv_ns,
+					qlen_mon_start_ns=qlen_mon_start_ns,
+					qlen_mon_end_ns=qlen_mon_end_ns,
+					enable_randoffset=args.enable_randoffset)
+	print(config)
+
 
 	print(config_name)
 	with open(config_name, "w") as file:
