@@ -38,8 +38,8 @@
 #include <ns3/rdma-driver.h>
 #include <ns3/switch-node.h>
 #include <ns3/sim-setting.h>
-#include "ns3/netcalc_model.h"
-#include "ns3/rand_offset_injector.h"
+// #include "ns3/netcalc_model.h"
+// #include "ns3/rand_offset_injector.h"
 #include "ns3/plain_random_model.h"
 
 using namespace ns3;
@@ -1046,17 +1046,15 @@ int main(int argc, char *argv[])
 			for (uint32_t j = 1; j < sw->GetNDevices(); j++){
 				Ptr<QbbNetDevice> dev = DynamicCast<QbbNetDevice>(sw->GetDevice(j));
 				uint64_t rate = dev->GetDataRate().GetBitRate();
-				if(cc_mode != 12){ // if not rand-offset, using DCQCN need to set kmin kmax
-					// set ecn
-					NS_ASSERT_MSG(rate2kmin.find(rate) != rate2kmin.end(), "must set kmin for each link speed");
-					NS_ASSERT_MSG(rate2kmax.find(rate) != rate2kmax.end(), "must set kmax for each link speed");
-					NS_ASSERT_MSG(rate2pmax.find(rate) != rate2pmax.end(), "must set pmax for each link speed");
-					sw->m_mmu->ConfigEcn(j, rate2kmin[rate], rate2kmax[rate], rate2pmax[rate]);
-					// set pfc
-					uint64_t delay = DynamicCast<QbbChannel>(dev->GetChannel())->GetDelay().GetTimeStep();
-					uint32_t headroom = rate * delay / 8 / 1000000000 * 3;
-					sw->m_mmu->ConfigHdrm(j, headroom);
-				}
+				// set ecn
+				NS_ASSERT_MSG(rate2kmin.find(rate) != rate2kmin.end(), "must set kmin for each link speed");
+				NS_ASSERT_MSG(rate2kmax.find(rate) != rate2kmax.end(), "must set kmax for each link speed");
+				NS_ASSERT_MSG(rate2pmax.find(rate) != rate2pmax.end(), "must set pmax for each link speed");
+				sw->m_mmu->ConfigEcn(j, rate2kmin[rate], rate2kmax[rate], rate2pmax[rate]);
+				// set pfc
+				uint64_t delay = DynamicCast<QbbChannel>(dev->GetChannel())->GetDelay().GetTimeStep();
+				uint32_t headroom = rate * delay / 8 / 1000000000 * 3;
+				sw->m_mmu->ConfigHdrm(j, headroom);
 				// set pfc alpha, proportional to link bw
 				sw->m_mmu->pfc_a_shift[j] = shift;
 				while (rate > nic_rate && sw->m_mmu->pfc_a_shift[j] > 0){
@@ -1119,11 +1117,11 @@ int main(int argc, char *argv[])
 			rdma_driver->Init();
 			rdma_driver->TraceConnectWithoutContext("QpComplete", 
 				MakeBoundCallback (qp_finish, fct_output)); // fct output
-			if(node2params.find(i) != node2params.end()){
-				Time pkt_trans_time = NanoSeconds(packet_payload_size * 8 * 1e9/ nic_rate);
-				Ptr<QbbNetDevice> qbb_net_dev = getQbbDevFromRdmaDriver(rdma_driver);
-				qbb_net_dev->SetRocc(1, 0, node2params[i], pkt_trans_time); // set rocc parameters
-			}
+			// if(node2params.find(i) != node2params.end()){
+			// 	Time pkt_trans_time = NanoSeconds(packet_payload_size * 8 * 1e9/ nic_rate);
+			// 	Ptr<QbbNetDevice> qbb_net_dev = getQbbDevFromRdmaDriver(rdma_driver);
+			// 	qbb_net_dev->SetRocc(1, 0, node2params[i], pkt_trans_time); // set rocc parameters
+			// }
 		}
 	}
 	#endif

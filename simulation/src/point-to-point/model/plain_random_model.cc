@@ -120,7 +120,7 @@ void PlainRandomModel::insert_offsets(shared_ptr<vector<FlowInputEntry>>& flows,
     rand_slot_offset(flows, nextHop, nodes, mtu_byte, 100, ns3::MilliSeconds(500*3));
 }
 
-void rand_slot_offset(shared_ptr<vector<FlowInputEntry>>& flows,
+void PlainRandomModel::rand_slot_offset(shared_ptr<vector<FlowInputEntry>>& flows,
                             const map<Ptr<Node>, map<Ptr<Node>, vector<Ptr<Node>>>>& nextHop,
                             const NodeContainer &nodes,
                             uint32_t mtu_byte,

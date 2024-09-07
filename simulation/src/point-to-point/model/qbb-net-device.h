@@ -185,20 +185,20 @@ protected:
   std::vector<ECNAccount> *m_ecn_source;
 
   // ROCC
-  bool enable_rocc;
-  uint32_t rocc_dist_type; // 0: uniform, 1: normal
-  std::vector<uint64_t> rocc_dist_params; // uniform:[min_us, max_us]
-  Time pkt_trans_time;
+  // bool enable_rocc;
+  // uint32_t rocc_dist_type; // 0: uniform, 1: normal
+  // std::vector<uint64_t> rocc_dist_params; // uniform:[min_us, max_us]
+  // Time pkt_trans_time;
 
-  std::mt19937 gen;
-  std::uniform_int_distribution<std::mt19937::result_type> dist;
+  // std::mt19937 gen;
+  // std::uniform_int_distribution<std::mt19937::result_type> dist;
 
-  ns3::Time getRandomDelay();
+  // ns3::Time getRandomDelay();
 public:
 
-  void SetRocc(bool enable, uint32_t dist_type, 
-              const std::vector<uint64_t>& dist_params,
-              Time trans_time);
+  // void SetRocc(bool enable, uint32_t dist_type, 
+  //             const std::vector<uint64_t>& dist_params,
+  //             Time trans_time);
 
   void logTransmit();
 

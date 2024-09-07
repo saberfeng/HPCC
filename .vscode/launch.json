@@ -6,12 +6,12 @@
     "configurations": [
 
         {
-            "name": "third llmTst HPCC",
+            "name": "third llmTst dcqcn",
             "type": "cppdbg", // cppdbg for GDB or LLDB
             "request": "launch", // "launch" a program or "attach" to an already running instance 
             "program": "${workspaceFolder}/simulation/build/scratch/third",
             "args": [
-                "simulation/mix/rand_offset/config_fat_llmTest_hpcc.txt",
+                "simulation/mix/rand_offset/config_fat_llmTest_dcqcn.txt",
             ],
             "cwd":"${workspaceFolder}", // cwd:working directory
             "setupCommands": [ // important for pretty printing containers: vectors, maps....
@@ -29,12 +29,12 @@
         },
 
         {
-            "name": "third hp",
+            "name": "third llmTst hp",
             "type": "cppdbg", // cppdbg for GDB or LLDB
             "request": "launch", // "launch" a program or "attach" to an already running instance 
             "program": "${workspaceFolder}/simulation/build/scratch/third",
             "args": [
-                "simulation/mix/config_fat_llm16_hp95ai50.txt",
+                "simulation/mix/rand_offset/config_fat_llmTest_hp95ai50.txt",
             ],
             "cwd":"${workspaceFolder}", // cwd:working directory
             "setupCommands": [ // important for pretty printing containers: vectors, maps....
@@ -52,12 +52,12 @@
         },
 
         {
-            "name": "third hpccPint",
+            "name": "third llmTst hpccPint",
             "type": "cppdbg", // cppdbg for GDB or LLDB
             "request": "launch", // "launch" a program or "attach" to an already running instance 
             "program": "${workspaceFolder}/simulation/build/scratch/third",
             "args": [
-                "simulation/mix/rand_offset/config_fat_llm_flows_hpccPint95ai50log1.050p1.000.txt",
+                "simulation/mix/rand_offset/config_fat_llmTest_hpccPint95ai50log1.050p1.000.txt",
             ],
             "cwd":"${workspaceFolder}", // cwd:working directory
             "setupCommands": [ // important for pretty printing containers: vectors, maps....
