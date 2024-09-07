@@ -2,12 +2,12 @@ import argparse
 import sys
 import os
 
-config_template="""ENABLE_QCN 0
-ENABLE_PFC {enable_pfc}
-
+config_template="""ENABLE_QCN 1
+ENABLE_PFC 1
 USE_DYNAMIC_PFC_THRESHOLD {dynamic_thresh} 
 
 PACKET_PAYLOAD_SIZE 1000
+
 TOPOLOGY_FILE simulation/mix/{proj_dir}/{topo}.txt
 FLOW_FILE simulation/mix/{proj_dir}/{trace}.txt
 TRACE_FILE simulation/mix/{proj_dir}/trace.txt
@@ -21,6 +21,17 @@ PFC_OUTPUT_FILE simulation/mix/{proj_dir}/pfc_{topo}_{trace}_{cc}{failure}.txt
 SIMULATOR_STOP_TIME 4.00
 
 CC_MODE {mode}
+ALPHA_RESUME_INTERVAL {t_alpha}
+RATE_DECREASE_INTERVAL {t_dec}
+CLAMP_TARGET_RATE 0
+RP_TIMER {t_inc}
+EWMA_GAIN {g}
+FAST_RECOVERY_TIMES 1
+RATE_AI {ai}Mb/s
+RATE_HAI {hai}Mb/s
+MIN_RATE 1000Mb/s
+DCTCP_RATE_AI {dctcp_ai}Mb/s
+
 ENABLE_RANDOFFSET {enable_randoffset}
 
 ERROR_RATE_PER_LINK 0.0000
@@ -32,6 +43,13 @@ HAS_WIN {has_win}
 GLOBAL_T 1
 VAR_WIN {vwin}
 FAST_REACT {us}
+U_TARGET {u_tgt}
+MI_THRESH {mi}
+INT_MULTI {int_multi}
+MULTI_RATE 0
+SAMPLE_FEEDBACK 0
+PINT_LOG_BASE {pint_log_base}
+PINT_PROB {pint_prob}
 
 RATE_BOUND 1
 
@@ -41,6 +59,9 @@ LINK_DOWN {link_down}
 
 ENABLE_TRACE {enable_tr}
 
+KMAX_MAP 2 100000000000 1600 400000000000 6400
+KMIN_MAP 2 100000000000 400 400000000000 1600
+PMAX_MAP 2 100000000000 0.20 400000000000 0.20
 BUFFER_SIZE {buffer_size}
 QLEN_MON_FILE simulation/mix/{proj_dir}/qlen_{topo}_{trace}_{cc}{failure}.txt
 QLEN_MON_START {qlen_mon_start_ns}
