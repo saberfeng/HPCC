@@ -6,12 +6,12 @@
     "configurations": [
 
         {
-            "name": "third ROCC",
+            "name": "third llmTst HPCC",
             "type": "cppdbg", // cppdbg for GDB or LLDB
             "request": "launch", // "launch" a program or "attach" to an already running instance 
             "program": "${workspaceFolder}/simulation/build/scratch/third",
             "args": [
-                "simulation/mix/rand_offset/config_fat_llmTest_rand_offset.txt",
+                "simulation/mix/rand_offset/config_fat_llmTest_hpcc.txt",
             ],
             "cwd":"${workspaceFolder}", // cwd:working directory
             "setupCommands": [ // important for pretty printing containers: vectors, maps....
@@ -75,13 +75,13 @@
         },
 
         {
-            "name": "gen conf LlmTstDCQCN",
+            "name": "gen conf llmTstDCQCN",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/simulation/run_rand_offset.py",
+            "program": "${workspaceFolder}/simulation/run_hybrid.py",
             "console": "integratedTerminal",
             "args": [
-                "--cc", "1",
+                "--cc", "dcqcn",
                 "--trace", "llmTest",
                 "--topo", "fat",
                 "--enable_tr", "0",
@@ -90,45 +90,30 @@
         },
 
         {
-            "name": "gen conf LlmTstHPCC",
+            "name": "gen conf llmTstHP",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/simulation/run_rand_offset.py",
-            "console": "integratedTerminal",
-            "args": [
-                "--cc", "3",
-                "--trace", "llmTest",
-                "--topo", "fat",
-                "--enable_tr", "0",
-            ],
-            "cwd":"${workspaceFolder}/simulation",
-        },
-        {
-            "name": "gen conf hp",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "${workspaceFolder}/simulation/run.py",
+            "program": "${workspaceFolder}/simulation/run_hybrid.py",
             "console": "integratedTerminal",
             "args": [
                 "--cc", "hp",
-                "--trace", "llm16",
+                "--trace", "llmTest",
                 "--topo", "fat",
                 "--enable_tr", "0",
             ],
             "cwd":"${workspaceFolder}/simulation",
         },
-
         {
-            "name": "gen conf hpccPint",
+            "name": "gen conf hpccPint-1.05-1",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/simulation/run.py",
+            "program": "${workspaceFolder}/simulation/run_hybrid.py",
             "console": "integratedTerminal",
             "args": [
                 "--cc", "hpccPint",
-                "--trace", "llm_flows",
+                "--trace", "llmTest",
                 "--topo", "fat",
-                "--enable_tr", "0",
+                "--enable_tr", "0",                
                 "--pint_log_base", "1.05",
                 "--pint_prob", "1",
             ],
@@ -180,7 +165,7 @@
             "name": "3n2f gen conf",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/simulation/run_rand_offset.py",
+            "program": "${workspaceFolder}/simulation/run_hybrid.py",
             "console": "integratedTerminal",
             "args": [
                 "--cc", "rand_offset",
