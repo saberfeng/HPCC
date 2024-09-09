@@ -13,7 +13,7 @@ TRACE_OUTPUT_FILE simulation/mix/rand_offset/mix_fat_llmTest_dcqcn.tr
 FCT_OUTPUT_FILE simulation/mix/rand_offset/fct_fat_llmTest_dcqcn.csv
 PFC_OUTPUT_FILE simulation/mix/rand_offset/pfc_fat_llmTest_dcqcn.txt
 
-SIMULATOR_STOP_TIME 4.00
+SIMULATOR_STOP_TIME 10
 
 CC_MODE 1
 ALPHA_RESUME_INTERVAL 50

@@ -1,3 +1,3 @@
-1600000
+1000 177049
 
-shift_gap_ns
+slots slots_interval_us

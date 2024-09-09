@@ -481,3 +481,7 @@
 359 374 400Gbps 1000ns 0.000000
 359 375 400Gbps 1000ns 0.000000
 
+First line: total node #, switch node #, link #
+Second line: switch node IDs...
+src0 dst0 rate delay error_rate
+src1 dst1 rate delay error_rate

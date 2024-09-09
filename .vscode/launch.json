@@ -82,11 +82,12 @@
             "console": "integratedTerminal",
             "args": [
                 "--cc", "dcqcn",
-                "--trace", "llmTest",
+                "--flow", "llmTest",
                 "--topo", "fat",
                 "--enable_tr", "0",
+                "--update_model_param", "1",
             ],
-            "cwd":"${workspaceFolder}/simulation",
+            "cwd":"${workspaceFolder}",
         },
 
         {
@@ -97,12 +98,14 @@
             "console": "integratedTerminal",
             "args": [
                 "--cc", "hp",
-                "--trace", "llmTest",
+                "--flow", "llmTest",
                 "--topo", "fat",
                 "--enable_tr", "0",
+                "--update_model_param", "1",
             ],
-            "cwd":"${workspaceFolder}/simulation",
+            "cwd":"${workspaceFolder}",
         },
+
         {
             "name": "gen conf hpccPint-1.05-1",
             "type": "debugpy",
@@ -111,13 +114,14 @@
             "console": "integratedTerminal",
             "args": [
                 "--cc", "hpccPint",
-                "--trace", "llmTest",
+                "--flow", "llmTest",
                 "--topo", "fat",
                 "--enable_tr", "0",                
                 "--pint_log_base", "1.05",
                 "--pint_prob", "1",
+                "--update_model_param", "1",
             ],
-            "cwd":"${workspaceFolder}/simulation",
+            "cwd":"${workspaceFolder}",
         },
 
         {
@@ -169,11 +173,11 @@
             "console": "integratedTerminal",
             "args": [
                 "--cc", "rand_offset",
-                "--trace", "3n2f_flow",
+                "--flow", "3n2f_flow",
                 "--topo", "3n2f_topo",
                 "--enable_tr", "1",
             ],
-            "cwd":"${workspaceFolder}/simulation",
+            "cwd":"${workspaceFolder}",
 
         },
 

@@ -13,7 +13,7 @@ TRACE_OUTPUT_FILE simulation/mix/rand_offset/mix_fat_llmTest_hpccPint95ai50log1.
 FCT_OUTPUT_FILE simulation/mix/rand_offset/fct_fat_llmTest_hpccPint95ai50log1.050p1.000.csv
 PFC_OUTPUT_FILE simulation/mix/rand_offset/pfc_fat_llmTest_hpccPint95ai50log1.050p1.000.txt
 
-SIMULATOR_STOP_TIME 4.00
+SIMULATOR_STOP_TIME 10
 
 CC_MODE 10
 ALPHA_RESUME_INTERVAL 1
