@@ -80,10 +80,8 @@ public:
                     ifstream& topo_file, 
                     const map<Ptr<Node>, map<Ptr<Node>, vector<Ptr<Node>>>>& nextHop,
                     const NodeContainer &nodes,
-                    string& rand_param_file){
-        readTopology(topo_file);
-        read_param_file(rand_param_file);
-    }
+                    string& rand_param_file,
+                    uint64_t nic_rate_Bps);
 
     void read_param_file(string& rand_param_file);
 
@@ -106,9 +104,7 @@ public:
     void rand_slot_offset(shared_ptr<vector<FlowInputEntry>>& flows,
                             const map<Ptr<Node>, map<Ptr<Node>, vector<Ptr<Node>>>>& nextHop,
                             const NodeContainer &nodes,
-                            uint32_t mtu_byte,
-                            uint32_t slot_num,
-                            Time slot_interval);
+                            uint32_t mtu_byte);
 
 private:
     uint64_t get_rand(uint64_t range_start, uint64_t range_end){
@@ -118,6 +114,9 @@ private:
     void print_sw2wins(unordered_map<uint32_t, vector<Window>> sw2wins);
 
     Time shift_gap;
+    Time slots_interval;
+    Time flow_trans_time;
+    uint32_t slots_num;
 };
 
 } // namespace rand_offset

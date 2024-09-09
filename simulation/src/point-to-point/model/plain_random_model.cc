@@ -1,6 +1,19 @@
 #include "plain_random_model.h"
+#include <iostream>
 
 namespace rand_offset{
+
+PlainRandomModel::PlainRandomModel(shared_ptr<vector<FlowInputEntry>>& flows, 
+                    ifstream& topo_file, 
+                    const map<Ptr<Node>, map<Ptr<Node>, vector<Ptr<Node>>>>& nextHop,
+                    const NodeContainer &nodes,
+                    string& rand_param_file,
+                    uint64_t nic_rate_bps){
+    readTopology(topo_file);
+    read_param_file(rand_param_file);
+    uint64_t flow_size = (*flows)[0].size_byte;
+    this->flow_trans_time = transTime(nic_rate_bps/8, flow_size);
+}
 
 void PlainRandomModel::print_sw2wins(unordered_map<uint32_t, vector<Window>> sw2wins){
     ofstream sw2wins_file("simulation/mix/rand_offset/sw2wins.txt");
@@ -16,12 +29,10 @@ void PlainRandomModel::print_sw2wins(unordered_map<uint32_t, vector<Window>> sw2
 
 void PlainRandomModel::read_param_file(string& rand_param_file){
     ifstream ifs(rand_param_file);
-    // one param, shift_gap_ns
-    uint64_t shift_gap_ns;
-    ifs >> shift_gap_ns; 
+    uint32_t slots_interval_us;
+	ifs >> this->slots_num >> slots_interval_us;
     ifs.close();
-
-    this->shift_gap = ns3::NanoSeconds(shift_gap_ns);
+    this->slots_interval = ns3::MicroSeconds(slots_interval_us);
 }
 
 void PlainRandomModel::shift_arr_curve_algo(shared_ptr<vector<FlowInputEntry>>& flows,
@@ -117,25 +128,31 @@ void PlainRandomModel::insert_offsets(shared_ptr<vector<FlowInputEntry>>& flows,
                             const NodeContainer &nodes,
                             uint32_t mtu_byte){
     // shift_arr_curve_algo(flows, nextHop, nodes, mtu_byte);
-    rand_slot_offset(flows, nextHop, nodes, mtu_byte, 100, ns3::MilliSeconds(500*3));
+    rand_slot_offset(flows, nextHop, nodes, mtu_byte);
 }
 
 void PlainRandomModel::rand_slot_offset(shared_ptr<vector<FlowInputEntry>>& flows,
                             const map<Ptr<Node>, map<Ptr<Node>, vector<Ptr<Node>>>>& nextHop,
                             const NodeContainer &nodes,
-                            uint32_t mtu_byte,
-                            uint32_t slot_num,
-                            Time slot_interval){
+                            uint32_t mtu_byte){
     // get a random number between 0 and slot_num
     std::random_device dev;
     std::mt19937 rng(dev());
-    std::uniform_int_distribution<std::mt19937::result_type> rand_dist(0,slot_num-1); // distribution in range [1, 6]
+    std::uniform_int_distribution<std::mt19937::result_type> rand_dist(0,this->slots_num-1); // distribution in range [1, 6]
 
+    cout << "----------------- Random Slot Offset -----------------" << endl;
+    cout << "slots_num:" << this->slots_num << " slots_interval_us:" << this->slots_interval.GetMicroSeconds() << endl;
+    cout << "flow trans_time:" << this->flow_trans_time.GetMicroSeconds() << "us" << endl; 
     for (uint32_t flow_id = 0; flow_id < flows->size(); flow_id++){
         FlowInputEntry& flow = (*flows)[flow_id];
         uint32_t slot_offset = rand_dist(rng);
-        flow.offset = ns3::NanoSeconds(
-            slot_interval.GetNanoSeconds() * (slot_offset / slot_num));
+        flow.offset = ns3::MilliSeconds(
+            this->slots_interval.GetMilliSeconds() * (double(slot_offset) / this->slots_num));
+        // cout << "slots_interval.GetMilliSeconds():" << slots_interval.GetMilliSeconds() << endl;
+        // cout << "slots_interval.GetMilliSeconds() * (slot_offset / slot_num):" << slots_interval.GetMilliSeconds() * (slot_offset / slot_num) << endl;
+        cout << "flow_id:" << flow_id << " offset:" << flow.offset.GetMicroSeconds() << "us" 
+             << " offset/flowtrans="<< flow.offset.GetMicroSeconds() / double(this->flow_trans_time.GetMicroSeconds())   << endl;
     }
+    cout << "------------------------------------------------------" << endl;
 }
 }

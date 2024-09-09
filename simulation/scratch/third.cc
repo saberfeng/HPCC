@@ -461,18 +461,18 @@ unordered_set<uint32_t> get_nodeid_set_from_file(ifstream& ifs, uint32_t node_nu
 	return nodeid_set;
 }
 
-void read_ROCC_param_file(ifstream& ifs){
-	uint32_t node_num, param_num;
-	ifs >> node_num >> param_num;
-	for(uint32_t i=0; i<node_num; i++){
-		uint32_t node_id;
-		ifs >> node_id;
-		for(uint32_t j=0; j<param_num; j++){
-			uint64_t param;
-			ifs >> param;
-			node2params[node_id].push_back(param);
-		}
-	}
+void read_RandOffset_param(ifstream& ifs){
+	uint32_t slots_num, slot_interval_us;
+	ifs >> slots_num >> slot_interval_us;
+	// for(uint32_t i=0; i<node_num; i++){
+	// 	uint32_t node_id;
+	// 	ifs >> node_id;
+	// 	for(uint32_t j=0; j<param_num; j++){
+	// 		uint64_t param;
+	// 		ifs >> param;
+	// 		node2params[node_id].push_back(param);
+	// 	}
+	// }
 }
 
 
@@ -1069,11 +1069,6 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if(cc_mode == 12){
-		ifstream param_file_ROCC(rand_param_file);// parameter file for Random Offset Injector (ROI)
-		read_ROCC_param_file(param_file_ROCC);
-	}
-
 	#if ENABLE_QP
 	FILE *fct_output = fopen(fct_output_file.c_str(), "w");
 	fprintf(fct_output, "src_ip,dst_ip,sport,dport,m_size(bytes),start(ns),complete_fct(ns),standalone_fct(ns),end(ns)\n");
@@ -1141,7 +1136,7 @@ int main(int argc, char *argv[])
 	if(enable_randoffset){
 		// RandOffsetInjector rand_offset_injector = rand_offset::RandOffsetInjector();
 		ifstream topo_file_randoffset(topology_file);// topology file for Random Offset Injector (ROI)
-		PlainRandomModel plain_rand_model(flows, topo_file_randoffset, nextHop, n, rand_param_file);
+		PlainRandomModel plain_rand_model(flows, topo_file_randoffset, nextHop, n, rand_param_file, nic_rate);
 		plain_rand_model.insert_offsets(flows, nextHop, n, packet_payload_size);
 		sortFlowsByStartTime();
 	}
