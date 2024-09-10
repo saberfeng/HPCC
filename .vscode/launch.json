@@ -11,7 +11,7 @@
             "request": "launch", // "launch" a program or "attach" to an already running instance 
             "program": "${workspaceFolder}/simulation/build/scratch/third",
             "args": [
-                "simulation/mix/rand_offset/config_fat_llmTest_dcqcn.txt",
+                "simulation/mix/rand_offset/config_fat_llmTest_dcqcn_1.txt",
             ],
             "cwd":"${workspaceFolder}", // cwd:working directory
             "setupCommands": [ // important for pretty printing containers: vectors, maps....
@@ -86,6 +86,7 @@
                 "--topo", "fat",
                 "--enable_tr", "0",
                 "--update_model_param", "1",
+                "--enable_randoffset", "1",
             ],
             "cwd":"${workspaceFolder}",
         },
@@ -102,6 +103,7 @@
                 "--topo", "fat",
                 "--enable_tr", "0",
                 "--update_model_param", "1",
+                "--enable_randoffset", "1",
             ],
             "cwd":"${workspaceFolder}",
         },
@@ -120,6 +122,7 @@
                 "--pint_log_base", "1.05",
                 "--pint_prob", "1",
                 "--update_model_param", "1",
+                "--enable_randoffset", "1",
             ],
             "cwd":"${workspaceFolder}",
         },
