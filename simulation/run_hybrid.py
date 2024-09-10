@@ -14,9 +14,9 @@ TRACE_FILE {TRACE_FILE}
 QUEUE_MONITOR_FILE {QUEUE_MONITOR_FILE}
 RANDOM_PARAM_FILE {RANDOM_PARAM_FILE}
 
-TRACE_OUTPUT_FILE simulation/mix/{proj_dir}/mix_{topo}_{flow}_{cc}{failure}.tr
-FCT_OUTPUT_FILE simulation/mix/{proj_dir}/fct_{topo}_{flow}_{cc}{failure}.csv
-PFC_OUTPUT_FILE simulation/mix/{proj_dir}/pfc_{topo}_{flow}_{cc}{failure}.txt
+TRACE_OUTPUT_FILE simulation/mix/{proj_dir}/mix_{topo}_{flow}_{cc}{failure}_{enable_randoffset}.tr
+FCT_OUTPUT_FILE simulation/mix/{proj_dir}/fct_{topo}_{flow}_{cc}{failure}_{enable_randoffset}.csv
+PFC_OUTPUT_FILE simulation/mix/{proj_dir}/pfc_{topo}_{flow}_{cc}{failure}_{enable_randoffset}.txt
 
 SIMULATOR_STOP_TIME {sim_time_s}
 
@@ -102,12 +102,11 @@ def gen_conf(args):
 	qlen_mon_dump_intv_ns = 1000000 # 1ms
 	qlen_mon_start_ns = 300000 # 0.3ms
 	qlen_mon_end_ns = 37000000 # 37ms
+	cc = args.cc
 
 	failure = ''
 	if args.down != '0 0 0':
 		failure = '_down'
-
-	config_name = "simulation/mix/%s/config_%s_%s_%s%s.txt"%(proj_dir, topo, flow, args.cc, failure)
 
 	kmax_map = "2 %d %d %d %d"%(bw*1000000000, 400*bw/25, bw*4*1000000000, 400*bw*4/25)
 	kmin_map = "2 %d %d %d %d"%(bw*1000000000, 100*bw/25, bw*4*1000000000, 100*bw*4/25)
@@ -166,7 +165,6 @@ def gen_conf(args):
 			cc += "mi%d"%mi
 		if args.hpai > 0:
 			cc += "ai%d"%ai
-		config_name = "simulation/mix/%s/config_%s_%s_%s%s.txt"%(proj_dir, topo, flow, cc, failure)
 		config = config_template.format(cc=args.cc, mode=1, t_alpha=50, t_dec=50, t_inc=55, g=0.00390625, ai=ai, hai=hai, dctcp_ai=1000, has_win=0, vwin=0, us=0, int_multi=1, ack_prio=1, kmax_map=kmax_map, kmin_map=kmin_map, pmax_map=pmax_map, **common_temp_args)
 	elif args.cc == "dctcp":
 		ai = 10 # ai is useless for dctcp
@@ -197,12 +195,12 @@ def gen_conf(args):
 			cc += "ai%d"%ai
 		cc += "log%.3f"%pint_log_base
 		cc += "p%.3f"%pint_prob
-		config_name = "simulation/mix/%s/config_%s_%s_%s%s.txt"%(proj_dir, topo, flow, cc, failure)
 		config = config_template.format(cc=cc, mode=10, t_alpha=1, t_dec=4, t_inc=300, g=0.00390625, ai=ai, hai=hai, dctcp_ai=1000, has_win=1, vwin=1, us=1, int_multi=int_multi, ack_prio=0, kmax_map=kmax_map, kmin_map=kmin_map, pmax_map=pmax_map, **common_temp_args)
 	else:
 		print("unknown cc:", args.cc)
 		sys.exit(1)
 
+	config_name = f"simulation/mix/{proj_dir}/config_{topo}_{flow}_{cc}{failure}_{args.enable_randoffset}.txt"
 	print(config_name)
 	with open(config_name, "w") as file:
 		file.write(config)
