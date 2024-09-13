@@ -2,7 +2,6 @@ import argparse
 import sys
 import os
 
-proj_dir = 'rand_offset'
 config_template="""ENABLE_QCN 1
 USE_DYNAMIC_PFC_THRESHOLD 1
 
@@ -14,9 +13,9 @@ TRACE_FILE {TRACE_FILE}
 QUEUE_MONITOR_FILE {QUEUE_MONITOR_FILE}
 RANDOM_PARAM_FILE {RANDOM_PARAM_FILE}
 
-TRACE_OUTPUT_FILE simulation/mix/{proj_dir}/mix_{topo}_{flow}_{cc}{failure}_{enable_randoffset}.tr
-FCT_OUTPUT_FILE simulation/mix/{proj_dir}/fct_{topo}_{flow}_{cc}{failure}_{enable_randoffset}.csv
-PFC_OUTPUT_FILE simulation/mix/{proj_dir}/pfc_{topo}_{flow}_{cc}{failure}_{enable_randoffset}.txt
+TRACE_OUTPUT_FILE {TRACE_OUTPUT_FILE}
+FCT_OUTPUT_FILE {FCT_OUTPUT_FILE}
+PFC_OUTPUT_FILE {PFC_OUTPUT_FILE}
 
 SIMULATOR_STOP_TIME {sim_time_s}
 
@@ -73,7 +72,7 @@ OFFSET_UPBOUND_US {offset_upbound_us}
 """
 
 
-def get_input_file_paths(topo, flow):
+def get_input_file_paths(topo, flow, proj_dir):
 	TOPOLOGY_FILE = "simulation/mix/{proj_dir}/{topo}.txt"
 	FLOW_FILE = "simulation/mix/{proj_dir}/{flow}.txt"
 	TRACE_FILE = "simulation/mix/{proj_dir}/trace.txt"
@@ -85,14 +84,24 @@ def get_input_file_paths(topo, flow):
 			QUEUE_MONITOR_FILE.format(proj_dir=proj_dir), \
 			RANDOM_PARAM_FILE.format(proj_dir=proj_dir), \
 
+def get_output_file_paths(topo, flow_num, cc, proj_dir, enable_randoffset,slots,multi_factor):
+	failure = ''
+	TRACE_OUTPUT_FILE = f"simulation/mix/{proj_dir}/"\
+					f"mix_{topo}_{flow_num}_{cc}{failure}_{enable_randoffset}_sl{slots}_fc{multi_factor}.tr"
+	FCT_OUTPUT_FILE = f"simulation/mix/{proj_dir}/"\
+					f"fct_{topo}_{flow_num}_{cc}{failure}_{enable_randoffset}_sl{slots}_fc{multi_factor}.csv"
+	PFC_OUTPUT_FILE = f"simulation/mix/{proj_dir}/"\
+					f"pfc_{topo}_{flow_num}_{cc}{failure}_{enable_randoffset}_sl{slots}_fc{multi_factor}.txt"
+	return TRACE_OUTPUT_FILE, FCT_OUTPUT_FILE, PFC_OUTPUT_FILE
+
 
 def gen_conf(args):
-	topo=args.topo
-	bw = int(args.bw)
-	flow = args.flow
+	topo=args['topo']
+	bw = int(args['bw'])
+	flow = args['flow']
 	#bfsz = 16 if bw==50 else 32
 	bfsz = 16 * bw / 50
-	u_tgt=args.utgt/100.
+	u_tgt=args['utgt']/100.
 	mi=args.mi
 	pint_log_base=args.pint_log_base
 	pint_prob = args.pint_prob
@@ -102,7 +111,11 @@ def gen_conf(args):
 	qlen_mon_dump_intv_ns = 1000000 # 1ms
 	qlen_mon_start_ns = 300000 # 0.3ms
 	qlen_mon_end_ns = 37000000 # 37ms
-	cc = args.cc
+	cc = args['cc']
+	proj_dir = args.proj_dir
+	enable_randoffset = args['enable_randoffset']
+	slots = args['slots']
+	multi_factor = args['multi_factor']
 
 	failure = ''
 	if args.down != '0 0 0':
@@ -112,7 +125,12 @@ def gen_conf(args):
 	kmin_map = "2 %d %d %d %d"%(bw*1000000000, 100*bw/25, bw*4*1000000000, 100*bw*4/25)
 	pmax_map = "2 %d %.2f %d %.2f"%(bw*1000000000, 0.2, bw*4*1000000000, 0.2)
 
-	TOPOLOGY_FILE, FLOW_FILE, TRACE_FILE, QUEUE_MONITOR_FILE, RANDOM_PARAM_FILE = get_input_file_paths(topo, flow)
+	TOPOLOGY_FILE, FLOW_FILE, TRACE_FILE, QUEUE_MONITOR_FILE, RANDOM_PARAM_FILE = \
+		get_input_file_paths(topo, flow, proj_dir)
+	flow_num, _ = read_flow_file(FLOW_FILE)	
+	TRACE_OUTPUT_FILE, FCT_OUTPUT_FILE, PFC_OUTPUT_FILE = \
+		get_output_file_paths(topo, flow_num, cc, proj_dir, enable_randoffset, slots, multi_factor)
+	
 	common_temp_args = {
 		"proj_dir": proj_dir,
 		"bw": bw,
@@ -133,62 +151,66 @@ def gen_conf(args):
 		"QUEUE_MONITOR_FILE": QUEUE_MONITOR_FILE,
 		"RANDOM_PARAM_FILE": RANDOM_PARAM_FILE,
 
+		"TRACE_OUTPUT_FILE": TRACE_OUTPUT_FILE,
+		"FCT_OUTPUT_FILE": FCT_OUTPUT_FILE,
+		"PFC_OUTPUT_FILE": PFC_OUTPUT_FILE,
+
 		"offset_upbound_us": offset_upbound_us,
 		"qlen_mon_intv_ns": qlen_mon_intv_ns,
 		"qlen_mon_dump_intv_ns": qlen_mon_dump_intv_ns,
 		"qlen_mon_start_ns": qlen_mon_start_ns,
 		"qlen_mon_end_ns": qlen_mon_end_ns,
-		"enable_randoffset": args.enable_randoffset,
-		"sim_time_s":args.sim_time_s
+		"enable_randoffset": enable_randoffset,
+		"sim_time_s":args['sim_time_s'],
 	}
 
-	if (args.cc.startswith("dcqcn")):
+	if (args['cc'].startswith("dcqcn")):
 		ai = 5 * bw / 25
 		hai = 50 * bw /25
 
-		if args.cc == "dcqcn":
-			config = config_template.format(cc=args.cc, mode=1, t_alpha=50, t_dec=50, t_inc=55, g=0.00390625, ai=ai, hai=hai, dctcp_ai=1000, has_win=0, vwin=0, us=0, int_multi=1, ack_prio=1, kmax_map=kmax_map, kmin_map=kmin_map, pmax_map=pmax_map, **common_temp_args)
-		elif args.cc == "dcqcn_paper":
-			config = config_template.format(cc=args.cc, mode=1, t_alpha=50, t_dec=50, t_inc=55, g=0.00390625, ai=ai, hai=hai, dctcp_ai=1000, has_win=0, vwin=0, us=0, int_multi=1, ack_prio=1, kmax_map=kmax_map, kmin_map=kmin_map, pmax_map=pmax_map, **common_temp_args)
-		elif args.cc == "dcqcn_vwin":
-			config = config_template.format(cc=args.cc, mode=1, t_alpha=50, t_dec=50, t_inc=55, g=0.00390625, ai=ai, hai=hai, dctcp_ai=1000, has_win=0, vwin=0, us=0, int_multi=1, ack_prio=1, kmax_map=kmax_map, kmin_map=kmin_map, pmax_map=pmax_map, **common_temp_args)
-		elif args.cc == "dcqcn_paper_vwin":
-			config = config_template.format(cc=args.cc, mode=1, t_alpha=50, t_dec=50, t_inc=55, g=0.00390625, ai=ai, hai=hai, dctcp_ai=1000, has_win=0, vwin=0, us=0, int_multi=1, ack_prio=1, kmax_map=kmax_map, kmin_map=kmin_map, pmax_map=pmax_map, **common_temp_args)
+		if args['cc'] == "dcqcn":
+			config = config_template.format(cc=args['cc'], mode=1, t_alpha=50, t_dec=50, t_inc=55, g=0.00390625, ai=ai, hai=hai, dctcp_ai=1000, has_win=0, vwin=0, us=0, int_multi=1, ack_prio=1, kmax_map=kmax_map, kmin_map=kmin_map, pmax_map=pmax_map, **common_temp_args)
+		elif args['cc'] == "dcqcn_paper":
+			config = config_template.format(cc=args['cc'], mode=1, t_alpha=50, t_dec=50, t_inc=55, g=0.00390625, ai=ai, hai=hai, dctcp_ai=1000, has_win=0, vwin=0, us=0, int_multi=1, ack_prio=1, kmax_map=kmax_map, kmin_map=kmin_map, pmax_map=pmax_map, **common_temp_args)
+		elif args['cc'] == "dcqcn_vwin":
+			config = config_template.format(cc=args['cc'], mode=1, t_alpha=50, t_dec=50, t_inc=55, g=0.00390625, ai=ai, hai=hai, dctcp_ai=1000, has_win=0, vwin=0, us=0, int_multi=1, ack_prio=1, kmax_map=kmax_map, kmin_map=kmin_map, pmax_map=pmax_map, **common_temp_args)
+		elif args['cc'] == "dcqcn_paper_vwin":
+			config = config_template.format(cc=args['cc'], mode=1, t_alpha=50, t_dec=50, t_inc=55, g=0.00390625, ai=ai, hai=hai, dctcp_ai=1000, has_win=0, vwin=0, us=0, int_multi=1, ack_prio=1, kmax_map=kmax_map, kmin_map=kmin_map, pmax_map=pmax_map, **common_temp_args)
 	elif args.cc == "hp":
 		ai = 10 * bw / 25
 		if args.hpai > 0:
 			ai = args.hpai
 		hai = ai # useless
 		int_multi = bw / 25
-		cc = "%s%d"%(args.cc, args.utgt)
+		cc = "%s%d"%(args['cc'], u_tgt)
 		if (mi > 0):
 			cc += "mi%d"%mi
 		if args.hpai > 0:
 			cc += "ai%d"%ai
-		config = config_template.format(cc=args.cc, mode=1, t_alpha=50, t_dec=50, t_inc=55, g=0.00390625, ai=ai, hai=hai, dctcp_ai=1000, has_win=0, vwin=0, us=0, int_multi=1, ack_prio=1, kmax_map=kmax_map, kmin_map=kmin_map, pmax_map=pmax_map, **common_temp_args)
-	elif args.cc == "dctcp":
+		config = config_template.format(cc=args['cc'], mode=1, t_alpha=50, t_dec=50, t_inc=55, g=0.00390625, ai=ai, hai=hai, dctcp_ai=1000, has_win=0, vwin=0, us=0, int_multi=1, ack_prio=1, kmax_map=kmax_map, kmin_map=kmin_map, pmax_map=pmax_map, **common_temp_args)
+	elif args['cc'] == "dctcp":
 		ai = 10 # ai is useless for dctcp
 		hai = ai  # also useless
 		dctcp_ai=615 # calculated from RTT=13us and MTU=1KB, because DCTCP add 1 MTU per RTT.
 		kmax_map = "2 %d %d %d %d"%(bw*1000000000, 30*bw/10, bw*4*1000000000, 30*bw*4/10)
 		kmin_map = "2 %d %d %d %d"%(bw*1000000000, 30*bw/10, bw*4*1000000000, 30*bw*4/10)
 		pmax_map = "2 %d %.2f %d %.2f"%(bw*1000000000, 1.0, bw*4*1000000000, 1.0)
-		config = config_template.format(cc=args.cc, mode=1, t_alpha=50, t_dec=50, t_inc=55, g=0.00390625, ai=ai, hai=hai, dctcp_ai=1000, has_win=0, vwin=0, us=0, int_multi=1, ack_prio=1, kmax_map=kmax_map, kmin_map=kmin_map, pmax_map=pmax_map, **common_temp_args)
-	elif args.cc == "timely":
+		config = config_template.format(cc=args['cc'], mode=1, t_alpha=50, t_dec=50, t_inc=55, g=0.00390625, ai=ai, hai=hai, dctcp_ai=1000, has_win=0, vwin=0, us=0, int_multi=1, ack_prio=1, kmax_map=kmax_map, kmin_map=kmin_map, pmax_map=pmax_map, **common_temp_args)
+	elif args['cc'] == "timely":
 		ai = 10 * bw / 10
 		hai = 50 * bw / 10
-		config = config_template.format(cc=args.cc, mode=1, t_alpha=50, t_dec=50, t_inc=55, g=0.00390625, ai=ai, hai=hai, dctcp_ai=1000, has_win=0, vwin=0, us=0, int_multi=1, ack_prio=1, kmax_map=kmax_map, kmin_map=kmin_map, pmax_map=pmax_map, **common_temp_args)
-	elif args.cc == "timely_vwin":
+		config = config_template.format(cc=args['cc'], mode=1, t_alpha=50, t_dec=50, t_inc=55, g=0.00390625, ai=ai, hai=hai, dctcp_ai=1000, has_win=0, vwin=0, us=0, int_multi=1, ack_prio=1, kmax_map=kmax_map, kmin_map=kmin_map, pmax_map=pmax_map, **common_temp_args)
+	elif args['cc'] == "timely_vwin":
 		ai = 10 * bw / 10
 		hai = 50 * bw / 10
-		config = config_template.format(cc=args.cc, mode=1, t_alpha=50, t_dec=50, t_inc=55, g=0.00390625, ai=ai, hai=hai, dctcp_ai=1000, has_win=0, vwin=0, us=0, int_multi=1, ack_prio=1, kmax_map=kmax_map, kmin_map=kmin_map, pmax_map=pmax_map, **common_temp_args)
-	elif args.cc == "hpccPint":
+		config = config_template.format(cc=args['cc'], mode=1, t_alpha=50, t_dec=50, t_inc=55, g=0.00390625, ai=ai, hai=hai, dctcp_ai=1000, has_win=0, vwin=0, us=0, int_multi=1, ack_prio=1, kmax_map=kmax_map, kmin_map=kmin_map, pmax_map=pmax_map, **common_temp_args)
+	elif args['cc'] == "hpccPint":
 		ai = 10 * bw / 25
 		if args.hpai > 0:
 			ai = args.hpai
 		hai = ai # useless
 		int_multi = bw / 25
-		cc = "%s%d"%(args.cc, args.utgt)
+		cc = "%s%d"%(args['cc'], args.utgt)
 		if (mi > 0):
 			cc += "mi%d"%mi
 		if args.hpai > 0:
@@ -197,15 +219,14 @@ def gen_conf(args):
 		cc += "p%.3f"%pint_prob
 		config = config_template.format(cc=cc, mode=10, t_alpha=1, t_dec=4, t_inc=300, g=0.00390625, ai=ai, hai=hai, dctcp_ai=1000, has_win=1, vwin=1, us=1, int_multi=int_multi, ack_prio=0, kmax_map=kmax_map, kmin_map=kmin_map, pmax_map=pmax_map, **common_temp_args)
 	else:
-		print("unknown cc:", args.cc)
+		print("unknown cc:", args['cc'])
 		sys.exit(1)
 
-	config_name = f"simulation/mix/{proj_dir}/config_{topo}_{flow}_{cc}{failure}_{args.enable_randoffset}.txt"
+	config_name = f"simulation/mix/{proj_dir}/config_{topo}_{flow}_{cc}{failure}_{enable_randoffset}.txt"
 	print(config_name)
 	with open(config_name, "w") as file:
 		file.write(config)
-	
-	# os.system("./waf --run 'scratch/third %s'"%(config_name))
+	return config_name, TRACE_OUTPUT_FILE, FCT_OUTPUT_FILE, PFC_OUTPUT_FILE
 
 def read_flow_file(flow_file):
 	with open(flow_file, "r") as file:
@@ -221,21 +242,21 @@ def read_topo_file(topo_file):
 		nic_rate = lines[2].split(" ")[2] # Gbps
 	return int(nic_rate[0:-4])
 
-def update_param(args):
+def update_param(args:dict):
+	slots = args['slots']
+	multi_factor = args[multi_factor]
 	TOPOLOGY_FILE, FLOW_FILE, _, __, RANDOM_PARAM_FILE = \
-			get_input_file_paths(args.topo, args.flow)
-	# strategy 1
-	def multiple_flow_trans():
+			get_input_file_paths(args['topo'], args['flow'])
+
+	def multiple_flow_trans(multi_factor):
 		flow_num, flow_size_bytes = read_flow_file(FLOW_FILE)
 		nic_rate_Gbps = read_topo_file(TOPOLOGY_FILE) 
 		flow_trans_time_us = (flow_size_bytes * 8 / nic_rate_Gbps) / 1e3
-		slots = 1000
-		multiple_factor = 0.5
-		slots_interval_us = int(flow_num * flow_trans_time_us * multiple_factor)
-		return slots, slots_interval_us
+		slots_interval_us = int(flow_num * flow_trans_time_us * multi_factor)
+		return slots_interval_us
 
 	# need to update 1. slots 2. slots_interval_us
-	slots, slots_interval_us = multiple_flow_trans()
+	slots_interval_us = multiple_flow_trans(multi_factor)
 	param_line = f"{slots} {slots_interval_us}\n\n"
 
 	desc_line = "slots slots_interval_us"
@@ -260,8 +281,11 @@ if __name__ == "__main__":
 	parser.add_argument('--enable_tr', dest='enable_tr', action = 'store', type=int, default=0, help="enable packet-level events dump")
 	parser.add_argument('--offset_upbound_us', dest='offset_upbound_us', action = 'store', type=int, default=1000, help="offset upperbound")
 	parser.add_argument('--sim_time_s', dest='sim_time_s', action='store', default=10, help="simulation time(s)")
+	parser.add_argument('--proj_dir', dest='proj_dir', action='store', default='rand_offset', help="project dir to store files")
+	parser.add_argument('--slots', dest='slots', action='store', default=1000, help="number of slots in the random range")
+	parser.add_argument('--multi_factor', dest='multi_factor', action='store', default=0.5, help="factor when calculating slots_interval_us")
 	args = parser.parse_args()
 	
-	gen_conf(args)
+	gen_conf(vars(args))
 	if int(args.update_model_param) == 1:
-		update_param(args)
+		update_param(vars(args))

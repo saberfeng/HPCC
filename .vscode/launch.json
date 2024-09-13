@@ -11,7 +11,7 @@
             "request": "launch", // "launch" a program or "attach" to an already running instance 
             "program": "${workspaceFolder}/simulation/build/scratch/third",
             "args": [
-                "simulation/mix/rand_offset/config_fat_llmTest_dcqcn_1.txt",
+                "simulation/mix/rand_offset/config_fat_llmTest_dcqcn_0.txt",
             ],
             "cwd":"${workspaceFolder}", // cwd:working directory
             "setupCommands": [ // important for pretty printing containers: vectors, maps....
@@ -34,7 +34,7 @@
             "request": "launch", // "launch" a program or "attach" to an already running instance 
             "program": "${workspaceFolder}/simulation/build/scratch/third",
             "args": [
-                "simulation/mix/rand_offset/config_fat_llmTest_hp95ai50.txt",
+                "simulation/mix/rand_offset/config_fat_llmTest_hp95ai50_0.txt",
             ],
             "cwd":"${workspaceFolder}", // cwd:working directory
             "setupCommands": [ // important for pretty printing containers: vectors, maps....
@@ -86,7 +86,7 @@
                 "--topo", "fat",
                 "--enable_tr", "0",
                 "--update_model_param", "1",
-                "--enable_randoffset", "1",
+                "--enable_randoffset", "0",
             ],
             "cwd":"${workspaceFolder}",
         },
@@ -103,7 +103,7 @@
                 "--topo", "fat",
                 "--enable_tr", "0",
                 "--update_model_param", "1",
-                "--enable_randoffset", "1",
+                "--enable_randoffset", "0",
             ],
             "cwd":"${workspaceFolder}",
         },
@@ -135,11 +135,11 @@
             "console": "integratedTerminal",
             "args": [
                 "--cdf", "simulation/scripts/traffic_gen/llm_train_cdf.txt",
-                "--nhost", "16",
+                "--nhost", "320",
                 "--load", "0.3",
                 "--bandwidth", "10G",
                 "--end_time", "0.1",
-                "--output", "simulation/mix/rand_offset/llmTest.txt",
+                "--output", "simulation/mix/rand_offset/llmFlows.txt",
                 "--scenario", "GPT1_data_parallel",
             ],
             "cwd":"${workspaceFolder}",
