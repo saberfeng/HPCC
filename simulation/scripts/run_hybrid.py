@@ -67,17 +67,15 @@ QLEN_MON_START {qlen_mon_start_ns}
 QLEN_MON_END {qlen_mon_end_ns}
 QLEN_MON_INTV_NS {qlen_mon_intv_ns}
 QLEN_MON_DUMP_INTV_NS {qlen_mon_dump_intv_ns}
-
-OFFSET_UPBOUND_US {offset_upbound_us}
 """
 
 
 def get_input_file_paths(topo, flow, proj_dir):
-	TOPOLOGY_FILE = "simulation/mix/{proj_dir}/{topo}.txt"
-	FLOW_FILE = "simulation/mix/{proj_dir}/{flow}.txt"
-	TRACE_FILE = "simulation/mix/{proj_dir}/trace.txt"
-	QUEUE_MONITOR_FILE = "simulation/mix/{proj_dir}/qmonitor.txt"
-	RANDOM_PARAM_FILE = "simulation/mix/{proj_dir}/plain_rand_model.txt"
+	TOPOLOGY_FILE = "{proj_dir}/{topo}.txt"
+	FLOW_FILE = "{proj_dir}/{flow}.txt"
+	TRACE_FILE = "{proj_dir}/trace.txt"
+	QUEUE_MONITOR_FILE = "{proj_dir}/qmonitor.txt"
+	RANDOM_PARAM_FILE = "{proj_dir}/plain_rand_model.txt"
 	return TOPOLOGY_FILE.format(proj_dir=proj_dir, topo=topo), \
 			FLOW_FILE.format(proj_dir=proj_dir, flow=flow), \
 			TRACE_FILE.format(proj_dir=proj_dir), \
@@ -86,11 +84,11 @@ def get_input_file_paths(topo, flow, proj_dir):
 
 def get_output_file_paths(topo, flow_num, cc, proj_dir, enable_randoffset,slots,multi_factor):
 	failure = ''
-	TRACE_OUTPUT_FILE = f"simulation/mix/{proj_dir}/"\
+	TRACE_OUTPUT_FILE = f"{proj_dir}/"\
 					f"mix_{topo}_{flow_num}_{cc}{failure}_{enable_randoffset}_sl{slots}_fc{multi_factor}.tr"
-	FCT_OUTPUT_FILE = f"simulation/mix/{proj_dir}/"\
+	FCT_OUTPUT_FILE = f"{proj_dir}/"\
 					f"fct_{topo}_{flow_num}_{cc}{failure}_{enable_randoffset}_sl{slots}_fc{multi_factor}.csv"
-	PFC_OUTPUT_FILE = f"simulation/mix/{proj_dir}/"\
+	PFC_OUTPUT_FILE = f"{proj_dir}/"\
 					f"pfc_{topo}_{flow_num}_{cc}{failure}_{enable_randoffset}_sl{slots}_fc{multi_factor}.txt"
 	return TRACE_OUTPUT_FILE, FCT_OUTPUT_FILE, PFC_OUTPUT_FILE
 
@@ -102,24 +100,23 @@ def gen_conf(args):
 	#bfsz = 16 if bw==50 else 32
 	bfsz = 16 * bw / 50
 	u_tgt=args['utgt']/100.
-	mi=args.mi
-	pint_log_base=args.pint_log_base
-	pint_prob = args.pint_prob
-	enable_tr = args.enable_tr
-	offset_upbound_us = args.offset_upbound_us
+	mi=args['mi']
+	pint_log_base=args['pint_log_base']
+	pint_prob = args['pint_prob']
+	enable_tr = args['enable_tr']
 	qlen_mon_intv_ns = 100000 # 0.1 ms
 	qlen_mon_dump_intv_ns = 1000000 # 1ms
 	qlen_mon_start_ns = 300000 # 0.3ms
 	qlen_mon_end_ns = 37000000 # 37ms
 	cc = args['cc']
-	proj_dir = args.proj_dir
+	proj_dir = args['proj_dir']
 	enable_randoffset = args['enable_randoffset']
 	slots = args['slots']
 	multi_factor = args['multi_factor']
 
 	failure = ''
-	if args.down != '0 0 0':
-		failure = '_down'
+	# if args.down != '0 0 0':
+	# 	failure = '_down'
 
 	kmax_map = "2 %d %d %d %d"%(bw*1000000000, 400*bw/25, bw*4*1000000000, 400*bw*4/25)
 	kmin_map = "2 %d %d %d %d"%(bw*1000000000, 100*bw/25, bw*4*1000000000, 100*bw*4/25)
@@ -140,7 +137,7 @@ def gen_conf(args):
 		"mi": mi,
 		"pint_log_base": pint_log_base,
 		"pint_prob": pint_prob,
-		"link_down": args.down,
+		"link_down": args['down'],
 		"failure": failure,
 		"buffer_size": bfsz,
 		"enable_tr": enable_tr,
@@ -155,7 +152,6 @@ def gen_conf(args):
 		"FCT_OUTPUT_FILE": FCT_OUTPUT_FILE,
 		"PFC_OUTPUT_FILE": PFC_OUTPUT_FILE,
 
-		"offset_upbound_us": offset_upbound_us,
 		"qlen_mon_intv_ns": qlen_mon_intv_ns,
 		"qlen_mon_dump_intv_ns": qlen_mon_dump_intv_ns,
 		"qlen_mon_start_ns": qlen_mon_start_ns,
@@ -222,7 +218,7 @@ def gen_conf(args):
 		print("unknown cc:", args['cc'])
 		sys.exit(1)
 
-	config_name = f"simulation/mix/{proj_dir}/config_{topo}_{flow}_{cc}{failure}_{enable_randoffset}.txt"
+	config_name = f"{proj_dir}/config_{topo}_{flow}_{cc}{failure}_{enable_randoffset}.txt"
 	print(config_name)
 	with open(config_name, "w") as file:
 		file.write(config)
@@ -244,9 +240,9 @@ def read_topo_file(topo_file):
 
 def update_param(args:dict):
 	slots = args['slots']
-	multi_factor = args[multi_factor]
+	multi_factor = args['multi_factor']
 	TOPOLOGY_FILE, FLOW_FILE, _, __, RANDOM_PARAM_FILE = \
-			get_input_file_paths(args['topo'], args['flow'])
+			get_input_file_paths(args['topo'], args['flow'], args['proj_dir'])
 
 	def multiple_flow_trans(multi_factor):
 		flow_num, flow_size_bytes = read_flow_file(FLOW_FILE)

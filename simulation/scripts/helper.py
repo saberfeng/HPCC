@@ -43,7 +43,7 @@ class BlueprintManagerBase:
 
     
     def set_status_seed_range(self, path, seed_from:int, 
-                                seed_to_notinclude:int, status_names:list[str],
+                                seed_to_notinclude:int, status_names:list,
                                 status_val:int):
         blueprint = pd.read_csv(path)
         condition = (blueprint['seed'] >= seed_from) & (blueprint['seed'] < seed_to_notinclude)
@@ -57,12 +57,12 @@ class BlueprintManagerBase:
         blueprint = blueprint[[c for c in blueprint if c not in column_names] + column_names]
         blueprint.to_csv(path, index=False)
 
-    def order_rows(self, path:str, priority_cols:list[str]):
+    def order_rows(self, path:str, priority_cols:list):
         blueprint = pd.read_csv(path)
         blueprint = blueprint.sort_values(by=priority_cols)
         blueprint.to_csv(path, index=False)
 
-    def reset_status_by_col_value(self, path, con_col:str, con_val, status_names:list[str]):
+    def reset_status_by_col_value(self, path, con_col:str, con_val, status_names:list):
         blueprint = pd.read_csv(path)
         condition = (blueprint[con_col] == con_val)
         assert type(status_names) == list
@@ -70,7 +70,7 @@ class BlueprintManagerBase:
             blueprint.loc[condition, status_name] = -1
         blueprint.to_csv(path, index=False)
     
-    def reset_col_values(self, path, con_col:str, con_val, reset_col_val_pair:dict[str, str]):
+    def reset_col_values(self, path, con_col:str, con_val, reset_col_val_pair:dict):
         blueprint = pd.read_csv(path)
         condition = (blueprint[con_col] == con_val)
         for reset_col, reset_val in reset_col_val_pair.items():

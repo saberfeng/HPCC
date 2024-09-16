@@ -1,9 +1,10 @@
 import argparse
-import run_hybrid
+import scripts.run_hybrid as run_hybrid
+from scripts.run_exp_base import *
 import sys
-from run_exp_base import *
 import pandas as pd
 import time
+import os
 
 # to run experiments:
 # 1. generate traffic: gen_llm_flows.gen_llm_traffic()
@@ -23,7 +24,7 @@ class HPCCExperiment(ExperimentRunnerBase):
 
     def run_by_blueprint(self):
         unrun_row, row_id = self._find_unrun_row()
-        while unrun_row:
+        while unrun_row is not False:
             results = self.execute(unrun_row)
             self.update_blueprint(row_id, results)
             unrun_row = self._find_unrun_row()
@@ -49,7 +50,7 @@ class HPCCExperiment(ExperimentRunnerBase):
     def run_conf(self, conf_path):
         cmd = f'{self.app_path} {conf_path}'
         start_time_s = time.time()
-        sys.cmd(cmd)
+        os.system(cmd)
         end_time_s = time.time()
         # logging.debug(f"running time: {(end_time_s-start_time_s)*1000}ms")
         print(f"running time: {(end_time_s-start_time_s)}s")
@@ -71,6 +72,15 @@ def gen_exp_conf(topo, seed, flow_num, cc, enable_randoffset, proj_dir,
         'enable_tr': 0,
         'sim_time_s': 100,
         'proj_dir': proj_dir,
+        'bw':100,
+        'down':'0 0 0',
+        'utgt':95,
+        'mi':0,
+        'hpai':50,
+        'pint_log_base':1.01,
+        'pint_prob':1.0,
+        'slots':slots,
+        'multi_factor':multi_factor,
     }
     # update flow input file
     _1, flow_file, _2, _3, _4 = run_hybrid.get_input_file_paths(
@@ -82,7 +92,7 @@ def gen_exp_conf(topo, seed, flow_num, cc, enable_randoffset, proj_dir,
     return conf_path
 
 def update_flownum_in_flowfile(flow_file:str, flow_num:int):
-    with open(flow_file, 'rw', encoding='utf-8') as f:
+    with open(flow_file, 'r+', encoding='utf-8') as f:
         lines = f.readlines()
         lines[0] = f'{flow_num}\n'
         f.writelines(lines)

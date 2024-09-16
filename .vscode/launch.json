@@ -6,6 +6,18 @@
     "configurations": [
 
         {
+            "name": "preliminary",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/simulation/launch.py",
+            "console": "integratedTerminal",
+            "args": [
+                "preliminary"
+            ],
+            "cwd":"${workspaceFolder}",
+
+        },
+        {
             "name": "third llmTst dcqcn",
             "type": "cppdbg", // cppdbg for GDB or LLDB
             "request": "launch", // "launch" a program or "attach" to an already running instance 
@@ -139,7 +151,7 @@
                 "--load", "0.3",
                 "--bandwidth", "10G",
                 "--end_time", "0.1",
-                "--output", "simulation/mix/rand_offset/llmFlows.txt",
+                "--output", "simulation/mix/rand_offset/preliminary/llmFlows.txt",
                 "--scenario", "GPT1_data_parallel",
             ],
             "cwd":"${workspaceFolder}",
