@@ -50,6 +50,7 @@ class HPCCExperiment(ExperimentRunnerBase):
     def run_conf(self, conf_path):
         cmd = f'{self.app_path} {conf_path}'
         start_time_s = time.time()
+        print(f"running:{cmd}")
         os.system(cmd)
         end_time_s = time.time()
         # logging.debug(f"running time: {(end_time_s-start_time_s)*1000}ms")
@@ -59,7 +60,6 @@ class HPCCExperiment(ExperimentRunnerBase):
 
 def gen_exp_conf(topo, seed, flow_num, cc, enable_randoffset, proj_dir, 
                  slots, multi_factor):
-    conf_path = f'config_{topo}_flow_{flow_num}_{cc}_{seed}.txt'
     line = f'{topo},{seed},{flow_num},{cc},{enable_randoffset},{conf_path},'\
             f'-1,-1,-1,-1,-1\n'
     #TODO: unfinished
@@ -82,6 +82,7 @@ def gen_exp_conf(topo, seed, flow_num, cc, enable_randoffset, proj_dir,
         'slots':slots,
         'multi_factor':multi_factor,
     }
+    conf_path = f'{proj_dir}/config_{topo}_{conf_args['flow']}_{flow_num}_{cc}_{seed}.txt'
     # update flow input file
     _1, flow_file, _2, _3, _4 = run_hybrid.get_input_file_paths(
         topo, conf_args['flow'], proj_dir)
@@ -92,9 +93,10 @@ def gen_exp_conf(topo, seed, flow_num, cc, enable_randoffset, proj_dir,
     return conf_path
 
 def update_flownum_in_flowfile(flow_file:str, flow_num:int):
-    with open(flow_file, 'r+', encoding='utf-8') as f:
+    with open(flow_file, 'r') as f:
         lines = f.readlines()
         lines[0] = f'{flow_num}\n'
+    with open(flow_file, 'w') as f:
         f.writelines(lines)
 
 # ----------v--------  gen blueprint --------------------------------

@@ -508,6 +508,8 @@ int main(int argc, char *argv[])
 #else
 		conf.open(PATH_TO_PGO_CONFIG);
 #endif
+		//TODO: will dead loop if file does not exist
+		// warn if no file
 		while (!conf.eof())
 		{
 			std::string key;
@@ -857,12 +859,7 @@ int main(int argc, char *argv[])
 			}else if (key.compare("PINT_PROB") == 0){
 				conf >> pint_prob;
 				std::cout << "PINT_PROB\t\t\t\t" << pint_prob << '\n';
-			}else if (key.compare("OFFSET_UPBOUND_US") == 0){
-				int v;
-				conf >> v;
-				offset_upbound_us = v;
-				std::cout << "OFFSET_UPBOUND_US\t\t\t\t" << offset_upbound_us << '\n';
-			}
+			}			
 			fflush(stdout);
 		}
 		conf.close();
