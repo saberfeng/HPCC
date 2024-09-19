@@ -93,6 +93,7 @@ def get_output_file_paths(topo, flow_num, cc, proj_dir, enable_randoffset,slots,
 	return TRACE_OUTPUT_FILE, FCT_OUTPUT_FILE, PFC_OUTPUT_FILE
 
 
+
 def gen_conf(args):
 	topo=args['topo']
 	bw = int(args['bw'])
@@ -218,11 +219,15 @@ def gen_conf(args):
 		print("unknown cc:", args['cc'])
 		sys.exit(1)
 
-	config_name = f"{proj_dir}/config_{topo}_{flow}_{cc}{failure}_{enable_randoffset}.txt"
+	config_name = get_conf_path(topo, flow, cc, enable_randoffset, proj_dir) 
+
 	print(config_name)
 	with open(config_name, "w") as file:
 		file.write(config)
 	return config_name, TRACE_OUTPUT_FILE, FCT_OUTPUT_FILE, PFC_OUTPUT_FILE
+	
+def get_conf_path(topo, flow, cc, enable_randoffset, proj_dir):
+	return f"{proj_dir}/config_{topo}_{flow}_{cc}_{enable_randoffset}.txt"
 
 def read_flow_file(flow_file):
 	with open(flow_file, "r") as file:

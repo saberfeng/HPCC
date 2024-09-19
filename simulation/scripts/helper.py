@@ -131,37 +131,12 @@ class BlueprintManager:
         blueprint.to_csv(path, index=False)
 
 
-def read_file(file_path):
-    # try encodings: utf-8, windows-1252
-    f = open(file_path, "r", encoding='utf-8')
-    while True:
-        try:
-            line = f.readline()
-        except UnicodeDecodeError:
-            f.close()
-            encoding = 'windows-1252'
-            break
-        if not line:
-            f.close()
-            encoding = 'utf-8'
-            break
-    with open(file_path, "r", encoding=encoding) as f:
-        return f.read()
-    
-
-def match_and_replace_in_file(file_path, pattern, replace):
-    content = read_file(file_path)
-    new_content = re.sub(pattern, replace, content)
-    write_file(file_path, new_content)
-
-
 # -------------- file helpers --------------------
 
 def get_file_content(file_path):
     with open(file_path, "r") as f:
         content = f.read()
         return content
-
 
 def write_json_to_file(content, path):
     os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -191,4 +166,29 @@ def get_concise_num(number: int):
 def get_dotted_concise_num_list(numbers):
     return '.'.join([get_concise_num(number) for number in numbers])
 
+def read_file(file_path):
+    # try encodings: utf-8, windows-1252
+    f = open(file_path, "r", encoding='utf-8')
+    while True:
+        try:
+            line = f.readline()
+        except UnicodeDecodeError:
+            f.close()
+            encoding = 'windows-1252'
+            break
+        if not line:
+            f.close()
+            encoding = 'utf-8'
+            break
+    with open(file_path, "r", encoding=encoding) as f:
+        return f.read()
+
+def read_file_lines(file_path):
+    with open(file_path, "r") as f:
+        return f.readlines()
+    
+def match_and_replace_in_file(file_path, pattern, replace):
+    content = read_file(file_path)
+    new_content = re.sub(pattern, replace, content)
+    write_file(file_path, new_content)
 

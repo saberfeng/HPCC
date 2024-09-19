@@ -5,6 +5,7 @@ import sys
 import pandas as pd
 import time
 import os
+import helper
 
 # to run experiments:
 # 1. generate traffic: gen_llm_flows.gen_llm_traffic()
@@ -25,10 +26,16 @@ class HPCCExperiment(ExperimentRunnerBase):
     def run_by_blueprint(self):
         unrun_row, row_id = self._find_unrun_row()
         while unrun_row is not False:
-            results = self.execute(unrun_row)
+            # run experiment
+            conf_path = self.execute(unrun_row)
+            # parse results
+            hpcc_parser = HPCCResultParser(conf_path)
+            results = hpcc_parser.parse_fct()
             self.update_blueprint(row_id, results)
+
             unrun_row = self._find_unrun_row()
         print("all experiments finished") 
+    
     
     def execute(self, row):
         conf_path = gen_exp_conf(topo=row.get('topo'), seed=row.get('seed'),
@@ -37,6 +44,7 @@ class HPCCExperiment(ExperimentRunnerBase):
                                  proj_dir=self.proj_dir, slots=row.get('slots'),
                                  multi_factor=row.get('multiFactor'))
         self.run_conf(conf_path)
+        return conf_path
 
 
     def update_blueprint(self, row_id, results):
@@ -56,12 +64,47 @@ class HPCCExperiment(ExperimentRunnerBase):
         # logging.debug(f"running time: {(end_time_s-start_time_s)*1000}ms")
         print(f"running time: {(end_time_s-start_time_s)}s")
 
+class HPCCResultParser:
+    def __init__(self, conf_path):
+        self.output_paths = self.__read_output_paths_from_conf(conf_path)
+
+    def __read_output_paths_from_conf(self, conf_path):
+        conf_lines = helper.read_file_lines()
+        output_paths = {}
+        for line in conf_lines:
+            kv_pair = line.split(' ')
+            key, value = kv_pair[0], kv_pair[1]
+            if key[-11:] == 'OUTPUT_PATH':
+                output_paths[key] = value
+        return output_paths
+    
+    def parse_fct(self):
+        path = self.output_paths['FCT_OUTPUT_PATH']
+        fct_df = pd.read_csv(path)
+        start_ns = fct_df['start(ns)']
+        complete_fct_ns = fct_df['complete_fct(ns)']
+        end_ns = fct_df['end(ns)']
+        result = {
+            'maxFctNs': complete_fct_ns.max(),
+            'avgFctNs': complete_fct_ns.mean(),
+            'makespanNs': end_ns.max() - start_ns.min(),
+        }
+        return result
+
+    
+    def parse_pfc(self):
+        path = self.output_paths['PFC_OUTPUT_PATH']
+    
+    def parse_link_util(self):
+        path = self.output_paths['LINK_UTIL_OUTPUT_PATH']
+    
+    def parse_trace(self):
+        path = self.output_paths['TRACE_OUTPUT_PATH']
+
 
 
 def gen_exp_conf(topo, seed, flow_num, cc, enable_randoffset, proj_dir, 
                  slots, multi_factor):
-    line = f'{topo},{seed},{flow_num},{cc},{enable_randoffset},{conf_path},'\
-            f'-1,-1,-1,-1,-1\n'
     #TODO: unfinished
     conf_args = {
         'topo': topo,
@@ -82,7 +125,8 @@ def gen_exp_conf(topo, seed, flow_num, cc, enable_randoffset, proj_dir,
         'slots':slots,
         'multi_factor':multi_factor,
     }
-    conf_path = f'{proj_dir}/config_{topo}_{conf_args['flow']}_{flow_num}_{cc}_{seed}.txt'
+    flow = conf_args['flow']
+    conf_path = run_hybrid.get_conf_path(topo, flow, cc, enable_randoffset, proj_dir) 
     # update flow input file
     _1, flow_file, _2, _3, _4 = run_hybrid.get_input_file_paths(
         topo, conf_args['flow'], proj_dir)

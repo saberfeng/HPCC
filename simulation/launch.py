@@ -1,5 +1,5 @@
 import sys
-import scripts.run_experiment as run_experiment
+from scripts.run_experiment import HPCCExperiment
 
 def main():
     proj_dir = 'simulation/mix/rand_offset/preliminary'
@@ -10,7 +10,7 @@ def main():
         if sys.argv[1] == "preliminary":
             blueprint_name = 'exp_blueprint.csv'
             blueprint_path = f'{proj_dir}/{blueprint_name}'
-            experiment = run_experiment.HPCCExperiment(
+            experiment = HPCCExperiment(
                 blueprint_path=blueprint_path,
                 status_col_name='state',
                 proj_dir=proj_dir,
