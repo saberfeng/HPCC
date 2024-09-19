@@ -43,7 +43,7 @@ class HPCCExperiment(ExperimentRunnerBase):
                                  enable_randoffset=row.get('randOffset'),
                                  proj_dir=self.proj_dir, slots=row.get('slots'),
                                  multi_factor=row.get('multiFactor'))
-        # self.run_conf(conf_path)
+        self.run_conf(conf_path)
         return conf_path
 
 
@@ -127,6 +127,7 @@ def gen_exp_conf(topo, seed, flow_num, cc, enable_randoffset, proj_dir,
         'pint_prob':1.0,
         'slots':slots,
         'multi_factor':multi_factor,
+        'seed':seed,
     }
     flow = conf_args['flow']
     conf_path = run_hybrid.get_conf_path(topo, flow, cc, enable_randoffset, proj_dir) 

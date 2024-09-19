@@ -82,14 +82,14 @@ def get_input_file_paths(topo, flow, proj_dir):
 			QUEUE_MONITOR_FILE.format(proj_dir=proj_dir), \
 			RANDOM_PARAM_FILE.format(proj_dir=proj_dir), \
 
-def get_output_file_paths(topo, flow_num, cc, proj_dir, enable_randoffset,slots,multi_factor):
+def get_output_file_paths(topo, flow_num, cc, proj_dir, enable_randoffset,slots,multi_factor,seed):
 	failure = ''
 	TRACE_OUTPUT_FILE = f"{proj_dir}/"\
-					f"mix_{topo}_{flow_num}_{cc}{failure}_{enable_randoffset}_sl{slots}_fc{multi_factor}.tr"
+					f"mix_{topo}_s{seed}_f{flow_num}_{cc}{failure}_{enable_randoffset}_sl{slots}_fc{multi_factor}.tr"
 	FCT_OUTPUT_FILE = f"{proj_dir}/"\
-					f"fct_{topo}_{flow_num}_{cc}{failure}_{enable_randoffset}_sl{slots}_fc{multi_factor}.csv"
+					f"fct_{topo}_s{seed}_f{flow_num}_{cc}{failure}_{enable_randoffset}_sl{slots}_fc{multi_factor}.csv"
 	PFC_OUTPUT_FILE = f"{proj_dir}/"\
-					f"pfc_{topo}_{flow_num}_{cc}{failure}_{enable_randoffset}_sl{slots}_fc{multi_factor}.txt"
+					f"pfc_{topo}_s{seed}_f{flow_num}_{cc}{failure}_{enable_randoffset}_sl{slots}_fc{multi_factor}.txt"
 	return TRACE_OUTPUT_FILE, FCT_OUTPUT_FILE, PFC_OUTPUT_FILE
 
 
@@ -114,6 +114,7 @@ def gen_conf(args):
 	enable_randoffset = args['enable_randoffset']
 	slots = args['slots']
 	multi_factor = args['multi_factor']
+	seed = args['seed']
 
 	failure = ''
 	# if args.down != '0 0 0':
@@ -127,7 +128,7 @@ def gen_conf(args):
 		get_input_file_paths(topo, flow, proj_dir)
 	flow_num, _ = read_flow_file(FLOW_FILE)	
 	TRACE_OUTPUT_FILE, FCT_OUTPUT_FILE, PFC_OUTPUT_FILE = \
-		get_output_file_paths(topo, flow_num, cc, proj_dir, enable_randoffset, slots, multi_factor)
+		get_output_file_paths(topo, flow_num, cc, proj_dir, enable_randoffset, slots, multi_factor, seed)
 	
 	common_temp_args = {
 		"proj_dir": proj_dir,
