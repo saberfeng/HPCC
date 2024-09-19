@@ -1,11 +1,11 @@
 import argparse
 import scripts.run_hybrid as run_hybrid
+import scripts.helper as helper
 from scripts.run_exp_base import *
 import sys
 import pandas as pd
 import time
 import os
-import helper
 
 # to run experiments:
 # 1. generate traffic: gen_llm_flows.gen_llm_traffic()
@@ -33,7 +33,7 @@ class HPCCExperiment(ExperimentRunnerBase):
             results = hpcc_parser.parse_fct()
             self.update_blueprint(row_id, results)
 
-            unrun_row = self._find_unrun_row()
+            unrun_row, row_id = self._find_unrun_row()
         print("all experiments finished") 
     
     
@@ -43,7 +43,7 @@ class HPCCExperiment(ExperimentRunnerBase):
                                  enable_randoffset=row.get('randOffset'),
                                  proj_dir=self.proj_dir, slots=row.get('slots'),
                                  multi_factor=row.get('multiFactor'))
-        self.run_conf(conf_path)
+        # self.run_conf(conf_path)
         return conf_path
 
 
@@ -69,17 +69,20 @@ class HPCCResultParser:
         self.output_paths = self.__read_output_paths_from_conf(conf_path)
 
     def __read_output_paths_from_conf(self, conf_path):
-        conf_lines = helper.read_file_lines()
+        conf_lines = helper.read_file_lines(conf_path)
         output_paths = {}
         for line in conf_lines:
+            line = line.strip('\n')
+            if line == '':
+                continue
             kv_pair = line.split(' ')
             key, value = kv_pair[0], kv_pair[1]
-            if key[-11:] == 'OUTPUT_PATH':
+            if key[-11:] == 'OUTPUT_FILE':
                 output_paths[key] = value
         return output_paths
     
     def parse_fct(self):
-        path = self.output_paths['FCT_OUTPUT_PATH']
+        path = self.output_paths['FCT_OUTPUT_FILE']
         fct_df = pd.read_csv(path)
         start_ns = fct_df['start(ns)']
         complete_fct_ns = fct_df['complete_fct(ns)']
@@ -93,13 +96,13 @@ class HPCCResultParser:
 
     
     def parse_pfc(self):
-        path = self.output_paths['PFC_OUTPUT_PATH']
+        path = self.output_paths['PFC_OUTPUT_FILE']
     
     def parse_link_util(self):
-        path = self.output_paths['LINK_UTIL_OUTPUT_PATH']
+        path = self.output_paths['LINK_UTIL_OUTPUT_FILE']
     
     def parse_trace(self):
-        path = self.output_paths['TRACE_OUTPUT_PATH']
+        path = self.output_paths['TRACE_OUTPUT_FILE']
 
 
 
