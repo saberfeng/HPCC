@@ -27,11 +27,11 @@ class HPCCExperiment(ExperimentRunnerBase):
         unrun_row, row_id = self._find_unrun_row()
         while unrun_row is not False:
             # run experiment
-            conf_path = self.execute(unrun_row)
+            conf_path, runtime_s = self.execute(unrun_row)
             # parse results
             hpcc_parser = HPCCResultParser(conf_path)
             results = hpcc_parser.parse_fct()
-            self.update_blueprint(row_id, results)
+            self.update_blueprint(row_id, results, runtime_s)
 
             unrun_row, row_id = self._find_unrun_row()
         print("all experiments finished") 
@@ -43,16 +43,17 @@ class HPCCExperiment(ExperimentRunnerBase):
                                  enable_randoffset=row.get('randOffset'),
                                  proj_dir=self.proj_dir, slots=row.get('slots'),
                                  multi_factor=row.get('multiFactor'))
-        self.run_conf(conf_path)
-        return conf_path
+        runtime_s = self.run_conf(conf_path)
+        return conf_path, runtime_s
 
 
-    def update_blueprint(self, row_id, results):
+    def update_blueprint(self, row_id, results, runtime_s):
         blueprint = self.read_blueprint()
         blueprint.loc[row_id, self.status_col_name] = EXP_RUN_STATUS
         blueprint.loc[row_id, 'maxFctNs'] = results['maxFctNs']
         blueprint.loc[row_id, 'avgFctNs'] = results['avgFctNs']
         blueprint.loc[row_id, 'makespanNs'] = results['makespanNs']
+        blueprint.loc[row_id, 'runtimeS'] = f'{runtime_s:.2f}'
         self.save_blueprint(blueprint)
 
     def run_conf(self, conf_path):
@@ -62,7 +63,9 @@ class HPCCExperiment(ExperimentRunnerBase):
         os.system(cmd)
         end_time_s = time.time()
         # logging.debug(f"running time: {(end_time_s-start_time_s)*1000}ms")
-        print(f"running time: {(end_time_s-start_time_s)}s")
+        runtime_s = end_time_s - start_time_s
+        print(f"running time: {runtime_s}s")
+        return runtime_s
 
 class HPCCResultParser:
     def __init__(self, conf_path):

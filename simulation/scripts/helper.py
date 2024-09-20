@@ -85,6 +85,12 @@ class BlueprintManagerBase:
         for column_name in column_names:
             blueprint = blueprint.drop(columns=[column_name])
         blueprint.to_csv(path, index=False)
+    
+    def insert_column(self, path, column_name, column_value):
+        blueprint = pd.read_csv(path)
+        column_values = [column_value] * blueprint.shape[0]
+        blueprint[column_name] = column_values
+        blueprint.to_csv(path, index=False)
  
 
 class BlueprintManager:

@@ -1,5 +1,6 @@
 import sys
 from scripts.run_experiment import HPCCExperiment
+import scripts.helper as helper
 
 def main():
     proj_dir = 'simulation/mix/rand_offset/preliminary'
@@ -17,6 +18,10 @@ def main():
                 app_path=app_path,
             )
             experiment.run_by_blueprint()
+        elif sys.argv[1] == "manage_blueprint":
+            mgr = helper.BlueprintManagerBase(status_col_name='state')
+            path = 'simulation/mix/rand_offset/preliminary/exp_blueprint.csv'
+            mgr.insert_column(path, 'runtimeS', -1)
         else:
             print("unknown param")
 

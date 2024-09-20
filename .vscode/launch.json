@@ -19,6 +19,18 @@
         },
 
         {
+            "name": "manage_blueprint",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/simulation/launch.py",
+            "console": "integratedTerminal",
+            "args": [
+                "manage_blueprint"
+            ],
+            "cwd":"${workspaceFolder}",
+        },
+
+        {
             "name": "third llmTst dcqcn",
             "type": "cppdbg", // cppdbg for GDB or LLDB
             "request": "launch", // "launch" a program or "attach" to an already running instance 
