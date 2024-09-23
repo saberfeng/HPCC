@@ -1196,9 +1196,11 @@ int main(int argc, char *argv[])
 	NodeContainer trace_nodes = get_node_container_from_file(tracef, trace_num);
 	monitor_nodeids = get_nodeid_set_from_file(qmonitorf, monitor_num);
 
-	FILE *trace_output = fopen(trace_output_file.c_str(), "w");
-	if (enable_trace)
+	FILE *trace_output;
+	if (enable_trace){
+		trace_output = fopen(trace_output_file.c_str(), "w");
 		qbb.EnableTracing(trace_output, trace_nodes);
+	}
 
 	// dump link speed to trace file
 	{
@@ -1212,7 +1214,9 @@ int main(int argc, char *argv[])
 			}
 		}
 		sim_setting.win = maxBdp;
-		sim_setting.Serialize(trace_output);
+		if(enable_trace){
+			sim_setting.Serialize(trace_output);
+		}
 	}
 
 	Ipv4GlobalRoutingHelper::PopulateRoutingTables();
@@ -1262,7 +1266,9 @@ int main(int argc, char *argv[])
 	Simulator::Destroy();
 	NS_LOG_INFO("Done.");
 	log_cur_time();
-	fclose(trace_output);
+	if(enable_trace){
+		fclose(trace_output);
+	}
 
 	endt = clock();
 	std::cout << (double)(endt - begint) / CLOCKS_PER_SEC << "\n";
