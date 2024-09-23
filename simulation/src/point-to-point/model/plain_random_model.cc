@@ -30,7 +30,10 @@ void PlainRandomModel::print_sw2wins(unordered_map<uint32_t, vector<Window>> sw2
 void PlainRandomModel::read_param_file(string& rand_param_file){
     ifstream ifs(rand_param_file);
     uint32_t slots_interval_us;
-	ifs >> this->slots_num >> slots_interval_us;
+    double slots_num_d, slots_interval_us_d;
+	ifs >> slots_num_d >> slots_interval_us_d;
+    this->slots_num = uint32_t(slots_num_d);
+    slots_interval_us = uint32_t(slots_interval_us_d);
     ifs.close();
     this->slots_interval = ns3::MicroSeconds(slots_interval_us);
 }

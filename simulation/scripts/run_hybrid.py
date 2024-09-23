@@ -262,7 +262,7 @@ def update_param(args:dict):
 
 	# need to update 1. slots 2. slots_interval_us
 	slots_interval_us = multiple_flow_trans(multi_factor)
-	param_line = f"{slots} {slots_interval_us}\n\n"
+	param_line = f"{slots:.0f} {slots_interval_us:.0f}\n\n"
 
 	desc_line = "slots slots_interval_us"
 	content = param_line + desc_line
