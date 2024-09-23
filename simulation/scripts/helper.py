@@ -91,6 +91,19 @@ class BlueprintManagerBase:
         column_values = [column_value] * blueprint.shape[0]
         blueprint[column_name] = column_values
         blueprint.to_csv(path, index=False)
+    
+    def reorder_all_column(self, path, column_names):
+        blueprint = pd.read_csv(path)
+        blueprint = blueprint[column_names]
+        blueprint.to_csv(path, index=False)
+    
+    def reorder_one_column(self, path, column_name, position):
+        blueprint = pd.read_csv(path)
+        columns = blueprint.columns.tolist()
+        columns.remove(column_name)
+        columns.insert(position, column_name)
+        blueprint = blueprint[columns]
+        blueprint.to_csv(path, index=False)
  
 
 class BlueprintManager:

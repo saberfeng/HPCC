@@ -21,7 +21,8 @@ def main():
         elif sys.argv[1] == "manage_blueprint":
             mgr = helper.BlueprintManagerBase(status_col_name='state')
             path = 'simulation/mix/rand_offset/preliminary/exp_blueprint.csv'
-            mgr.insert_column(path, 'runtimeS', -1)
+            # mgr.insert_column(path, 'runtimeS', -1)
+            mgr.reorder_one_column(path, 'state', 0)
         else:
             print("unknown param")
 
