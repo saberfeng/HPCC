@@ -177,16 +177,16 @@ def gen_conf(args):
 			config = config_template.format(cc=args['cc'], mode=1, t_alpha=50, t_dec=50, t_inc=55, g=0.00390625, ai=ai, hai=hai, dctcp_ai=1000, has_win=0, vwin=0, us=0, int_multi=1, ack_prio=1, kmax_map=kmax_map, kmin_map=kmin_map, pmax_map=pmax_map, **common_temp_args)
 		elif args['cc'] == "dcqcn_paper_vwin":
 			config = config_template.format(cc=args['cc'], mode=1, t_alpha=50, t_dec=50, t_inc=55, g=0.00390625, ai=ai, hai=hai, dctcp_ai=1000, has_win=0, vwin=0, us=0, int_multi=1, ack_prio=1, kmax_map=kmax_map, kmin_map=kmin_map, pmax_map=pmax_map, **common_temp_args)
-	elif args.cc == "hp":
+	elif args['cc'] == "hp":
 		ai = 10 * bw / 25
-		if args.hpai > 0:
-			ai = args.hpai
+		if args['hpai'] > 0:
+			ai = args['hpai']
 		hai = ai # useless
 		int_multi = bw / 25
 		cc = "%s%d"%(args['cc'], u_tgt)
 		if (mi > 0):
 			cc += "mi%d"%mi
-		if args.hpai > 0:
+		if args['hpai'] > 0:
 			cc += "ai%d"%ai
 		config = config_template.format(cc=args['cc'], mode=1, t_alpha=50, t_dec=50, t_inc=55, g=0.00390625, ai=ai, hai=hai, dctcp_ai=1000, has_win=0, vwin=0, us=0, int_multi=1, ack_prio=1, kmax_map=kmax_map, kmin_map=kmin_map, pmax_map=pmax_map, **common_temp_args)
 	elif args['cc'] == "dctcp":
@@ -207,14 +207,14 @@ def gen_conf(args):
 		config = config_template.format(cc=args['cc'], mode=1, t_alpha=50, t_dec=50, t_inc=55, g=0.00390625, ai=ai, hai=hai, dctcp_ai=1000, has_win=0, vwin=0, us=0, int_multi=1, ack_prio=1, kmax_map=kmax_map, kmin_map=kmin_map, pmax_map=pmax_map, **common_temp_args)
 	elif args['cc'] == "hpccPint":
 		ai = 10 * bw / 25
-		if args.hpai > 0:
-			ai = args.hpai
+		if args['hpai'] > 0:
+			ai = args['hpai']
 		hai = ai # useless
 		int_multi = bw / 25
-		cc = "%s%d"%(args['cc'], args.utgt)
+		cc = "%s%d"%(args['cc'], args['utgt'])
 		if (mi > 0):
 			cc += "mi%d"%mi
-		if args.hpai > 0:
+		if args['hpai'] > 0:
 			cc += "ai%d"%ai
 		cc += "log%.3f"%pint_log_base
 		cc += "p%.3f"%pint_prob
@@ -292,5 +292,5 @@ if __name__ == "__main__":
 	args = parser.parse_args()
 	
 	gen_conf(vars(args))
-	if int(args.update_model_param) == 1:
+	if int(args['update_model_param']) == 1:
 		update_param(vars(args))
