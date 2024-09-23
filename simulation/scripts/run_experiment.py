@@ -26,6 +26,7 @@ class HPCCExperiment(ExperimentRunnerBase):
     def run_by_blueprint(self):
         unrun_row, row_id = self._find_unrun_row()
         while unrun_row is not False:
+            self.set_blueprint_running(row_id)
             # run experiment
             conf_path, runtime_s = self.execute(unrun_row)
             # parse results
@@ -36,6 +37,11 @@ class HPCCExperiment(ExperimentRunnerBase):
             unrun_row, row_id = self._find_unrun_row()
         print("all experiments finished") 
     
+
+    def set_blueprint_running(self, row_id):
+        blueprint = self.read_blueprint()
+        blueprint.loc[row_id, self.status_col_name] = self.EXP_RUNNING_STATUS
+        self.save_blueprint(blueprint)
     
     def execute(self, row):
         conf_path = gen_exp_conf(topo=row.get('topo'), seed=row.get('seed'),
@@ -49,7 +55,7 @@ class HPCCExperiment(ExperimentRunnerBase):
 
     def update_blueprint(self, row_id, results, runtime_s):
         blueprint = self.read_blueprint()
-        blueprint.loc[row_id, self.status_col_name] = EXP_RUN_STATUS
+        blueprint.loc[row_id, self.status_col_name] = self.EXP_DONE_STATUS
         blueprint.loc[row_id, 'maxFctNs'] = results['maxFctNs']
         blueprint.loc[row_id, 'avgFctNs'] = results['avgFctNs']
         blueprint.loc[row_id, 'makespanNs'] = results['makespanNs']

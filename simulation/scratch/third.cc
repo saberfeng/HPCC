@@ -493,8 +493,8 @@ int main(int argc, char *argv[])
 {
 	clock_t begint, endt;
 	begint = clock();
-    cout << "third app\nargv[1]:" << argv[1] << endl;
-    cout << "argc:" << argc << endl;
+    cout << "third app. argv[1]:" << argv[1] 
+		<< " argc:" << argc << endl;
 	std::stringstream ss;
 
 	LogComponentEnable("GENERIC_SIMULATION", LOG_LEVEL_LOGIC);
