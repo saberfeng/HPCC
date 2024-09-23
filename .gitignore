@@ -7,3 +7,4 @@ simulation/.lock-waf_linux2_build
 simulation/cmake-build-debug
 simulation/cmake-build-debug-event-trace
 build
+simulation/mix/rand_offset/preliminary/config*

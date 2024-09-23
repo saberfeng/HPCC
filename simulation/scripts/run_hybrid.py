@@ -223,15 +223,15 @@ def gen_conf(args):
 		print("unknown cc:", args['cc'])
 		sys.exit(1)
 
-	config_name = get_conf_path(topo, flow, cc, enable_randoffset, proj_dir) 
+	conf_path = get_conf_path(topo, flow, cc, enable_randoffset, proj_dir, seed, slots, multi_factor) 
 
-	print(config_name)
-	with open(config_name, "w") as file:
+	print(f'generated:{conf_path}')
+	with open(conf_path, "w") as file:
 		file.write(config)
-	return config_name, TRACE_OUTPUT_FILE, FCT_OUTPUT_FILE, PFC_OUTPUT_FILE
+	return conf_path, TRACE_OUTPUT_FILE, FCT_OUTPUT_FILE, PFC_OUTPUT_FILE
 	
-def get_conf_path(topo, flow, cc, enable_randoffset, proj_dir):
-	return f"{proj_dir}/config_{topo}_{flow}_{cc}_{enable_randoffset}.txt"
+def get_conf_path(topo, flow, cc, enable_randoffset, proj_dir, seed, slots, multi_factor):
+	return f"{proj_dir}/config_{topo}_s{seed}_f{flow}_{cc}_{enable_randoffset}_sl{slots}_fc{multi_factor}.txt"
 
 def read_flow_file(flow_file):
 	with open(flow_file, "r") as file:

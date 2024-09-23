@@ -16,6 +16,7 @@ def main():
                 status_col_name='state',
                 proj_dir=proj_dir,
                 app_path=app_path,
+                proc_num=1,
             )
             experiment.run_by_blueprint()
 

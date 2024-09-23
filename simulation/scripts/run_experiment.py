@@ -6,6 +6,7 @@ import sys
 import pandas as pd
 import time
 import os
+from multiprocessing import Process
 
 # to run experiments:
 # 1. generate traffic: gen_llm_flows.gen_llm_traffic()
@@ -18,24 +19,39 @@ import os
 
 # ----------v--------- run experiment ------------------------
 class HPCCExperiment(ExperimentRunnerBase):
-    def __init__(self, blueprint_path, status_col_name, proj_dir, app_path):
+    def __init__(self, blueprint_path, status_col_name, proj_dir, app_path, proc_num):
         super().__init__(blueprint_path, status_col_name)
         self.proj_dir = proj_dir
         self.app_path = app_path # "simulation/build/scratch/third"
+        self.proc_num = proc_num
 
     def run_by_blueprint(self):
         unrun_row, row_id = self._find_unrun_row()
         while unrun_row is not False:
-            self.set_blueprint_running(row_id)
-            # run experiment
-            conf_path, runtime_s = self.execute(unrun_row)
-            # parse results
-            hpcc_parser = HPCCResultParser(conf_path)
-            results = hpcc_parser.parse_fct()
-            self.update_blueprint(row_id, results, runtime_s)
-
+            self.run_row(unrun_row, row_id)
             unrun_row, row_id = self._find_unrun_row()
         print("all experiments finished") 
+
+    def run_by_blueprint_parallel(self):
+        unrun_row_li, row_id_li = self._find_unrun_row_list(self.proc_num)
+        while unrun_row_li != [] and row_id_li != []:
+            procs = []
+            for i in range(len(unrun_row_li)):
+                p = Process(target=self.run_row, args=(unrun_row_li[i], row_id_li[i]))
+                procs.append(p)
+                p.start()
+            for p in procs:
+                p.join()
+            unrun_row_li, row_id_li = self._find_unrun_row_list(self.proc_num)   
+
+    def run_row(self, unrun_row, row_id):
+        self.set_blueprint_running(row_id)
+        # run experiment
+        conf_path, runtime_s = self.execute(unrun_row)
+        # parse results
+        hpcc_parser = HPCCResultParser(conf_path)
+        results = hpcc_parser.parse_fct()
+        self.update_blueprint(row_id, results, runtime_s)
     
 
     def set_blueprint_running(self, row_id):
@@ -139,13 +155,13 @@ def gen_exp_conf(topo, seed, flow_num, cc, enable_randoffset, proj_dir,
         'seed':seed,
     }
     flow = conf_args['flow']
-    conf_path = run_hybrid.get_conf_path(topo, flow, cc, enable_randoffset, proj_dir) 
+    # conf_path = run_hybrid.get_conf_path(topo, flow, cc, enable_randoffset, proj_dir, seed, slots, multi_factor) 
     # update flow input file
     _1, flow_file, _2, _3, _4 = run_hybrid.get_input_file_paths(
         topo, conf_args['flow'], proj_dir)
     update_flownum_in_flowfile(flow_file, flow_num)
     # generate config file
-    run_hybrid.gen_conf(conf_args)
+    conf_path, TRACE_OUTPUT_FILE, FCT_OUTPUT_FILE, PFC_OUTPUT_FILE = run_hybrid.gen_conf(conf_args)
     run_hybrid.update_param(conf_args)
     return conf_path
 
