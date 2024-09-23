@@ -9,7 +9,7 @@ def main():
         print("need params")
     else:
         if sys.argv[1] == "preliminary":
-            if sys.argc > 2:
+            if len(sys.argv[1]) > 2:
                 proc_num = int(sys.argv[2])
             else:
                 proc_num = 4
