@@ -16,9 +16,9 @@ def main():
                 status_col_name='state',
                 proj_dir=proj_dir,
                 app_path=app_path,
-                proc_num=1,
+                proc_num=4,
             )
-            experiment.run_by_blueprint()
+            experiment.run_by_blueprint_parallel()
 
         elif sys.argv[1] == "manage_blueprint":
             mgr = helper.BlueprintManagerBase(status_col_name='state')

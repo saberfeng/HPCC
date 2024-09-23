@@ -6,7 +6,7 @@ import sys
 import pandas as pd
 import time
 import os
-from multiprocessing import Process
+from multiprocessing import Process, Lock, cpu_count
 
 # to run experiments:
 # 1. generate traffic: gen_llm_flows.gen_llm_traffic()
@@ -28,35 +28,50 @@ class HPCCExperiment(ExperimentRunnerBase):
     def run_by_blueprint(self):
         unrun_row, row_id = self._find_unrun_row()
         while unrun_row is not False:
-            self.run_row(unrun_row, row_id)
+            self.set_blueprint_running(row_id)
+            # run experiment
+            conf_path, runtime_s = self.execute(unrun_row)
+            # parse results
+            hpcc_parser = HPCCResultParser(conf_path)
+            results = hpcc_parser.parse_fct()
+            self.update_blueprint(row_id, results, runtime_s)
             unrun_row, row_id = self._find_unrun_row()
         print("all experiments finished") 
 
     def run_by_blueprint_parallel(self):
+        lock = Lock()
+        # print(f'cpu count:{cpu_count()}')
         unrun_row_li, row_id_li = self._find_unrun_row_list(self.proc_num)
         while unrun_row_li != [] and row_id_li != []:
             procs = []
             for i in range(len(unrun_row_li)):
-                p = Process(target=self.run_row, args=(unrun_row_li[i], row_id_li[i]))
+                p = Process(target=self.run_row, args=(unrun_row_li[i], row_id_li[i], lock))
                 procs.append(p)
                 p.start()
             for p in procs:
                 p.join()
             unrun_row_li, row_id_li = self._find_unrun_row_list(self.proc_num)   
+        print("all experiments finished") 
 
-    def run_row(self, unrun_row, row_id):
+    def run_row(self, unrun_row, row_id, lock=None):
+        lock.acquire() # lock file updates
         self.set_blueprint_running(row_id)
+        lock.release()
         # run experiment
         conf_path, runtime_s = self.execute(unrun_row)
         # parse results
         hpcc_parser = HPCCResultParser(conf_path)
         results = hpcc_parser.parse_fct()
+
+        lock.acquire() # lock file updates
         self.update_blueprint(row_id, results, runtime_s)
+        lock.release()
     
 
     def set_blueprint_running(self, row_id):
         blueprint = self.read_blueprint()
         blueprint.loc[row_id, self.status_col_name] = self.EXP_RUNNING_STATUS
+        # print(f"row_id{row_id}---writing blueprint:{blueprint.loc[row_id]}")
         self.save_blueprint(blueprint)
     
     def execute(self, row):
