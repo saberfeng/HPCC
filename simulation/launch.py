@@ -9,6 +9,10 @@ def main():
         print("need params")
     else:
         if sys.argv[1] == "preliminary":
+            if sys.argc > 2:
+                proc_num = int(sys.argv[2])
+            else:
+                proc_num = 4
             blueprint_name = 'exp_blueprint.csv'
             blueprint_path = f'{proj_dir}/{blueprint_name}'
             experiment = HPCCExperiment(
@@ -16,7 +20,7 @@ def main():
                 status_col_name='state',
                 proj_dir=proj_dir,
                 app_path=app_path,
-                proc_num=4,
+                proc_num=proc_num,
             )
             experiment.run_by_blueprint_parallel()
 
