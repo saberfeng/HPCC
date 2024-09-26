@@ -1,3 +1,0 @@
-100.0 70819
-
-slots slots_interval_us

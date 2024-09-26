@@ -177,7 +177,6 @@ def gen_exp_conf(topo, seed, flow_num, cc, enable_randoffset, proj_dir,
     update_flownum_in_flowfile(flow_file, flow_num)
     # generate config file
     conf_path, TRACE_OUTPUT_FILE, FCT_OUTPUT_FILE, PFC_OUTPUT_FILE = run_hybrid.gen_conf(conf_args)
-    run_hybrid.update_param(conf_args)
     return conf_path
 
 def update_flownum_in_flowfile(flow_file:str, flow_num:int):
@@ -186,6 +185,7 @@ def update_flownum_in_flowfile(flow_file:str, flow_num:int):
         lines[0] = f'{flow_num}\n'
     with open(flow_file, 'w') as f:
         f.writelines(lines)
+
 
 # ----------v--------  gen blueprint --------------------------------
 def add_param_combinations(repetition, slots_li, multi_factors_li, **kwargs):

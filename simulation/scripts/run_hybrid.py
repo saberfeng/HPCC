@@ -68,6 +68,8 @@ QLEN_MON_START {qlen_mon_start_ns}
 QLEN_MON_END {qlen_mon_end_ns}
 QLEN_MON_INTV_NS {qlen_mon_intv_ns}
 QLEN_MON_DUMP_INTV_NS {qlen_mon_dump_intv_ns}
+
+RANDOFFSET_PARAMS {slots_num} {slots_interval_us}
 """
 
 
@@ -95,7 +97,20 @@ def get_output_file_paths(topo, flow_num, cc, proj_dir, enable_randoffset,slots,
 					f"pfc_{topo}_s{seed}_f{flow_num}_{cc}{failure}_{enable_randoffset}_sl{slots}_fc{multi_factor}.txt"
 	return TRACE_OUTPUT_FILE, FCT_OUTPUT_FILE, PFC_OUTPUT_FILE
 
+def update_param(slots, multi_factor, topo_file, flow_file):
+	slots = slots
+	multi_factor = multi_factor
 
+	def multiple_flow_trans(multi_factor):
+		flow_num, flow_size_bytes = read_flow_file(flow_file)
+		nic_rate_Gbps = read_topo_file(topo_file) 
+		flow_trans_time_us = (flow_size_bytes * 8 / nic_rate_Gbps) / 1e3
+		slots_interval_us = int(flow_num * flow_trans_time_us * multi_factor)
+		return slots_interval_us
+
+	slots_interval_us = multiple_flow_trans(multi_factor)
+	param_line = f"{slots:.0f} {slots_interval_us:.0f}\n\n"
+	return slots, slots_interval_us
 
 def gen_conf(args):
 	topo=args['topo']
@@ -133,6 +148,8 @@ def gen_conf(args):
 	TRACE_OUTPUT_FILE, FCT_OUTPUT_FILE, PFC_OUTPUT_FILE = \
 		get_output_file_paths(topo, flow_num, cc, proj_dir, enable_randoffset, slots, multi_factor, seed)
 	
+	slots_num, slots_interval_us = update_param(slots, multi_factor, TOPOLOGY_FILE, FLOW_FILE)
+	
 	common_temp_args = {
 		"proj_dir": proj_dir,
 		"bw": bw,
@@ -163,6 +180,9 @@ def gen_conf(args):
 		"qlen_mon_end_ns": qlen_mon_end_ns,
 		"enable_randoffset": enable_randoffset,
 		"sim_time_s":args['sim_time_s'],
+
+		"slots_num": int(slots_num),
+		"slots_interval_us": int(slots_interval_us),
 	}
 
 	if (args['cc'].startswith("dcqcn")):
@@ -247,27 +267,8 @@ def read_topo_file(topo_file):
 		nic_rate = lines[2].split(" ")[2] # Gbps
 	return int(nic_rate[0:-4])
 
-def update_param(args:dict):
-	slots = args['slots']
-	multi_factor = args['multi_factor']
-	TOPOLOGY_FILE, FLOW_FILE, _, __, RANDOM_PARAM_FILE = \
-			get_input_file_paths(args['topo'], args['flow'], args['proj_dir'])
 
-	def multiple_flow_trans(multi_factor):
-		flow_num, flow_size_bytes = read_flow_file(FLOW_FILE)
-		nic_rate_Gbps = read_topo_file(TOPOLOGY_FILE) 
-		flow_trans_time_us = (flow_size_bytes * 8 / nic_rate_Gbps) / 1e3
-		slots_interval_us = int(flow_num * flow_trans_time_us * multi_factor)
-		return slots_interval_us
 
-	# need to update 1. slots 2. slots_interval_us
-	slots_interval_us = multiple_flow_trans(multi_factor)
-	param_line = f"{slots:.0f} {slots_interval_us:.0f}\n\n"
-
-	desc_line = "slots slots_interval_us"
-	content = param_line + desc_line
-	with open(RANDOM_PARAM_FILE, "w") as file:
-		file.write(content)
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser(description='run simulation')
