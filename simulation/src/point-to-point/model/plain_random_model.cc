@@ -7,36 +7,38 @@ PlainRandomModel::PlainRandomModel(shared_ptr<vector<FlowInputEntry>>& flows,
                     ifstream& topo_file, 
                     const map<Ptr<Node>, map<Ptr<Node>, vector<Ptr<Node>>>>& nextHop,
                     const NodeContainer &nodes,
-                    string& rand_param_file,
-                    uint64_t nic_rate_bps){
+                    uint64_t nic_rate_bps,
+                    uint32_t slots_num,
+                    Time slots_interval){
     readTopology(topo_file);
-    read_param_file(rand_param_file);
+    this->slots_num = slots_num;
+    this->slots_interval = slots_interval;
     uint64_t flow_size = (*flows)[0].size_byte;
     this->flow_trans_time = transTime(nic_rate_bps/8, flow_size);
 }
 
-void PlainRandomModel::print_sw2wins(unordered_map<uint32_t, vector<Window>> sw2wins){
-    ofstream sw2wins_file("simulation/mix/rand_offset/sw2wins.txt");
-    for(const auto& sw_wins_pair : sw2wins){
-        sw2wins_file << "sw:" << sw_wins_pair.first << " ";
-        for(const auto& win : sw_wins_pair.second){
-            sw2wins_file << win << " ";
-        }
-        sw2wins_file << endl;
-    }
-    sw2wins_file.close();
-}
+// void PlainRandomModel::print_sw2wins(unordered_map<uint32_t, vector<Window>> sw2wins){
+//     ofstream sw2wins_file("simulation/mix/rand_offset/sw2wins.txt");
+//     for(const auto& sw_wins_pair : sw2wins){
+//         sw2wins_file << "sw:" << sw_wins_pair.first << " ";
+//         for(const auto& win : sw_wins_pair.second){
+//             sw2wins_file << win << " ";
+//         }
+//         sw2wins_file << endl;
+//     }
+//     sw2wins_file.close();
+// }
 
-void PlainRandomModel::read_param_file(string& rand_param_file){
-    ifstream ifs(rand_param_file);
-    uint32_t slots_interval_us;
-    double slots_num_d, slots_interval_us_d;
-	ifs >> slots_num_d >> slots_interval_us_d;
-    this->slots_num = uint32_t(slots_num_d);
-    slots_interval_us = uint32_t(slots_interval_us_d);
-    ifs.close();
-    this->slots_interval = ns3::MicroSeconds(slots_interval_us);
-}
+// void PlainRandomModel::read_param_file(string& rand_param_file){
+//     ifstream ifs(rand_param_file);
+//     uint32_t slots_interval_us;
+//     double slots_num_d, slots_interval_us_d;
+// 	ifs >> slots_num_d >> slots_interval_us_d;
+//     this->slots_num = uint32_t(slots_num_d);
+//     slots_interval_us = uint32_t(slots_interval_us_d);
+//     ifs.close();
+//     this->slots_interval = ns3::MicroSeconds(slots_interval_us);
+// }
 
 void PlainRandomModel::shift_arr_curve_algo(shared_ptr<vector<FlowInputEntry>>& flows,
                             const map<Ptr<Node>, map<Ptr<Node>, vector<Ptr<Node>>>>& nextHop,
@@ -123,7 +125,7 @@ void PlainRandomModel::shift_arr_curve_algo(shared_ptr<vector<FlowInputEntry>>& 
             }
         }
     }  
-    print_sw2wins(sw2wins);
+    // print_sw2wins(sw2wins);
 }
 
 void PlainRandomModel::insert_offsets(shared_ptr<vector<FlowInputEntry>>& flows,

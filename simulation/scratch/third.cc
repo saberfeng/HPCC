@@ -97,6 +97,10 @@ unordered_map<uint64_t, double> rate2pmax;
 uint32_t offset_upbound_us = 0;
 
 uint32_t display_config = 0;
+
+// random offset params
+uint32_t slots_num = 0;
+Time slots_interval = Time(0);
 /************************************************
  * Runtime varibles
  ***********************************************/
@@ -463,19 +467,19 @@ unordered_set<uint32_t> get_nodeid_set_from_file(ifstream& ifs, uint32_t node_nu
 	return nodeid_set;
 }
 
-void read_RandOffset_param(ifstream& ifs){
-	uint32_t slots_num, slot_interval_us;
-	ifs >> slots_num >> slot_interval_us;
-	// for(uint32_t i=0; i<node_num; i++){
-	// 	uint32_t node_id;
-	// 	ifs >> node_id;
-	// 	for(uint32_t j=0; j<param_num; j++){
-	// 		uint64_t param;
-	// 		ifs >> param;
-	// 		node2params[node_id].push_back(param);
-	// 	}
-	// }
-}
+// void read_RandOffset_param(ifstream& ifs){
+// 	uint32_t slots_num, slot_interval_us;
+// 	ifs >> slots_num >> slot_interval_us;
+// 	// for(uint32_t i=0; i<node_num; i++){
+// 	// 	uint32_t node_id;
+// 	// 	ifs >> node_id;
+// 	// 	for(uint32_t j=0; j<param_num; j++){
+// 	// 		uint64_t param;
+// 	// 		ifs >> param;
+// 	// 		node2params[node_id].push_back(param);
+// 	// 	}
+// 	// }
+// }
 
 
 Ptr<QbbNetDevice> getQbbDevFromRdmaDriver(Ptr<RdmaDriver> driver){
@@ -869,7 +873,13 @@ int main(int argc, char *argv[])
 			}else if (key.compare("PINT_PROB") == 0){
 				conf >> pint_prob;
 				ss << "PINT_PROB\t\t\t\t" << pint_prob << '\n';
-			}			
+			}else if (key.compare("RANDOFFSET_PARAMS") == 0){
+				double slots_num_d, slots_interval_us_d;
+				conf >> slots_num_d >> slots_interval_us_d;
+				slots_num = uint32_t(slots_num_d);
+				slots_interval = MicroSeconds((slots_interval_us_d));
+				ss << "PINT_PROB\t\t\t\t" << pint_prob << '\n';
+			}		
 			fflush(stdout);
 		}
 		conf.close();
@@ -1147,7 +1157,7 @@ int main(int argc, char *argv[])
 	if(enable_randoffset){
 		// RandOffsetInjector rand_offset_injector = rand_offset::RandOffsetInjector();
 		ifstream topo_file_randoffset(topology_file);// topology file for Random Offset Injector (ROI)
-		PlainRandomModel plain_rand_model(flows, topo_file_randoffset, nextHop, n, rand_param_file, nic_rate);
+		PlainRandomModel plain_rand_model(flows, topo_file_randoffset, nextHop, n, nic_rate, slots_num, slots_interval);
 		plain_rand_model.insert_offsets(flows, nextHop, n, packet_payload_size);
 		sortFlowsByStartTime();
 	}

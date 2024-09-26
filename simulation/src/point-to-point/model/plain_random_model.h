@@ -80,10 +80,11 @@ public:
                     ifstream& topo_file, 
                     const map<Ptr<Node>, map<Ptr<Node>, vector<Ptr<Node>>>>& nextHop,
                     const NodeContainer &nodes,
-                    string& rand_param_file,
-                    uint64_t nic_rate_Bps);
+                    uint64_t nic_rate_Bps,
+                    uint32_t slots_num,
+                    Time slots_interval);
 
-    void read_param_file(string& rand_param_file);
+    // void read_param_file(string& rand_param_file);
 
     pair<uint32_t, uint32_t> get_first_period_flow_range(shared_ptr<vector<FlowInputEntry>>& flows){
         return pair<uint32_t, uint32_t>(0, flows->size()); // now just the entire array
@@ -111,7 +112,7 @@ private:
         return range_start + (rand() % range_end);
     }
 
-    void print_sw2wins(unordered_map<uint32_t, vector<Window>> sw2wins);
+    // void print_sw2wins(unordered_map<uint32_t, vector<Window>> sw2wins);
 
     Time shift_gap;
     Time slots_interval;
