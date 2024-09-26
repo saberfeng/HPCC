@@ -25,9 +25,10 @@ class BlueprintManagerBase:
 
     # blueprint is a csv file saving experiment configs and results, header:
     # topo,cycles,cycleIdx,macrotick,seed,status,runtime,flow_num
-    # - successful experiments have status=1, 
-    # - ready-to-run experiments have status=-1, 
-    # - disabled experiments have status=0
+    # - experiments done have status=1, 
+    # - experiments unrun have status=-1, 
+    # - experiments running have status=0
+    # - experiments disabled have status=-2
 
     #TODO: list of conditions; blueprint = blueprint.loc[]; 
     def _disable_rows(self, blueprint, condition):
@@ -76,7 +77,13 @@ class BlueprintManagerBase:
         for reset_col, reset_val in reset_col_val_pair.items():
             blueprint.loc[condition, reset_col] = reset_val
         blueprint.to_csv(path, index=False)
-    
+
+    def reset_col_values_by_idx(self, path, idx_range:list, col_name:str, col_val):
+        blueprint = pd.read_csv(path)
+        for idx in idx_range:
+            blueprint.loc[idx, col_name] = col_val
+        blueprint.to_csv(path, index=False)   
+
     def reset_val_by_func(self, path, conditions:dict, reset_col_func_pairs:dict):
         blueprint = pd.read_csv(path)
     

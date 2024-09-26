@@ -200,21 +200,22 @@ def add_param_combinations(repetition, slots_li, multi_factors_li, **kwargs):
     return lines
 
 def get_blueprint_line(topo, seed, flow_num, cc, enable_randoffset, slots, multi_factor):
-    line = f'{topo},{seed},{flow_num},{cc},{enable_randoffset},'\
-            f'{slots},{multi_factor},-1,'\
-            f'-1,-1,-1,-1,-1\n'
+    state_default = -1
+    line = f'{state_default},{topo},{seed},{flow_num},{cc},{enable_randoffset},'\
+            f'{slots},{multi_factor},'\
+            f'-1,-1,-1,-1,-1,-1\n'
     return line
 
-def gen_exp_blueprint():
-    headerline_input = 'topo,seed,flowNum,cc,randOffset,'
-    headerline_adjust = 'slots,multiFactor,state,'
-    headerline_output = 'maxFctNs,avgFctNs,makespanNs,dropPkts,linkUtil\n'
+def gen_exp_blueprint(blueprint_path):
+    headerline_input = 'state,topo,seed,flowNum,cc,randOffset,'
+    headerline_adjust = 'slots,multiFactor,'
+    headerline_output = 'maxFctNs,avgFctNs,makespanNs,dropPkts,linkUtil,runtimeS\n'
     headerline = headerline_input + headerline_adjust + headerline_output
     topos = ['fat',]
     seed = 100
     repetition = 1
     flow_num_range = [10,16] + list(range(128, 321, 16))
-    cc = ['dcqcn', 'hp', 'dctcp', 'timely', 'hpccPint']
+    cc_li = ['dcqcn', 'hp', 'dctcp', 'timely', 'hpccPint']
     rand_offset = [0, 1]
     inflow_filename = 'llmFlows'
     proj_dir = 'rand_offset/preliminary'
@@ -229,7 +230,7 @@ def gen_exp_blueprint():
             # flow_input_file = run_hybrid.get_input_file_paths(
             #     topo=topo, flow=inflow_filename, proj_dir=proj_dir)[1]
             # update_flownum_in_flowfile(flow_input_file, flow_num)
-            for cc in cc:
+            for cc in cc_li:
                 for enable_randoffset in rand_offset:
                     kwargs = {
                         'topo': topo,
@@ -246,7 +247,7 @@ def gen_exp_blueprint():
                         lines.append(get_blueprint_line(**kwargs))
                 seed += 1
 
-    with open('exp_blueprint.csv', 'w') as f:
+    with open(blueprint_path, 'w') as f:
         f.write(headerline)
         f.writelines(lines)
     
