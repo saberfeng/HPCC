@@ -6,24 +6,32 @@ import sys
 import pandas as pd
 import time
 import os
-from multiprocessing import Process, Lock, cpu_count
+from multiprocessing import Process, Lock, cpu_count, Pool, Manager, Queue
 
 # to run experiments:
 # 1. generate traffic: gen_llm_flows.gen_llm_traffic()
 # 2. set random param file
 # 3. determine fct, pfc output
 
-#TODO: remove trace
+#TODO: add row id to config name
 #TODO: monitor link utilization
 
 
 # ----------v--------- run experiment ------------------------
 class HPCCExperiment(ExperimentRunnerBase):
     def __init__(self, blueprint_path, status_col_name, proj_dir, app_path, proc_num):
-        super().__init__(blueprint_path, status_col_name)
+        super().__init__(blueprint_path, status_col_name, dtype={
+            'state':int, 'topo':str, 'seed':int, 'flowNum':int, 'cc':str,
+            'randOffset':int, 'slots':int, 'multiFactor':float,
+            'maxFctNs':int, 'avgFctNs':float, 'makespanNs':int, 
+            'dropPkts':int, 'linkUtil':float, 'runtimeS':int,
+        })
         self.proj_dir = proj_dir
         self.app_path = app_path # "simulation/build/scratch/third"
         self.proc_num = proc_num
+
+        self.act_set_blueprint_running = 'action_set_blueprint_running'
+        self.act_update_blueprint = 'action_update_blueprint'
 
     def run_by_blueprint(self):
         unrun_row, row_id = self._find_unrun_row()
@@ -45,15 +53,40 @@ class HPCCExperiment(ExperimentRunnerBase):
         while unrun_row_li != [] and row_id_li != []:
             procs = []
             for i in range(len(unrun_row_li)):
-                p = Process(target=self.run_row, args=(unrun_row_li[i], row_id_li[i], lock))
+                p = Process(target=self.run_row, args=((unrun_row_li[i], row_id_li[i], lock)))
                 procs.append(p)
                 p.start()
             for p in procs:
                 p.join()
             unrun_row_li, row_id_li = self._find_unrun_row_list(self.proc_num)   
         print("all experiments finished") 
+    
+    # maybe not file safe
+    def run_by_blueprint_proc_pool(self):
+        # find all unrun rows
+        unrun_row_li, row_id_li = self._find_unrun_row_list(-1)        
+        with Manager() as manager: # use manager to share lock among processes
+            lock = manager.Lock()
+            # input for each process: (unrun_row, row_id, lock)
+            args_li = [(unrun_row_li[i], row_id_li[i], lock) for i in range(len(unrun_row_li))]
+            with Pool(self.proc_num) as p:
+                p.map(self.run_row, args_li)
+    
+    def run_by_blueprint_proc_pool_que_msg(self):
+        # find all unrun rows
+        unrun_row_li, row_id_li = self._find_unrun_row_list(-1)        
+        with Manager() as manager: # use manager to share lock among processes
+            queue = manager.Queue()
+            # input for each process: (unrun_row, row_id, lock)
+            args_li = [(unrun_row_li[i], row_id_li[i], queue) for i in range(len(unrun_row_li))]
+            with Pool(self.proc_num + 1) as pool: # +1 for writer process
+                writer_result = pool.apply_async(self.blueprint_writer_process, (queue,))
+                pool.map(self.run_row_que_msg, args_li)
+                queue.put(None) # terminate the writing process
+                writer_result.wait()
 
-    def run_row(self, unrun_row, row_id, lock=None):
+    def run_row(self, args_li:tuple):
+        unrun_row, row_id, lock = args_li
         lock.acquire() # lock file updates
         self.set_blueprint_running(row_id)
         lock.release()
@@ -62,18 +95,43 @@ class HPCCExperiment(ExperimentRunnerBase):
         # parse results
         hpcc_parser = HPCCResultParser(conf_path)
         results = hpcc_parser.parse_fct()
-
+        
         lock.acquire() # lock file updates
         self.update_blueprint(row_id, results, runtime_s)
         lock.release()
     
+        # results = {'maxFctNs':-1, 'avgFctNs':-1, 'makespanNs':-1}
+        # runtime_s = 0
+        # time.sleep(1)
 
-    def set_blueprint_running(self, row_id):
-        blueprint = self.read_blueprint()
-        blueprint.loc[row_id, self.status_col_name] = self.EXP_RUNNING_STATUS
-        # print(f"row_id{row_id}---writing blueprint:{blueprint.loc[row_id]}")
-        self.save_blueprint(blueprint)
-    
+    # using multiprocessing.Queue to communicate between processes
+    def run_row_que_msg(self, args_li:tuple):
+        unrun_row, row_id, queue = args_li
+        queue.put((self.act_set_blueprint_running, {'row_id':row_id}))
+        # run experiment
+        conf_path, runtime_s = self.execute(unrun_row)
+        # parse results
+        hpcc_parser = HPCCResultParser(conf_path)
+        results = hpcc_parser.parse_fct()
+            # debugging
+            # results = {'maxFctNs':-1, 'avgFctNs':-1, 'makespanNs':-1}
+            # runtime_s = 0
+            # time.sleep(1)
+        queue.put((self.act_update_blueprint, {'row_id':row_id, 'results':results, 'runtime_s':runtime_s}))   
+
+
+    def blueprint_writer_process(self, queue:Queue):
+        mgr = BlueprintWriter(status_col_name='state', path=self.blueprint_path)
+        while True:
+            request = queue.get()
+            if request is None:
+                break
+            action, data = request
+            if action == self.act_set_blueprint_running:
+                mgr.set_blueprint_running(**data)
+            elif action == self.act_update_blueprint:
+                mgr.update_blueprint(**data)
+
     def execute(self, row):
         conf_path = gen_exp_conf(topo=row.get('topo'), seed=row.get('seed'),
                                  flow_num=row.get('flowNum'), cc=row.get('cc'),
@@ -84,15 +142,6 @@ class HPCCExperiment(ExperimentRunnerBase):
         return conf_path, runtime_s
 
 
-    def update_blueprint(self, row_id, results, runtime_s):
-        blueprint = self.read_blueprint()
-        blueprint.loc[row_id, self.status_col_name] = self.EXP_DONE_STATUS
-        blueprint.loc[row_id, 'maxFctNs'] = results['maxFctNs']
-        blueprint.loc[row_id, 'avgFctNs'] = results['avgFctNs']
-        blueprint.loc[row_id, 'makespanNs'] = results['makespanNs']
-        blueprint.loc[row_id, 'runtimeS'] = f'{runtime_s:.2f}'
-        self.save_blueprint(blueprint)
-
     def run_conf(self, conf_path):
         cmd = f'{self.app_path} {conf_path}'
         start_time_s = time.time()
@@ -101,8 +150,24 @@ class HPCCExperiment(ExperimentRunnerBase):
         end_time_s = time.time()
         # logging.debug(f"running time: {(end_time_s-start_time_s)*1000}ms")
         runtime_s = end_time_s - start_time_s
-        print(f"running time: {runtime_s}s")
+        print(f"runtime: {runtime_s}s")
         return runtime_s
+
+class BlueprintWriter(helper.BlueprintManagerBase):
+    def set_blueprint_running(self, row_id):
+        blueprint = self.read_blueprint()
+        blueprint.loc[row_id, self.status_col_name] = self.EXP_RUNNING_STATUS
+        # print(f"row_id{row_id}---writing blueprint:{blueprint.loc[row_id]}")
+        self.save_blueprint(blueprint)
+   
+    def update_blueprint(self, row_id, results, runtime_s):
+        blueprint = self.read_blueprint()
+        blueprint.loc[row_id, self.status_col_name] = self.EXP_DONE_STATUS
+        blueprint.loc[row_id, 'maxFctNs'] = results['maxFctNs']
+        blueprint.loc[row_id, 'avgFctNs'] = results['avgFctNs']
+        blueprint.loc[row_id, 'makespanNs'] = results['makespanNs']
+        blueprint.loc[row_id, 'runtimeS'] = f'{runtime_s:.2f}'
+        self.save_blueprint(blueprint) 
 
 class HPCCResultParser:
     def __init__(self, conf_path):

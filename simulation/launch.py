@@ -12,7 +12,7 @@ def main():
             if len(sys.argv[1]) > 2:
                 proc_num = int(sys.argv[2])
             else:
-                proc_num = 4
+                proc_num = 2
             blueprint_name = 'exp_blueprint.csv'
             blueprint_path = f'{proj_dir}/{blueprint_name}'
             experiment = HPCCExperiment(
@@ -23,7 +23,9 @@ def main():
                 proc_num=proc_num,
             )
             # experiment.run_by_blueprint_parallel()
-            experiment.run_by_blueprint()
+            # experiment.run_by_blueprint()
+            # experiment.run_by_blueprint_proc_pool()
+            experiment.run_by_blueprint_proc_pool_que_msg()
 
         elif sys.argv[1] == "manage_blueprint":
             mgr = helper.BlueprintManagerBase(status_col_name='state')

@@ -20,8 +20,23 @@ def write_file(file_path, content):
         return f.write(content)
 
 class BlueprintManagerBase:
-    def __init__(self, status_col_name) -> None:
+    def __init__(self, status_col_name, path,
+                EXP_DISABLE_STATUS = -2,
+                EXP_UNRUN_STATUS = -1,
+                EXP_DONE_STATUS = 1,
+                EXP_RUNNING_STATUS = 0,) -> None:
         self.status_col_name = status_col_name
+        self.blueprint_path = path
+        self.EXP_DISABLE_STATUS = EXP_DISABLE_STATUS
+        self.EXP_UNRUN_STATUS = EXP_UNRUN_STATUS
+        self.EXP_DONE_STATUS = EXP_DONE_STATUS
+        self.EXP_RUNNING_STATUS = EXP_RUNNING_STATUS
+    
+    def read_blueprint(self):
+        return pd.read_csv(self.blueprint_path)
+
+    def save_blueprint(self, blueprint:pd.DataFrame):
+        blueprint.to_csv(self.blueprint_path, index=False)
 
     # blueprint is a csv file saving experiment configs and results, header:
     # topo,cycles,cycleIdx,macrotick,seed,status,runtime,flow_num
