@@ -46,21 +46,6 @@ class HPCCExperiment(ExperimentRunnerBase):
             unrun_row, row_id = self._find_unrun_row()
         print("all experiments finished") 
 
-    def run_by_blueprint_parallel(self):
-        lock = Lock()
-        # print(f'cpu count:{cpu_count()}')
-        unrun_row_li, row_id_li = self._find_unrun_row_list(self.proc_num)
-        while unrun_row_li != [] and row_id_li != []:
-            procs = []
-            for i in range(len(unrun_row_li)):
-                p = Process(target=self.run_row, args=((unrun_row_li[i], row_id_li[i], lock)))
-                procs.append(p)
-                p.start()
-            for p in procs:
-                p.join()
-            unrun_row_li, row_id_li = self._find_unrun_row_list(self.proc_num)   
-        print("all experiments finished") 
-    
     def run_by_blueprint_proc_pool_que_msg(self):
         # find all unrun rows
         unrun_row_li, row_id_li = self._find_unrun_row_list(-1)        
