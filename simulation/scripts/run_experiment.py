@@ -61,17 +61,6 @@ class HPCCExperiment(ExperimentRunnerBase):
             unrun_row_li, row_id_li = self._find_unrun_row_list(self.proc_num)   
         print("all experiments finished") 
     
-    # maybe not file safe
-    def run_by_blueprint_proc_pool(self):
-        # find all unrun rows
-        unrun_row_li, row_id_li = self._find_unrun_row_list(-1)        
-        with Manager() as manager: # use manager to share lock among processes
-            lock = manager.Lock()
-            # input for each process: (unrun_row, row_id, lock)
-            args_li = [(unrun_row_li[i], row_id_li[i], lock) for i in range(len(unrun_row_li))]
-            with Pool(self.proc_num) as p:
-                p.map(self.run_row, args_li)
-    
     def run_by_blueprint_proc_pool_que_msg(self):
         # find all unrun rows
         unrun_row_li, row_id_li = self._find_unrun_row_list(-1)        
@@ -84,25 +73,6 @@ class HPCCExperiment(ExperimentRunnerBase):
                 pool.map(self.run_row_que_msg, args_li)
                 queue.put(None) # terminate the writing process
                 writer_result.wait()
-
-    def run_row(self, args_li:tuple):
-        unrun_row, row_id, lock = args_li
-        lock.acquire() # lock file updates
-        self.set_blueprint_running(row_id)
-        lock.release()
-        # run experiment
-        conf_path, runtime_s = self.execute(unrun_row)
-        # parse results
-        hpcc_parser = HPCCResultParser(conf_path)
-        results = hpcc_parser.parse_fct()
-        
-        lock.acquire() # lock file updates
-        self.update_blueprint(row_id, results, runtime_s)
-        lock.release()
-    
-        # results = {'maxFctNs':-1, 'avgFctNs':-1, 'makespanNs':-1}
-        # runtime_s = 0
-        # time.sleep(1)
 
     # using multiprocessing.Queue to communicate between processes
     def run_row_que_msg(self, args_li:tuple):
