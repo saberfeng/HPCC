@@ -75,5 +75,7 @@
         "ranges": "cpp",
         "span": "cpp"
     },
-    "cmake.sourceDirectory": "/home/xingbo/project/HPCC/simulation"
+    "cmake.sourceDirectory": "/home/xingbo/project/HPCC/simulation",
+    "python.analysis.autoImportCompletions": true,
+    "python.analysis.typeCheckingMode": "basic"
 }

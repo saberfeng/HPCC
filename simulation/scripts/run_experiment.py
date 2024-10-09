@@ -35,14 +35,15 @@ class HPCCExperiment(ExperimentRunnerBase):
 
     def run_by_blueprint(self):
         unrun_row, row_id = self._find_unrun_row()
+        mgr = BlueprintWriter(status_col_name='state', path=self.blueprint_path)
         while unrun_row is not False:
-            self.set_blueprint_running(row_id)
+            mgr.set_blueprint_running(row_id)
             # run experiment
-            conf_path, runtime_s = self.execute(unrun_row)
+            conf_path, runtime_s = self.execute(unrun_row, row_id)
             # parse results
             hpcc_parser = HPCCResultParser(conf_path)
             results = hpcc_parser.parse_fct()
-            self.update_blueprint(row_id, results, runtime_s)
+            mgr.update_blueprint(row_id, results, runtime_s)
             unrun_row, row_id = self._find_unrun_row()
         print("all experiments finished") 
 
@@ -64,7 +65,7 @@ class HPCCExperiment(ExperimentRunnerBase):
         unrun_row, row_id, queue = args_li
         queue.put((self.act_set_blueprint_running, {'row_id':row_id}))
         # run experiment
-        conf_path, runtime_s = self.execute(unrun_row)
+        conf_path, runtime_s = self.execute(unrun_row, row_id)
         # parse results
         hpcc_parser = HPCCResultParser(conf_path)
         results = hpcc_parser.parse_fct()
@@ -86,13 +87,19 @@ class HPCCExperiment(ExperimentRunnerBase):
                 mgr.set_blueprint_running(**data)
             elif action == self.act_update_blueprint:
                 mgr.update_blueprint(**data)
+    
+    # extract blueprint name from blueprint_path
+    def get_blueprint_name(self):
+        return self.blueprint_path.split('/')[-1]
 
-    def execute(self, row):
+    def execute(self, row, row_id):
         conf_path = gen_exp_conf(topo=row.get('topo'), seed=row.get('seed'),
                                  flow_num=row.get('flowNum'), cc=row.get('cc'),
                                  enable_randoffset=row.get('randOffset'),
                                  proj_dir=self.proj_dir, slots=row.get('slots'),
-                                 multi_factor=row.get('multiFactor'))
+                                 multi_factor=row.get('multiFactor'),
+                                 blueprint_name=self.get_blueprint_name(),
+                                 row_id=row_id)
         runtime_s = self.run_conf(conf_path)
         return conf_path, runtime_s
 
@@ -167,7 +174,7 @@ class HPCCResultParser:
 
 
 def gen_exp_conf(topo, seed, flow_num, cc, enable_randoffset, proj_dir, 
-                 slots, multi_factor):
+                 slots, multi_factor, blueprint_name, row_id):
     #TODO: unfinished
     conf_args = {
         'topo': topo,
@@ -188,6 +195,8 @@ def gen_exp_conf(topo, seed, flow_num, cc, enable_randoffset, proj_dir,
         'slots':slots,
         'multi_factor':multi_factor,
         'seed':seed,
+        'blueprint_name':blueprint_name,
+        'row_id':row_id,
     }
     flow = conf_args['flow']
     # conf_path = run_hybrid.get_conf_path(topo, flow, cc, enable_randoffset, proj_dir, seed, slots, multi_factor) 
@@ -273,7 +282,8 @@ def gen_exp_blueprint(blueprint_path):
     
 
 def main():
-    gen_exp_blueprint()
+    # gen_exp_blueprint()
+    pass
 
 
 if __name__ == '__main__':

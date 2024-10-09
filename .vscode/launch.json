@@ -12,7 +12,7 @@
             "program": "${workspaceFolder}/simulation/launch.py",
             "console": "integratedTerminal",
             "args": [
-                "preliminary", "2"
+                "preliminary", "2", "exp_blueprint.csv",
             ],
             "cwd":"${workspaceFolder}",
 

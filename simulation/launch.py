@@ -9,11 +9,11 @@ def main():
         print("need params")
     else:
         if sys.argv[1] == "preliminary":
-            if len(sys.argv[1]) > 2:
-                proc_num = int(sys.argv[2])
+            blueprint_name = sys.argv[2]
+            if len(sys.argv) > 3:
+                proc_num = int(sys.argv[3])
             else:
                 proc_num = 2
-            blueprint_name = 'exp_blueprint.csv'
             blueprint_path = f'{proj_dir}/{blueprint_name}'
             experiment = HPCCExperiment(
                 blueprint_path=blueprint_path,

@@ -133,6 +133,8 @@ def gen_conf(args):
 	slots = args['slots']
 	multi_factor = args['multi_factor']
 	seed = args['seed']
+	blueprint_name = args['blueprint_name']
+	row_id = args ['row_id']
 
 	failure = ''
 	# if args.down != '0 0 0':
@@ -243,15 +245,15 @@ def gen_conf(args):
 		print("unknown cc:", args['cc'])
 		sys.exit(1)
 
-	conf_path = get_conf_path(topo, flow, cc, enable_randoffset, proj_dir, seed, slots, multi_factor) 
+	conf_path = get_conf_path(topo, flow, cc, enable_randoffset, proj_dir, seed, slots, multi_factor, blueprint_name, row_id) 
 
 	print(f'generated:{conf_path}')
 	with open(conf_path, "w") as file:
 		file.write(config)
 	return conf_path, TRACE_OUTPUT_FILE, FCT_OUTPUT_FILE, PFC_OUTPUT_FILE
 	
-def get_conf_path(topo, flow, cc, enable_randoffset, proj_dir, seed, slots, multi_factor):
-	return f"{proj_dir}/config_{topo}_s{seed}_f{flow}_{cc}_{enable_randoffset}_sl{slots}_fc{multi_factor}.txt"
+def get_conf_path(topo, flow, cc, enable_randoffset, proj_dir, seed, slots, multi_factor, blueprint_name, row_id):
+	return f"{proj_dir}/conf_{blueprint_name}_r{row_id}_{topo}_s{seed}_f{flow}_{cc}_{enable_randoffset}_sl{slots}_fc{multi_factor}.txt"
 
 def read_flow_file(flow_file):
 	with open(flow_file, "r") as file:
