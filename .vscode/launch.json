@@ -19,6 +19,18 @@
         },
 
         {
+            "name": "test_algo",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/simulation/launch.py",
+            "console": "integratedTerminal",
+            "args": [
+                "test_algo",
+            ],
+            "cwd":"${workspaceFolder}",
+
+        },
+        {
             "name": "manage_blueprint",
             "type": "debugpy",
             "request": "launch",

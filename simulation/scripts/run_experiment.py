@@ -88,9 +88,9 @@ class HPCCExperiment(ExperimentRunnerBase):
             elif action == self.act_update_blueprint:
                 mgr.update_blueprint(**data)
     
-    # extract blueprint name from blueprint_path
+    # extract blueprint name from blueprint_path, discard the path and extension
     def get_blueprint_name(self):
-        return self.blueprint_path.split('/')[-1]
+        return self.blueprint_path.split('/')[-1].split('.')[-2]
 
     def execute(self, row, row_id):
         conf_path = gen_exp_conf(topo=row.get('topo'), seed=row.get('seed'),
