@@ -1,5 +1,5 @@
 import sys
-from scripts.run_experiment import HPCCExperiment, gen_exp_blueprint
+from scripts.run_experiment import HPCCExperiment, gen_exp_blueprint, BlueprintGenerator
 import scripts.helper as helper
 
 def main():
@@ -28,13 +28,16 @@ def main():
             experiment.run_by_blueprint_proc_pool_que_msg()
 
         elif sys.argv[1] == "manage_blueprint":
-            mgr = helper.BlueprintManagerBase(status_col_name='state')
-            path = 'simulation/mix/rand_offset/preliminary/exp_blueprint.csv'
+            # mgr = helper.BlueprintManagerBase(status_col_name='state')
+            # path = 'simulation/mix/rand_offset/preliminary/exp_blueprint.csv'
             # mgr.insert_column(path, 'runtimeS', -1)
             # mgr.reorder_one_column(path, 'state', 0)
             # mgr.reset_col_values_by_idx(path, idx_range=[87, 100], col_name='cc', col_val='dcqcn')
-            tmp_blueprint_path = 'simulation/mix/rand_offset/preliminary/tmp_exp_blueprint.csv'
-            gen_exp_blueprint(tmp_blueprint_path)
+
+            # tmp_blueprint_path = 'simulation/mix/rand_offset/preliminary/tmp_exp_blueprint.csv'
+            bp2_test_algo_path = 'simulation/mix/rand_offset/preliminary/bp2.csv'
+            bp_generator = BlueprintGenerator()
+            bp_generator.gen_test_blueprint(bp2_test_algo_path)
             
         else:
             print("unknown param")
