@@ -63,74 +63,73 @@ class BlueprintManagerBase:
         blueprint.loc[:,self.status_col_name] = 0
 
     
-    def set_status_seed_range(self, path, seed_from:int, 
+    def set_status_seed_range(self, seed_from:int, 
                                 seed_to_notinclude:int, status_names:list,
                                 status_val:int):
-        blueprint = pd.read_csv(path)
+        blueprint = pd.read_csv(self.blueprint_path)
         condition = (blueprint['seed'] >= seed_from) & (blueprint['seed'] < seed_to_notinclude)
         assert type(status_names) == list
         for status_name in status_names:
             blueprint.loc[condition, status_name] = status_val
-        blueprint.to_csv(path, index=False)
+        blueprint.to_csv(self.blueprint_path, index=False)
     
-    def move_columns_to_back(self, path, column_names):
-        blueprint = pd.read_csv(path)
+    def move_columns_to_back(self, column_names):
+        blueprint = pd.read_csv(self.blueprint_path)
         blueprint = blueprint[[c for c in blueprint if c not in column_names] + column_names]
-        blueprint.to_csv(path, index=False)
+        blueprint.to_csv(self.blueprint_path, index=False)
 
-    def order_rows(self, path:str, priority_cols:list):
-        blueprint = pd.read_csv(path)
+    def order_rows(self, priority_cols:list):
+        blueprint = pd.read_csv(self.blueprint_path)
         blueprint = blueprint.sort_values(by=priority_cols)
-        blueprint.to_csv(path, index=False)
+        blueprint.to_csv(self.blueprint_path, index=False)
 
-    def reset_status_by_col_value(self, path, con_col:str, con_val, status_names:list):
-        blueprint = pd.read_csv(path)
+    def reset_status_by_col_value(self, con_col:str, con_val, status_names:list):
+        blueprint = pd.read_csv(self.blueprint_path)
         condition = (blueprint[con_col] == con_val)
         assert type(status_names) == list
         for status_name in status_names:
             blueprint.loc[condition, status_name] = -1
-        blueprint.to_csv(path, index=False)
+        blueprint.to_csv(self.blueprint_path, index=False)
     
-    def reset_col_values(self, path, con_col:str, con_val, reset_col_val_pair:dict):
-        blueprint = pd.read_csv(path)
+    def reset_col_values(self, con_col:str, con_val, reset_col_val_pair:dict):
+        blueprint = pd.read_csv(self.blueprint_path)
         condition = (blueprint[con_col] == con_val)
         for reset_col, reset_val in reset_col_val_pair.items():
             blueprint.loc[condition, reset_col] = reset_val
-        blueprint.to_csv(path, index=False)
+        blueprint.to_csv(self.blueprint_path, index=False)
 
-    def reset_col_values_by_idx(self, path, idx_range:list, col_name:str, col_val):
-        blueprint = pd.read_csv(path)
+    def reset_col_values_by_idx(self, idx_range:list, col_name:str, col_val):
+        blueprint = pd.read_csv(self.blueprint_path)
         for idx in idx_range:
             blueprint.loc[idx, col_name] = col_val
-        blueprint.to_csv(path, index=False)   
+        blueprint.to_csv(self.blueprint_path, index=False)   
 
-    def reset_val_by_func(self, path, conditions:dict, reset_col_func_pairs:dict):
-        blueprint = pd.read_csv(path)
+    def reset_val_by_func(self, conditions:dict, reset_col_func_pairs:dict):
+        blueprint = pd.read_csv(self.blueprint_path)
     
-    def delete_column(self, path, column_names):
-        blueprint = pd.read_csv(path)
+    def delete_column(self, column_names):
+        blueprint = pd.read_csv(self.blueprint_path)
         for column_name in column_names:
             blueprint = blueprint.drop(columns=[column_name])
-        blueprint.to_csv(path, index=False)
+        blueprint.to_csv(self.blueprint_path, index=False)
     
-    def insert_column(self, path, column_name, column_value):
-        blueprint = pd.read_csv(path)
-        column_values = [column_value] * blueprint.shape[0]
-        blueprint[column_name] = column_values
-        blueprint.to_csv(path, index=False)
+    def insert_column(self, column_name, column_value):
+        blueprint = pd.read_csv(self.blueprint_path)
+        blueprint[column_name] = column_value
+        blueprint.to_csv(self.blueprint_path, index=False)
     
-    def reorder_all_column(self, path, column_names):
-        blueprint = pd.read_csv(path)
+    def reorder_all_column(self, column_names):
+        blueprint = pd.read_csv(self.blueprint_path)
         blueprint = blueprint[column_names]
-        blueprint.to_csv(path, index=False)
+        blueprint.to_csv(self.blueprint_path, index=False)
     
-    def reorder_one_column(self, path, column_name, position):
-        blueprint = pd.read_csv(path)
+    def reorder_one_column(self, column_name, position):
+        blueprint = pd.read_csv(self.blueprint_path)
         columns = blueprint.columns.tolist()
         columns.remove(column_name)
         columns.insert(position, column_name)
         blueprint = blueprint[columns]
-        blueprint.to_csv(path, index=False)
+        blueprint.to_csv(self.blueprint_path, index=False)
  
 
 class BlueprintManager:

@@ -132,7 +132,8 @@ class BlueprintWriter(helper.BlueprintManagerBase):
         blueprint.loc[row_id, self.status_col_name] = self.EXP_DONE_STATUS
         blueprint.loc[row_id, 'maxFctNs'] = results['maxFctNs']
         blueprint.loc[row_id, 'avgFctNs'] = results['avgFctNs']
-        blueprint.loc[row_id, 'makespanNs'] = results['makespanNs']
+        blueprint.loc[row_id, 'mkspanJobNs'] = results['mkspanJobNs']
+        blueprint.loc[row_id, 'mkspanAllNs'] = results['mkspanAllNs']
         blueprint.loc[row_id, 'runtimeS'] = f'{runtime_s:.2f}'
         self.save_blueprint(blueprint) 
 
@@ -169,7 +170,7 @@ class HPCCResultParser:
         result = {
             'maxFctNs': complete_fct_ns.max(),
             'avgFctNs': complete_fct_ns.mean(),
-            'makespanNs': end_ns.max() - start_ns.min(),
+            'mkspanAllNs': end_ns.max() - start_ns.min(),
         }
         return result
     
@@ -213,7 +214,8 @@ class HPCCResultParser:
         result = {
             'maxFctNs': fct_df[complete_fct_colname].max(),
             'avgFctNs': fct_df[complete_fct_colname].mean(),
-            'makespanNs': self.serialize_job_makespan(job_makespan_df.array),
+            'mkspanJobNs': self.serialize_job_makespan(job_makespan_df.array),
+            'mkspanAllNs': fct_df[end_colname].max() - fct_df[start_colname].min(),
         }
         return result
     
@@ -297,7 +299,7 @@ class BlueprintGenerator:
         state_default = -1
         line = f'{state_default},{topo},{seed},{flow_num},{cc},{enable_randoffset},'\
                 f'{slots},{multi_factor},'\
-                f'-1,-1,-1,-1,-1,-1\n'
+                f'-1,-1,-1,-1,-1,-1,-1\n'
         return line
     
     def gen_example_blueprint(self, blueprint_path):
@@ -331,7 +333,7 @@ class BlueprintGenerator:
     def gen_blueprint(self, blueprint_path, topos, seed, repetition, flow_num_range, cc_li, rand_offset, inflow_filename, proj_dir, slots_li, multi_factors_li):
         headerline_input = 'state,topo,seed,flowNum,cc,randOffset,'
         headerline_adjust = 'slots,multiFactor,'
-        headerline_output = 'maxFctNs,avgFctNs,makespanNs,dropPkts,linkUtil,runtimeS\n'
+        headerline_output = 'maxFctNs,avgFctNs,mkspanJobNs,mkspanAllNs,dropPkts,linkUtil,runtimeS\n'
         headerline = headerline_input + headerline_adjust + headerline_output
         lines = []
         for topo in topos:
