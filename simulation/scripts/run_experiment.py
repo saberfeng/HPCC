@@ -7,6 +7,7 @@ import pandas as pd
 import time
 import os
 from multiprocessing import Process, Lock, cpu_count, Pool, Manager, Queue
+import random
 
 # to run experiments:
 # 1. generate traffic: gen_llm_flows.gen_llm_traffic()
@@ -39,10 +40,11 @@ class HPCCExperiment(ExperimentRunnerBase):
         while unrun_row is not False:
             mgr.set_blueprint_running(row_id)
             # run experiment
-            conf_path, runtime_s = self.execute(unrun_row, row_id)
+            conf_path, runtime_s, trace_output_file, fct_output_file,\
+                pfc_output_file = self.execute(unrun_row, row_id)
             # parse results
-            hpcc_parser = HPCCResultParser(conf_path)
-            results = hpcc_parser.parse_fct()
+            hpcc_parser = HPCCResultParser(trace_output_file, fct_output_file, pfc_output_file)
+            results = hpcc_parser.parse_fct_multi_job()
             mgr.update_blueprint(row_id, results, runtime_s)
             unrun_row, row_id = self._find_unrun_row()
         print("all experiments finished") 
@@ -65,10 +67,11 @@ class HPCCExperiment(ExperimentRunnerBase):
         unrun_row, row_id, queue = args_li
         queue.put((self.act_set_blueprint_running, {'row_id':row_id}))
         # run experiment
-        conf_path, runtime_s = self.execute(unrun_row, row_id)
+        conf_path, runtime_s, trace_output_file, fct_output_file,\
+                pfc_output_file = self.execute(unrun_row, row_id)
         # parse results
-        hpcc_parser = HPCCResultParser(conf_path)
-        results = hpcc_parser.parse_fct()
+        hpcc_parser = HPCCResultParser(trace_output_file, fct_output_file, pfc_output_file)
+        results = hpcc_parser.parse_fct_multi_job()
             # debugging
             # results = {'maxFctNs':-1, 'avgFctNs':-1, 'makespanNs':-1}
             # runtime_s = 0
@@ -93,15 +96,17 @@ class HPCCExperiment(ExperimentRunnerBase):
         return self.blueprint_path.split('/')[-1].split('.')[-2]
 
     def execute(self, row, row_id):
-        conf_path = gen_exp_conf(topo=row.get('topo'), seed=row.get('seed'),
+        conf_path, trace_output_file, fct_output_file, pfc_output_file  = \
+                                gen_exp_conf(topo=row.get('topo'), seed=row.get('seed'),
                                  flow_num=row.get('flowNum'), cc=row.get('cc'),
                                  enable_randoffset=row.get('randOffset'),
                                  proj_dir=self.proj_dir, slots=row.get('slots'),
                                  multi_factor=row.get('multiFactor'),
                                  blueprint_name=self.get_blueprint_name(),
                                  row_id=row_id)
-        runtime_s = self.run_conf(conf_path)
-        return conf_path, runtime_s
+        # runtime_s = self.run_conf(conf_path)
+        runtime_s = 0
+        return conf_path, runtime_s, trace_output_file, fct_output_file, pfc_output_file
 
 
     def run_conf(self, conf_path):
@@ -132,8 +137,15 @@ class BlueprintWriter(helper.BlueprintManagerBase):
         self.save_blueprint(blueprint) 
 
 class HPCCResultParser:
-    def __init__(self, conf_path):
-        self.output_paths = self.__read_output_paths_from_conf(conf_path)
+    def __init__(self, trace_out_path, fct_out_path, pfc_out_path):
+        self.output_paths = {
+            'TRACE_OUTPUT_FILE': trace_out_path,
+            'FCT_OUTPUT_FILE': fct_out_path,
+            'PFC_OUTPUT_FILE': pfc_out_path,
+        }
+        self.trace_output_path = trace_out_path
+        self.fct_output_path = fct_out_path
+        self.pfc_output_path = pfc_out_path
 
     def __read_output_paths_from_conf(self, conf_path):
         conf_lines = helper.read_file_lines(conf_path)
@@ -149,7 +161,7 @@ class HPCCResultParser:
         return output_paths
     
     def parse_fct(self):
-        path = self.output_paths['FCT_OUTPUT_FILE']
+        path = self.fct_output_path
         fct_df = pd.read_csv(path)
         start_ns = fct_df['start(ns)']
         complete_fct_ns = fct_df['complete_fct(ns)']
@@ -160,16 +172,65 @@ class HPCCResultParser:
             'makespanNs': end_ns.max() - start_ns.min(),
         }
         return result
+    
+    def parse_fct_multi_job(self, num_job:int=0):
+        path = self.fct_output_path
+        fct_df = pd.read_csv(path)
+        num_flow = fct_df.shape[0]
 
+        # default 4 flows per job
+        if num_job <= 0:
+            remainder = num_flow % 4
+            num_job = num_flow // 4 + (1 if remainder > 0 else 0)
+
+        shuffled_row_num_li = list(range(num_flow))
+        random.shuffle(shuffled_row_num_li)
+        num_flow_per_job = num_flow // num_job
+        job_id_colname = 'job_id'
+
+        job_id_to_flow_ids = {}
+        for job_id in range(num_job):
+            job_id_to_flow_ids[job_id] = []
+            for j in range(num_flow_per_job):
+                shuffled_row_id = shuffled_row_num_li.pop()
+                job_id_to_flow_ids[job_id].append(shuffled_row_id)
+        for i in range(len(shuffled_row_num_li)):
+            job_id_to_flow_ids[i].append(shuffled_row_num_li[i])
+
+        # assign job id to each flow
+        for job_id, flow_ids in job_id_to_flow_ids.items():
+            fct_df.loc[flow_ids, job_id_colname] = job_id
+        # print(fct_df)
+        # count rows by job id
+        # job_id_to_row_num = fct_df.groupby(job_id_colname).size()
+        # print(job_id_to_row_num)
+        start_colname = "start(ns)" 
+        complete_fct_colname = "complete_fct(ns)"
+        end_colname = "end(ns)"
+
+        groupped_df = fct_df.groupby('job_id')
+        job_makespan_df = groupped_df[end_colname].max() - groupped_df[start_colname].min()
+        result = {
+            'maxFctNs': fct_df[complete_fct_colname].max(),
+            'avgFctNs': fct_df[complete_fct_colname].mean(),
+            'makespanNs': self.serialize_job_makespan(job_makespan_df.array),
+        }
+        return result
+    
+    def serialize_job_makespan(self, makespan_li):
+        return ' '.join([f'{makespan}' for makespan in makespan_li])
+
+    def deserialize_job_makespan(self, job_makespan_str:str):
+        return [int(makespan) for makespan in job_makespan_str.split(' ')]
     
     def parse_pfc(self):
-        path = self.output_paths['PFC_OUTPUT_FILE']
+        path = self.pfc_output_path
     
     def parse_link_util(self):
-        path = self.output_paths['LINK_UTIL_OUTPUT_FILE']
+        pass
     
     def parse_trace(self):
-        path = self.output_paths['TRACE_OUTPUT_FILE']
+        path = self.trace_output_path
 
 
 
@@ -206,7 +267,7 @@ def gen_exp_conf(topo, seed, flow_num, cc, enable_randoffset, proj_dir,
     update_flownum_in_flowfile(flow_file, flow_num)
     # generate config file
     conf_path, TRACE_OUTPUT_FILE, FCT_OUTPUT_FILE, PFC_OUTPUT_FILE = run_hybrid.gen_conf(conf_args)
-    return conf_path
+    return conf_path, TRACE_OUTPUT_FILE, FCT_OUTPUT_FILE, PFC_OUTPUT_FILE
 
 def update_flownum_in_flowfile(flow_file:str, flow_num:int):
     with open(flow_file, 'r') as f:

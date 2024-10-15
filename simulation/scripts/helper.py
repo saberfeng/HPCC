@@ -3,11 +3,16 @@ import pandas as pd
 import json
 # from .data_structures import PathConfig, SchedConfig
 import os
+import random
 
 def append_file(file_path, content):
     with open(file_path, "a+") as f:
         f.write(content)
 
+# randomly shuffle a list and split it into n parts
+def split_list(lst:list, n:int):
+    random.shuffle(lst)
+    return [lst[i::n] for i in range(n)]
 
 def cycles_to_str(cycles):
     return " ".join([str(cycle) for cycle in cycles])

@@ -1,0 +1,1 @@
+cd simulation/mix/rand_offset/preliminary

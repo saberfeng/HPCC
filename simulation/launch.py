@@ -27,7 +27,7 @@ def main():
             # experiment.run_by_blueprint_proc_pool()
             experiment.run_by_blueprint_proc_pool_que_msg()
         elif sys.argv[1] == "test_algo":
-            bp2_test_algo_path = 'simulation/mix/rand_offset/preliminary/bp2.csv'
+            bp2_test_algo_path = 'simulation/mix/rand_offset/preliminary/bp3.csv'
             proc_num = 3
             experiment = HPCCExperiment(
                 blueprint_path=bp2_test_algo_path,
@@ -36,7 +36,7 @@ def main():
                 app_path=app_path,
                 proc_num=proc_num,
             )
-            experiment.run_by_blueprint_proc_pool_que_msg()
+            experiment.run_by_blueprint()
         elif sys.argv[1] == "manage_blueprint":
             # mgr = helper.BlueprintManagerBase(status_col_name='state')
             # path = 'simulation/mix/rand_offset/preliminary/exp_blueprint.csv'
