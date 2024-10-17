@@ -155,11 +155,11 @@ void readAllFlowInputEntrys(){
 	int read_idx = 0;
 	while (read_idx < flow_num){
 		FlowInputEntry flow;
-		double start_time_s;
+		double start_time_ns;
 		flowf >> flow.src >> flow.dst >> flow.priority_group 
 			  >> flow.dst_port >> flow.size_byte 
-			  >> start_time_s;
-		flow.start_time = Seconds(start_time_s);
+			  >> start_time_ns;
+		flow.start_time = NanoSeconds(start_time_ns);
 		flow.flow_idx = read_idx;
 		flows->emplace_back(flow);
         read_idx++;
@@ -177,10 +177,10 @@ void sortFlowsByStartTime(){
 
 void ReadFlowInput(){
 	if (flow_input.flow_idx < flow_num){
-		double start_time_s;
+		double start_time_ns;
 		flowf >> flow_input.src >> flow_input.dst >> flow_input.priority_group 
-			  >> flow_input.dst_port >> flow_input.size_byte >> start_time_s;
-		flow_input.start_time = Seconds(start_time_s);
+			  >> flow_input.dst_port >> flow_input.size_byte >> start_time_ns;
+		flow_input.start_time = NanoSeconds(start_time_ns);
 		NS_ASSERT(n.Get(flow_input.src)->GetNodeType() == 0 && n.Get(flow_input.dst)->GetNodeType() == 0);
 	}
 }

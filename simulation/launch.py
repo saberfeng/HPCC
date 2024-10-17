@@ -2,6 +2,8 @@ import sys
 from scripts.run_experiment import HPCCExperiment, BlueprintGenerator
 import scripts.helper as helper
 
+#TODO: parse offsetted fct output
+
 def main():
     proj_dir = 'simulation/mix/rand_offset/preliminary'
     app_path = 'simulation/build/scratch/third'
@@ -46,9 +48,9 @@ def main():
             # mgr.reset_col_values_by_idx(path, idx_range=[87, 100], col_name='cc', col_val='dcqcn')
 
             # tmp_blueprint_path = 'simulation/mix/rand_offset/preliminary/tmp_exp_blueprint.csv'
-            # bp2_test_algo_path = 'simulation/mix/rand_offset/preliminary/bp2.csv'
-            # bp_generator = BlueprintGenerator()
-            # bp_generator.gen_test_blueprint(bp2_test_algo_path)
+            bp4_test_algo_path = 'simulation/mix/rand_offset/preliminary/bp4.csv'
+            bp_generator = BlueprintGenerator()
+            bp_generator.gen_test_blueprint(bp4_test_algo_path)
 
             # bp3_test_algo_path = 'simulation/mix/rand_offset/preliminary/bp3.csv'
             # mgr = helper.BlueprintManagerBase(status_col_name='state', path=bp3_test_algo_path)

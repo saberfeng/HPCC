@@ -34,6 +34,12 @@ class FlowPattern(Enum):
 def ns_to_s(time_ns:int):
 	return time_ns/1e9
 
+def uniform_fluctuate(value, fluctuation):
+	return value + random.uniform(0, fluctuation)
+
+def gaussian_fluctuate(value, fluc_sigma):
+	return value + random.gauss(0, fluc_sigma)
+
 def gen_llm_traffic(nhost, end_time, output, bandwidth, flow_size_bit, interval_ns, flow_pattern:FlowPattern):
 	#TODO run GPT1 GPT2 to get real traffic
 	#TODO call NCCL to verify allreduce pipelined traffic
@@ -49,6 +55,10 @@ def gen_llm_traffic(nhost, end_time, output, bandwidth, flow_size_bit, interval_
 		dst = random.randint(0, nhost-1)
 		flow_start_time = 0
 		flow_count = 0
+		start_time_li = []
+		for i in range(nhost):
+			start_time_li.append(int(random.uniform(0, 100)))
+			start_time_li = sorted(start_time_li)
 		while flow_start_time <= end_time:
 			for host_idx in range(nhost):
 				# start a burst period
@@ -56,7 +66,8 @@ def gen_llm_traffic(nhost, end_time, output, bandwidth, flow_size_bit, interval_
 					continue
 				# add flow from host_idx to dst
 				flow_size_byte = int(flow_size_bit/8)
-				flows += f'{host_idx} {dst} 3 100 {flow_size_byte} {ns_to_s(flow_start_time)}\n'
+				fluctuated_flow_size = gaussian_fluctuate(flow_size_byte, 0.001*flow_size_byte)
+				flows += f'{host_idx} {dst} 3 100 {int(fluctuated_flow_size)} {start_time_li[host_idx]}\n'
 				flow_count += 1
 			flow_start_time += interval_ns
 	return flow_count, flows 
@@ -105,7 +116,15 @@ if __name__ == "__main__":
 			sys.exit(0)
 
 	flow_count, flows =	gen_llm_traffic(nhost, end_time, output, bandwidth, flow_size_bit, interval_ns, FlowPattern.Incast)
+	desc = """
+First line: # of flows
+src0 dst0 3(priority group) dst_port0 size0(bytes to write) start_time0_ns
+src1 dst1 3(priority group) dst_port1 size1(bytes to write) start_time1_ns
+...
+Please order the flows in ascending start_time!
+"""
 	print(output)
 	with open(output, mode='w') as f:
 		f.write(str(flow_count)+'\n')
 		f.write(flows)
+		f.write(desc)

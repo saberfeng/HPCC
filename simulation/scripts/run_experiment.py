@@ -281,7 +281,7 @@ def update_flownum_in_flowfile(flow_file:str, flow_num:int):
 # ----------v--------  gen blueprint --------------------------------
 class BlueprintGenerator:
     def __init__(self):
-        pass
+        self.seed = 0
 
     def add_param_combinations(self, repetition, slots_li, multi_factors_li, **kwargs):
         lines = []
@@ -296,14 +296,15 @@ class BlueprintGenerator:
 
     def get_blueprint_line(self, topo, seed, flow_num, cc, enable_randoffset, slots, multi_factor):
         state_default = -1
-        line = f'{state_default},{topo},{seed},{flow_num},{cc},{enable_randoffset},'\
+        line = f'{state_default},{topo},{self.seed},{flow_num},{cc},{enable_randoffset},'\
                 f'{slots},{multi_factor},'\
                 f'-1,-1,-1,-1,-1,-1,-1\n'
+        self.seed += 1
         return line
     
     def gen_example_blueprint(self, blueprint_path):
         topos = ['fat',]
-        seed = 100
+        self.seed = 100
         repetition = 1
         flow_num_range = [10,16] + list(range(128, 321, 16))
         cc_li = ['dcqcn', 'hp', 'dctcp', 'timely', 'hpccPint']
@@ -313,23 +314,26 @@ class BlueprintGenerator:
         # rand offset params to try
         slots_li = [100, 1000, 1e6]
         multi_factors_li = [0.2, 0.5, 0.7, 1, 1.5]
-        self.gen_blueprint(blueprint_path, topos, seed, repetition, flow_num_range, cc_li, rand_offset, inflow_filename, proj_dir, slots_li, multi_factors_li)
+        self.gen_blueprint(blueprint_path, topos, self.seed, repetition, flow_num_range, cc_li, rand_offset, inflow_filename, proj_dir, slots_li, multi_factors_li)
     
     def gen_test_blueprint(self, blueprint_path):
         topos = ['fat',]
-        seed = 100
-        repetition = 1
-        flow_num_range = [10]
+        self.seed = 300
+        repetition = 5
+        flow_num_range = [10, 16, 32, 64, 128, 256,319]
         cc_li = ['dcqcn', 'hp', 'dctcp', 'timely', 'hpccPint']
-        rand_offset = [0, 1]
+        rand_offset = [0]
         inflow_filename = 'llmFlows'
         proj_dir = 'rand_offset/preliminary'
         # rand offset params to try
         slots_li = [3]
         multi_factors_li = [0.7, 1]
-        self.gen_blueprint(blueprint_path, topos, seed, repetition, flow_num_range, cc_li, rand_offset, inflow_filename, proj_dir, slots_li, multi_factors_li)
+        self.gen_blueprint(blueprint_path, topos, self.seed, repetition, flow_num_range, cc_li, rand_offset, inflow_filename, proj_dir, slots_li, multi_factors_li)
 
-    def gen_blueprint(self, blueprint_path, topos, seed, repetition, flow_num_range, cc_li, rand_offset, inflow_filename, proj_dir, slots_li, multi_factors_li):
+    def gen_blueprint(
+            self, blueprint_path, topos, seed, repetition, 
+            flow_num_range, cc_li, rand_offset, inflow_filename, 
+            proj_dir, slots_li, multi_factors_li):
         headerline_input = 'state,topo,seed,flowNum,cc,randOffset,'
         headerline_adjust = 'slots,multiFactor,'
         headerline_output = 'maxFctNs,avgFctNs,mkspanJobNs,mkspanAllNs,dropPkts,linkUtil,runtimeS\n'
@@ -354,8 +358,8 @@ class BlueprintGenerator:
                         else:
                             kwargs['slots'] = -1
                             kwargs['multi_factor'] = -1
-                            lines.append(self.get_blueprint_line(**kwargs))
-                    seed += 1
+                            for i in range(repetition):
+                                lines.append(self.get_blueprint_line(**kwargs))
         with open(blueprint_path, 'w') as f:
             f.write(headerline)
             f.writelines(lines)
