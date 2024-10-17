@@ -231,13 +231,15 @@ void qp_finish(FILE* fout, Ptr<RdmaQueuePair> q){
 	uint32_t total_bytes = q->m_size + ((q->m_size-1) / packet_payload_size + 1) * (CustomHeader::GetStaticWholeHeaderSize() - IntHeader::GetStaticSize()); // translate to the minimum bytes required (with header but no INT)
 	// complete fct
 	uint64_t complete_fct_ns = (Simulator::Now() - q->startTime).GetNanoSeconds();
-	// uint64_t offsetted_fct_ns = complete_fct_ns - q->offseted_fct_ns;
+	// fct + offset
+	FlowInputEntry& cur_flow = (*flows)[q->flow_id];
+	uint64_t offsetted_fct_ns = complete_fct_ns + cur_flow.getOffsetStart().GetNanoSeconds();
 	// standalone fct only includes the transmission delay + propagation delay (base_rtt), plus one transmission delay of all data? problem? 
 	uint64_t standalone_fct_ns = base_rtt + total_bytes * 8000000000lu / b; // fct in unit of ns
 	// sip, dip, src_port, dst_port, size (B), start_time, fct (ns), offseted_fct(ns), standalone_fct (ns), end(ns)
-	fprintf(fout, "%08x,%08x,%u,%u,%lu,%lu,%lu,%lu,%lu\n", 
+	fprintf(fout, "%08x,%08x,%u,%u,%lu,%lu,%lu,%lu,%lu,%lu\n", 
 					q->sip.Get(), q->dip.Get(), q->sport, q->dport, q->m_size, q->startTime.GetNanoSeconds(), 
-					complete_fct_ns, standalone_fct_ns, Simulator::Now().GetNanoSeconds());
+					complete_fct_ns, offsetted_fct_ns, standalone_fct_ns, Simulator::Now().GetNanoSeconds());
 	fflush(fout);
 
 	// remove rxQp from the receiver

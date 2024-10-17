@@ -28,6 +28,7 @@ public:
 	Time m_nextAvail;	//< Soonest time of next send
 	uint32_t wp; // current window of packets
 	uint32_t lastPktSize;
+	uint32_t flow_id;
 	Callback<void> m_notifyAppFinish;
 
 	/******************************
@@ -84,7 +85,7 @@ public:
 	 * methods
 	 **********/
 	static TypeId GetTypeId (void);
-	RdmaQueuePair(uint16_t pg, Ipv4Address _sip, Ipv4Address _dip, uint16_t _sport, uint16_t _dport);
+	RdmaQueuePair(uint16_t pg, Ipv4Address _sip, Ipv4Address _dip, uint16_t _sport, uint16_t _dport, uint32_t _flow_id);
 	void SetSize(uint64_t size);
 	void SetWin(uint32_t win);
 	void SetBaseRtt(uint64_t baseRtt);
