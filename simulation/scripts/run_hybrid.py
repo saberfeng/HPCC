@@ -4,6 +4,7 @@ import os
 
 config_template="""ENABLE_QCN 1
 USE_DYNAMIC_PFC_THRESHOLD 1
+ENABLE_PFC {enable_pfc}
 
 PACKET_PAYLOAD_SIZE 1000
 
@@ -165,6 +166,7 @@ def gen_conf(args):
 		"failure": failure,
 		"buffer_size": bfsz,
 		"enable_tr": enable_tr,
+		"enable_pfc": 1,
 
 		"TOPOLOGY_FILE": TOPOLOGY_FILE,
 		"FLOW_FILE": FLOW_FILE,

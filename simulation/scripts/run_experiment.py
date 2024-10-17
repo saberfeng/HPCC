@@ -104,8 +104,7 @@ class HPCCExperiment(ExperimentRunnerBase):
                                  multi_factor=row.get('multiFactor'),
                                  blueprint_name=self.get_blueprint_name(),
                                  row_id=row_id)
-        # runtime_s = self.run_conf(conf_path)
-        runtime_s = 0
+        runtime_s = self.run_conf(conf_path)
         return conf_path, runtime_s, trace_output_file, fct_output_file, pfc_output_file
 
 
