@@ -20,7 +20,9 @@ TypeId RdmaQueuePair::GetTypeId (void)
 	return tid;
 }
 
-RdmaQueuePair::RdmaQueuePair(uint16_t pg, Ipv4Address _sip, Ipv4Address _dip, uint16_t _sport, uint16_t _dport){
+RdmaQueuePair::RdmaQueuePair(
+		uint16_t pg, Ipv4Address _sip, Ipv4Address _dip, uint16_t _sport, 
+		uint16_t _dport, uint32_t _flow_id){
 	startTime = Simulator::Now();
 	sip = _sip;
 	dip = _dip;
@@ -36,6 +38,7 @@ RdmaQueuePair::RdmaQueuePair(uint16_t pg, Ipv4Address _sip, Ipv4Address _dip, ui
 	m_var_win = false;
 	m_rate = 0;
 	m_nextAvail = Time(0);
+	flow_id = _flow_id;
 	mlx.m_alpha = 1;
 	mlx.m_alpha_cnp_arrived = false;
 	mlx.m_first_cnp = true;
