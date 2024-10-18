@@ -46,10 +46,19 @@ class HPCCExperiment(ExperimentRunnerBase):
             # parse results
             hpcc_parser = HPCCResultParser(trace_output_file, fct_output_file, pfc_output_file)
             results = hpcc_parser.parse_fct_multi_job()
+            
+            # # debug
+            # time.sleep(1)
+            # runtime_s = 0
+            # results = {
+            #     'maxFctNs':-1, 'avgFctNs':-1, 'mkspanJobNs':-1, 'mkspanAllNs':-1, 'runtimeS':-1
+            # }
+
             mgr.update_blueprint(row_id, results, runtime_s)
             unrun_row, row_id = self._find_unrun_row()
         print("all experiments finished") 
 
+    # job assignment order not gauranteed
     def run_by_blueprint_proc_pool_que_msg(self):
         # find all unrun rows
         unrun_row_li, row_id_li = self._find_unrun_row_list(-1)        
@@ -59,11 +68,12 @@ class HPCCExperiment(ExperimentRunnerBase):
             # input for each process: (unrun_row, row_id, lock)
             args_li = [(unrun_row_li[i], row_id_li[i], queue_msg) for i in range(len(unrun_row_li))]
             with Pool(self.proc_num + 1) as pool: # +1 for writer process
-                writer_result = pool.apply_async(self.blueprint_writer_process, (queue_msg,))
+                writer_result = pool.apply_async(self.proc_blueprint_writer, (queue_msg,))
                 pool.map(self.run_row_que_msg, args_li)
                 queue_msg.put(None) # terminate the writing process
                 writer_result.wait()
 
+    # fixed job assignment order
     def run_by_blueprint_que_tsk_que_msg(self):
         # find all unrun rows
         unrun_row_li, row_id_li = self._find_unrun_row_list(-1)        
@@ -75,7 +85,7 @@ class HPCCExperiment(ExperimentRunnerBase):
                 queue_task.put(task_item)
 
             # start writer process
-            proc_state_writer = Process(target=self.blueprint_writer_process, args=(queue_msg,))
+            proc_state_writer = Process(target=self.proc_blueprint_writer, args=(queue_msg,))
             proc_state_writer.start()
 
             proc_worker_li = []
@@ -88,8 +98,7 @@ class HPCCExperiment(ExperimentRunnerBase):
             queue_msg.put(None) # terminate the writing process
             proc_state_writer.join()
             
-    def proc_run_row_qmsg_qtsk(self, args_li:tuple):
-        queue_msg, queue_task = args_li
+    def proc_run_row_qmsg_qtsk(self, queue_msg:Queue, queue_task:Queue):
         while True:
             try:
                 task = queue_task.get()
@@ -103,10 +112,13 @@ class HPCCExperiment(ExperimentRunnerBase):
             # parse results
             hpcc_parser = HPCCResultParser(trace_output_file, fct_output_file, pfc_output_file)
             results = hpcc_parser.parse_fct_multi_job()
-                # debugging
-                # results = {'maxFctNs':-1, 'avgFctNs':-1, 'makespanNs':-1}
-                # runtime_s = 0
-                # time.sleep(1)
+
+            # # debugging
+            # time.sleep(1)
+            # runtime_s = 0
+            # results = {
+            #     'maxFctNs':-1, 'avgFctNs':-1, 'mkspanJobNs':-1, 'mkspanAllNs':-1, 'runtimeS':-1
+            # }
             queue_msg.put((self.act_update_blueprint, {'row_id':row_id, 'results':results, 'runtime_s':runtime_s}))
 
     # using multiprocessing.Queue to communicate between processes
@@ -126,7 +138,7 @@ class HPCCExperiment(ExperimentRunnerBase):
         queue.put((self.act_update_blueprint, {'row_id':row_id, 'results':results, 'runtime_s':runtime_s}))   
 
 
-    def blueprint_writer_process(self, queue_msg:Queue):
+    def proc_blueprint_writer(self, queue_msg:Queue):
         mgr = BlueprintWriter(status_col_name='state', path=self.blueprint_path)
         while True:
             request = queue_msg.get()
