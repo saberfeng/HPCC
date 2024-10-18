@@ -330,18 +330,27 @@ def gen_conf_flow_input(topo, seed, flow_num, cc, enable_randoffset, proj_dir,
     gen_flow_file(meta_flow_file=meta_flow_file, out_flow_file=flow_input_file, flow_num=flow_num)
     return conf_path, TRACE_OUTPUT_FILE, FCT_OUTPUT_FILE, PFC_OUTPUT_FILE, flow_input_file
 
-#TODO: modify conf file flow input path form llmFlows to out_flow_file
 def gen_flow_file(meta_flow_file:str, out_flow_file:str, flow_num:int):
     with open(meta_flow_file, 'r') as f:
         lines = f.readlines()
         lines[0] = f'{flow_num}\n'
         lines = lines[:flow_num+1]
+        ordered_start_time_li = []
+        flow_size_li = []
         for i in range(1, len(lines)):
             # int(random.uniform(0, 100))
             line_components = lines[i].split(' ')
             start_time_ns = int(line_components[-1])
             start_time_fluctuation_ns = random.uniform(0, 100)
-            line_components[-1] = f'{int(start_time_ns + start_time_fluctuation_ns)}\n'
+            ordered_start_time_li.append(int(start_time_ns + start_time_fluctuation_ns))
+            flow_size_li.append(int(line_components[-2]))
+        ordered_start_time_li = sorted(ordered_start_time_li)
+        random.shuffle(flow_size_li)
+
+        for i in range(1, len(lines)):
+            line_components = lines[i].split(' ')
+            line_components[-2] = f'{flow_size_li[i-1]}'
+            line_components[-1] = f'{ordered_start_time_li[i-1]}\n'
             lines[i] = ' '.join(line_components)
     with open(out_flow_file, 'w') as f:
         f.writelines(lines)
