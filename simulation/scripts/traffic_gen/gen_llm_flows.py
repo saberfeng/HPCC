@@ -55,10 +55,10 @@ def gen_llm_traffic(nhost, end_time, output, bandwidth, flow_size_bit, interval_
 		dst = random.randint(0, nhost-1)
 		flow_start_time = 0
 		flow_count = 0
-		start_time_li = []
-		for i in range(nhost):
-			start_time_li.append(int(random.uniform(0, 100)))
-			start_time_li = sorted(start_time_li)
+		# start_time_li = []
+		# for i in range(nhost):
+		# 	start_time_li.append(int(random.uniform(0, 100)))
+		# 	start_time_li = sorted(start_time_li)
 		while flow_start_time <= end_time:
 			for host_idx in range(nhost):
 				# start a burst period
@@ -67,7 +67,7 @@ def gen_llm_traffic(nhost, end_time, output, bandwidth, flow_size_bit, interval_
 				# add flow from host_idx to dst
 				flow_size_byte = int(flow_size_bit/8)
 				fluctuated_flow_size = gaussian_fluctuate(flow_size_byte, 0.001*flow_size_byte)
-				flows += f'{host_idx} {dst} 3 100 {int(fluctuated_flow_size)} {start_time_li[host_idx]}\n'
+				flows += f'{host_idx} {dst} 3 100 {int(fluctuated_flow_size)} {flow_start_time}\n'
 				flow_count += 1
 			flow_start_time += interval_ns
 	return flow_count, flows 

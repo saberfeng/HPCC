@@ -64,7 +64,7 @@ KMAX_MAP {kmax_map}
 KMIN_MAP {kmin_map}
 PMAX_MAP {pmax_map}
 BUFFER_SIZE {buffer_size}
-QLEN_MON_FILE simulation/mix/rand_offset/qlen_{topo}_{flow}_{cc}{failure}.txt
+QLEN_MON_FILE simulation/mix/rand_offset/qlen_{topo}_{flow_num}_{cc}{failure}.txt
 QLEN_MON_START {qlen_mon_start_ns}
 QLEN_MON_END {qlen_mon_end_ns}
 QLEN_MON_INTV_NS {qlen_mon_intv_ns}
@@ -74,19 +74,17 @@ RANDOFFSET_PARAMS {slots_num} {slots_interval_us}
 """
 
 
-def get_input_file_paths(topo, flow, proj_dir):
+def get_input_file_paths(topo, proj_dir):
 	TOPOLOGY_FILE = "{proj_dir}/{topo}.txt"
-	FLOW_FILE = "{proj_dir}/{flow}.txt"
 	TRACE_FILE = "{proj_dir}/trace.txt"
 	QUEUE_MONITOR_FILE = "{proj_dir}/qmonitor.txt"
 	RANDOM_PARAM_FILE = "{proj_dir}/plain_rand_model.txt"
 	return TOPOLOGY_FILE.format(proj_dir=proj_dir, topo=topo), \
-			FLOW_FILE.format(proj_dir=proj_dir, flow=flow), \
 			TRACE_FILE.format(proj_dir=proj_dir), \
 			QUEUE_MONITOR_FILE.format(proj_dir=proj_dir), \
 			RANDOM_PARAM_FILE.format(proj_dir=proj_dir), \
 
-def get_output_file_paths(topo, flow_num, cc, proj_dir, enable_randoffset,slots,multi_factor,seed):
+def get_inout_file_paths(topo, flow_num, cc, proj_dir, enable_randoffset,slots,multi_factor,seed):
 	failure = ''
 	# TRACE_OUTPUT_FILE = f"{proj_dir}/"\
 	# 				f"mix_{topo}_s{seed}_f{flow_num}_{cc}{failure}_{enable_randoffset}_sl{slots}_fc{multi_factor}.tr"
@@ -96,7 +94,9 @@ def get_output_file_paths(topo, flow_num, cc, proj_dir, enable_randoffset,slots,
 					f"fct_{topo}_s{seed}_f{flow_num}_{cc}{failure}_{enable_randoffset}_sl{slots}_fc{multi_factor}.csv"
 	PFC_OUTPUT_FILE = f"{proj_dir}/"\
 					f"pfc_{topo}_s{seed}_f{flow_num}_{cc}{failure}_{enable_randoffset}_sl{slots}_fc{multi_factor}.txt"
-	return TRACE_OUTPUT_FILE, FCT_OUTPUT_FILE, PFC_OUTPUT_FILE
+	flow_input_file = f"{proj_dir}/"\
+					f"flow_{topo}_s{seed}_f{flow_num}_{cc}{failure}_{enable_randoffset}_sl{slots}_fc{multi_factor}.txt"	
+	return TRACE_OUTPUT_FILE, FCT_OUTPUT_FILE, PFC_OUTPUT_FILE, flow_input_file
 
 def update_param(slots, multi_factor, topo_file, flow_file):
 	slots = slots
@@ -116,7 +116,6 @@ def update_param(slots, multi_factor, topo_file, flow_file):
 def gen_conf(args):
 	topo=args['topo']
 	bw = int(args['bw'])
-	flow = args['flow']
 	#bfsz = 16 if bw==50 else 32
 	bfsz = 16 * bw / 50
 	u_tgt=args['utgt']/100.
@@ -135,7 +134,9 @@ def gen_conf(args):
 	multi_factor = args['multi_factor']
 	seed = args['seed']
 	blueprint_name = args['blueprint_name']
-	row_id = args ['row_id']
+	row_id = args['row_id']
+	flow_num = args['flow_num']
+	meta_flow_file = args['meta_flow_file']
 
 	failure = ''
 	# if args.down != '0 0 0':
@@ -145,18 +146,16 @@ def gen_conf(args):
 	kmin_map = "2 %d %d %d %d"%(bw*1000000000, 100*bw/25, bw*4*1000000000, 100*bw*4/25)
 	pmax_map = "2 %d %.2f %d %.2f"%(bw*1000000000, 0.2, bw*4*1000000000, 0.2)
 
-	TOPOLOGY_FILE, FLOW_FILE, TRACE_FILE, QUEUE_MONITOR_FILE, RANDOM_PARAM_FILE = \
-		get_input_file_paths(topo, flow, proj_dir)
-	flow_num, _ = read_flow_file(FLOW_FILE)	
-	TRACE_OUTPUT_FILE, FCT_OUTPUT_FILE, PFC_OUTPUT_FILE = \
-		get_output_file_paths(topo, flow_num, cc, proj_dir, enable_randoffset, slots, multi_factor, seed)
+	TOPOLOGY_FILE, TRACE_FILE, QUEUE_MONITOR_FILE, RANDOM_PARAM_FILE = \
+		get_input_file_paths(topo, proj_dir)
+	TRACE_OUTPUT_FILE, FCT_OUTPUT_FILE, PFC_OUTPUT_FILE, flow_input_file = \
+		get_inout_file_paths(topo, flow_num, cc, proj_dir, enable_randoffset, slots, multi_factor, seed)
 	
-	slots_num, slots_interval_us = update_param(slots, multi_factor, TOPOLOGY_FILE, FLOW_FILE)
-	
+	slots_num, slots_interval_us = update_param(slots, multi_factor, TOPOLOGY_FILE, meta_flow_file)
 	common_temp_args = {
 		"proj_dir": proj_dir,
 		"bw": bw,
-		"flow": flow,
+		"flow_num": flow_num,
 		"topo": topo,
 		"u_tgt": u_tgt,
 		"mi": mi,
@@ -169,7 +168,7 @@ def gen_conf(args):
 		"enable_pfc": 1,
 
 		"TOPOLOGY_FILE": TOPOLOGY_FILE,
-		"FLOW_FILE": FLOW_FILE,
+		"FLOW_FILE": flow_input_file,
 		"TRACE_FILE": TRACE_FILE,
 		"QUEUE_MONITOR_FILE": QUEUE_MONITOR_FILE,
 		"RANDOM_PARAM_FILE": RANDOM_PARAM_FILE,
@@ -247,15 +246,15 @@ def gen_conf(args):
 		print("unknown cc:", args['cc'])
 		sys.exit(1)
 
-	conf_path = get_conf_path(topo, flow, cc, enable_randoffset, proj_dir, seed, slots, multi_factor, blueprint_name, row_id) 
+	conf_path = get_conf_path(topo, flow_num, cc, enable_randoffset, proj_dir, seed, slots, multi_factor, blueprint_name, row_id) 
 
 	print(f'generated:{conf_path}')
 	with open(conf_path, "w") as file:
 		file.write(config)
-	return conf_path, TRACE_OUTPUT_FILE, FCT_OUTPUT_FILE, PFC_OUTPUT_FILE
+	return conf_path, TRACE_OUTPUT_FILE, FCT_OUTPUT_FILE, PFC_OUTPUT_FILE, flow_input_file
 	
-def get_conf_path(topo, flow, cc, enable_randoffset, proj_dir, seed, slots, multi_factor, blueprint_name, row_id):
-	return f"{proj_dir}/conf_{blueprint_name}_r{row_id}_{topo}_s{seed}_f{flow}_{cc}_{enable_randoffset}_sl{slots}_fc{multi_factor}.txt"
+def get_conf_path(topo, flow_num, cc, enable_randoffset, proj_dir, seed, slots, multi_factor, blueprint_name, row_id):
+	return f"{proj_dir}/conf_{blueprint_name}_r{row_id}_{topo}_s{seed}_f{flow_num}_{cc}_{enable_randoffset}_sl{slots}_fc{multi_factor}.txt"
 
 def read_flow_file(flow_file):
 	with open(flow_file, "r") as file:
