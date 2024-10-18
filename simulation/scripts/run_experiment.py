@@ -101,7 +101,7 @@ class HPCCExperiment(ExperimentRunnerBase):
     def proc_run_row_qmsg_qtsk(self, queue_msg:Queue, queue_task:Queue):
         while True:
             try:
-                task = queue_task.get()
+                task = queue_task.get(timeout=1)
             except Empty:
                 break # no more task
             unrun_row, row_id = task
