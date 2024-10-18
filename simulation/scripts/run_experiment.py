@@ -7,6 +7,7 @@ import pandas as pd
 import time
 import os
 from multiprocessing import Process, Lock, cpu_count, Pool, Manager, Queue
+from queue import Empty
 import random
 
 # to run experiments:
@@ -53,14 +54,60 @@ class HPCCExperiment(ExperimentRunnerBase):
         # find all unrun rows
         unrun_row_li, row_id_li = self._find_unrun_row_list(-1)        
         with Manager() as manager: # use manager to share lock among processes
-            queue = manager.Queue()
+            queue_msg = manager.Queue()
+            queue_task = manager.Queue()
             # input for each process: (unrun_row, row_id, lock)
-            args_li = [(unrun_row_li[i], row_id_li[i], queue) for i in range(len(unrun_row_li))]
+            args_li = [(unrun_row_li[i], row_id_li[i], queue_msg) for i in range(len(unrun_row_li))]
             with Pool(self.proc_num + 1) as pool: # +1 for writer process
-                writer_result = pool.apply_async(self.blueprint_writer_process, (queue,))
+                writer_result = pool.apply_async(self.blueprint_writer_process, (queue_msg,))
                 pool.map(self.run_row_que_msg, args_li)
-                queue.put(None) # terminate the writing process
+                queue_msg.put(None) # terminate the writing process
                 writer_result.wait()
+
+    def run_by_blueprint_que_tsk_que_msg(self):
+        # find all unrun rows
+        unrun_row_li, row_id_li = self._find_unrun_row_list(-1)        
+        with Manager() as manager: # use manager to share lock among processes
+            queue_msg = manager.Queue()
+            queue_task = manager.Queue()
+            # input for each process: (unrun_row, row_id, lock)
+            for task_item in [(unrun_row_li[i], row_id_li[i]) for i in range(len(unrun_row_li))]:
+                queue_task.put(task_item)
+
+            # start writer process
+            proc_state_writer = Process(target=self.blueprint_writer_process, args=(queue_msg,))
+            proc_state_writer.start()
+
+            proc_worker_li = []
+            for i in range(self.proc_num):
+                proc_worker = Process(target=self.proc_run_row_qmsg_qtsk, args=(queue_msg, queue_task))
+                proc_worker.start()
+                proc_worker_li.append(proc_worker)
+            for proc in proc_worker_li:
+                proc.join()
+            queue_msg.put(None) # terminate the writing process
+            proc_state_writer.join()
+            
+    def proc_run_row_qmsg_qtsk(self, args_li:tuple):
+        queue_msg, queue_task = args_li
+        while True:
+            try:
+                task = queue_task.get()
+            except Empty:
+                break # no more task
+            unrun_row, row_id = task
+            queue_msg.put((self.act_set_blueprint_running, {'row_id':row_id}))
+            # run experiment
+            conf_path, runtime_s, trace_output_file, fct_output_file,\
+                    pfc_output_file = self.execute(unrun_row, row_id)
+            # parse results
+            hpcc_parser = HPCCResultParser(trace_output_file, fct_output_file, pfc_output_file)
+            results = hpcc_parser.parse_fct_multi_job()
+                # debugging
+                # results = {'maxFctNs':-1, 'avgFctNs':-1, 'makespanNs':-1}
+                # runtime_s = 0
+                # time.sleep(1)
+            queue_msg.put((self.act_update_blueprint, {'row_id':row_id, 'results':results, 'runtime_s':runtime_s}))
 
     # using multiprocessing.Queue to communicate between processes
     def run_row_que_msg(self, args_li:tuple):
@@ -79,10 +126,10 @@ class HPCCExperiment(ExperimentRunnerBase):
         queue.put((self.act_update_blueprint, {'row_id':row_id, 'results':results, 'runtime_s':runtime_s}))   
 
 
-    def blueprint_writer_process(self, queue:Queue):
+    def blueprint_writer_process(self, queue_msg:Queue):
         mgr = BlueprintWriter(status_col_name='state', path=self.blueprint_path)
         while True:
-            request = queue.get()
+            request = queue_msg.get()
             if request is None:
                 break
             action, data = request

@@ -40,7 +40,7 @@ class BlueprintGenerator:
     def gen_test_blueprint(self, blueprint_path):
         topos = ['fat',]
         self.seed = 300
-        repetition = 5
+        repetition = 3
         flow_num_range = [10, 16, 32, 64, 128, 256,319]
         cc_li = ['dcqcn', 'hp', 'dctcp', 'timely', 'hpccPint']
         rand_offset = [0]

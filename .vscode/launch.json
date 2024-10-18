@@ -12,7 +12,7 @@
             "program": "${workspaceFolder}/simulation/launch.py",
             "console": "integratedTerminal",
             "args": [
-                "preliminary", "2", "exp_blueprint.csv",
+                "preliminary", "bp4.csv", "3",
             ],
             "cwd":"${workspaceFolder}",
 
@@ -177,7 +177,7 @@
                 "--load", "0.3",
                 "--bandwidth", "10G",
                 "--end_time", "0.1",
-                "--output", "simulation/mix/rand_offset/preliminary/llmFlows.txt",
+                "--output", "simulation/mix/rand_offset/preliminary/llmFlows2.txt",
                 "--scenario", "GPT1_data_parallel",
             ],
             "cwd":"${workspaceFolder}",

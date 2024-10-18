@@ -29,7 +29,8 @@ def main():
             # experiment.run_by_blueprint()
             # experiment.run_by_blueprint_proc_pool()
             # experiment.run_by_blueprint_proc_pool_que_msg()
-            experiment.run_by_blueprint()
+            # experiment.run_by_blueprint()
+            experiment.run_by_blueprint_que_tsk_que_msg()
         elif sys.argv[1] == "test_algo":
             bp2_test_algo_path = 'simulation/mix/rand_offset/preliminary/bp4.csv'
             proc_num = 3
