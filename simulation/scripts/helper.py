@@ -237,3 +237,17 @@ def match_and_replace_in_file(file_path, pattern, replace):
     new_content = re.sub(pattern, replace, content)
     write_file(file_path, new_content)
 
+def read_flow_file(flow_file):
+	with open(flow_file, "r") as file:
+		lines = file.readlines()
+		flow_num = int(lines[0])
+		flow_size_bytes = int(lines[1].split(" ")[4])
+	return flow_num, flow_size_bytes
+
+def read_topo_file(topo_file):
+	with open(topo_file, "r") as file:
+		lines = file.readlines()
+		node_num, switch_num, link_num = [int(x) for x in lines[0].split(" ")]
+		nic_rate = lines[2].split(" ")[2] # Gbps
+	return int(nic_rate[0:-4])
+

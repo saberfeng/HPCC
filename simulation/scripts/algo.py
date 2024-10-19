@@ -1,6 +1,7 @@
 import numpy as np
 from math import factorial
 from enum import Enum, auto
+import scripts.helper as helper
 
 # Define an enumeration class for algorithm names
 BEST_SLOT_NUM_MULTI_FACTOR = 'bstSltNumMltFctr'
@@ -67,8 +68,15 @@ class NonEmptySlotCalculator:
     def prob_all_slot_used(self, slot_num:int, item_num:int):
         return 1 - self.prob_any_slot_empty(slot_num, item_num)
 
-    def find_best_slot_num(self, item_num:int, threshold_prob:float):
-        slot_num = 2
+    def find_best_slot_num_for_flows(self, flow_num:int, thresh_allused_prob:float=0.9):
+        slot_num = flow_num
+        prob = self.prob_all_slot_used(slot_num=slot_num, item_num=flow_num)
+        while prob < thresh_allused_prob:
+            # print(f"Number of slots: {slot_num}, all slot used Probability: {prob:.6f}")
+            slot_num -= 1
+            prob = self.prob_all_slot_used(slot_num=slot_num, item_num=flow_num)
+        # print(f"Number of slots: {slot_num}, all slot used Probability: {prob:.6f}")
+        return slot_num
 
 def try_frequency(slot_num:int, item_num:int):
     times = 1000
@@ -83,18 +91,6 @@ def try_frequency(slot_num:int, item_num:int):
     prob_any_empty = any_empty / times 
     prob_all_used = 1 - prob_any_empty
     print(f"frequency/trials all used: {prob_all_used}")
-
-
-def find_best_slot_num_for_flows(flow_num:int, thresh_allused_prob:float=0.9):
-    slot_num = flow_num
-    nonempty_calc = NonEmptySlotCalculator()
-    prob = nonempty_calc.prob_all_slot_used(slot_num=slot_num, item_num=flow_num)
-    while prob < thresh_allused_prob:
-        # print(f"Number of slots: {slot_num}, all slot used Probability: {prob:.6f}")
-        slot_num -= 1
-        prob = nonempty_calc.prob_all_slot_used(slot_num=slot_num, item_num=flow_num)
-    # print(f"Number of slots: {slot_num}, all slot used Probability: {prob:.6f}")
-    return slot_num
 
 def test_NonEmptySlotCalculator():
     nonempty_calc = NonEmptySlotCalculator()
@@ -120,7 +116,45 @@ def test1():
 
 def main():
     # test_NonEmptySlotCalculator()
-    find_best_slot_num_for_flows(10)
+    # find_best_slot_num_for_flows(10)
+    pass
+
+class Algo:
+    def __init__(self, algo:str, params:str):
+        self.algo = algo
+        self.params = params
+    
+    def calc_slot_val(self, topo_file:str, flow_file:str):
+        if self.algo == BEST_SLOT_NUM_MULTI_FACTOR:
+            return self.calc_slot_val_bstSltNumMltFctr(topo_file, flow_file)
+        elif self.algo == BEST_SLOT_NUM_LINESPD_SLOT:
+            return self.calc_slot_val_bstSltNumLnspdSlt(topo_file, flow_file)
+        else:
+            raise ValueError(f"Invalid algo: {self.algo}")
+
+    def calc_flow_trans_total(self, flow_file:str, topo_file:str):
+        flow_num, flow_size_bytes = helper.read_flow_file(flow_file)
+        nic_rate_Gbps = helper.read_topo_file(topo_file) 
+        flow_trans_time_us = (flow_size_bytes * 8 / nic_rate_Gbps) / 1e3
+        flow_trans_time_total_us = int(flow_num * flow_trans_time_us)
+        return flow_trans_time_total_us, flow_num, flow_size_bytes, flow_trans_time_us
+        
+    def calc_slot_val_bstSltNumMltFctr(self, topo_file:str, flow_file:str):
+        multi_factor = float(self.params)
+        flow_trans_time_total_us, flow_num, flow_size_bytes, flow_trans_time_us = self.calc_flow_trans_total(flow_file, topo_file)
+        slots_interval_us = int(flow_trans_time_total_us * multi_factor)
+        nonempty_calc = NonEmptySlotCalculator()
+        slot_num = nonempty_calc.find_best_slot_num_for_flows(flow_num=flow_num)
+        return slot_num, slots_interval_us
+
+    def calc_slot_val_bstSltNumLnspdSlt(self, topo_file:str, flow_file:str):
+        flow_trans_time_total_us, flow_num, flow_size_bytes, flow_trans_time_us = self.calc_flow_trans_total(flow_file, topo_file)
+        nonempty_calc = NonEmptySlotCalculator()
+        slot_num = nonempty_calc.find_best_slot_num_for_flows(flow_num=flow_num)
+        slots_interval_us = int(flow_trans_time_us * slot_num)
+        return slot_num, slots_interval_us
+
+
 
 if __name__ == '__main__':
     main()
