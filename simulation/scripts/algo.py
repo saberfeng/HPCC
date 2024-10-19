@@ -1,5 +1,11 @@
 import numpy as np
 from math import factorial
+from enum import Enum, auto
+
+# Define an enumeration class for algorithm names
+BEST_SLOT_NUM_MULTI_FACTOR = 'bstSltNumMltFctr'
+BEST_SLOT_NUM_LINESPD_SLOT = 'bstSltNumLnspdSlt'
+
 
 # Function to compute Stirling numbers of the second kind
 def stirling_second_kind(n, k):
@@ -39,16 +45,82 @@ def find_best_num_drawers(threshold_prob, num_balls):
         prob = probability_atleast_one_empty_drawer(num_drawers, num_balls)
     return num_drawers
 
-# Example usage
-m = 10  # Number of drawers
-num_ball = 16 # Number of balls
-x = 1  # Number of empty drawers
 
-# prob = probability_empty_drawers(m, num_ball, x)
-# print(f"The probability of having exactly {x} empty drawers is: {prob:.6f}")
+class NonEmptySlotCalculator:
+    def __init__(self):
+        pass
 
-# prob = probability_atleast_one_empty_drawer(m, num_ball)
-# print(f"The probability of having at least one empty drawer is: {prob:.6f}")
+    # the combination of r items from the available n items
+    # n! / (r! * (n-r)!)
+    def comb(self, r, n):
+        return factorial(n) / (factorial(r) * factorial(n-r))
 
-threshold_prob = 0.1
-find_best_num_drawers(threshold_prob, num_ball)
+    def prob_any_slot_empty(self, slot_num:int, item_num:int):
+        prob = 0
+        for i in range(slot_num):
+            r = i + 1
+            n = slot_num
+            positivity = (-1)**i
+            prob += positivity * self.comb(r, n) * ((n - r) / n )**item_num 
+        return prob
+
+    def prob_all_slot_used(self, slot_num:int, item_num:int):
+        return 1 - self.prob_any_slot_empty(slot_num, item_num)
+
+    def find_best_slot_num(self, item_num:int, threshold_prob:float):
+        slot_num = 2
+
+def try_frequency(slot_num:int, item_num:int):
+    times = 1000
+    any_empty = 0
+    for i in range(times):
+        slots = [0]*slot_num
+        for j in range(item_num):
+            # pick a random slot
+            slots[np.random.randint(0, slot_num)] += 1
+        if 0 in slots:
+            any_empty += 1
+    prob_any_empty = any_empty / times 
+    prob_all_used = 1 - prob_any_empty
+    print(f"frequency/trials all used: {prob_all_used}")
+
+
+def find_best_slot_num_for_flows(flow_num:int, thresh_allused_prob:float=0.9):
+    slot_num = flow_num
+    nonempty_calc = NonEmptySlotCalculator()
+    prob = nonempty_calc.prob_all_slot_used(slot_num=slot_num, item_num=flow_num)
+    while prob < thresh_allused_prob:
+        # print(f"Number of slots: {slot_num}, all slot used Probability: {prob:.6f}")
+        slot_num -= 1
+        prob = nonempty_calc.prob_all_slot_used(slot_num=slot_num, item_num=flow_num)
+    # print(f"Number of slots: {slot_num}, all slot used Probability: {prob:.6f}")
+    return slot_num
+
+def test_NonEmptySlotCalculator():
+    nonempty_calc = NonEmptySlotCalculator()
+    all_slots_used_5_10 = nonempty_calc.prob_all_slot_used(slot_num=5, item_num=20)
+    print(f"all_slots_used_5_10: {all_slots_used_5_10}")
+    try_frequency(5, 20)
+    
+    
+def test1():
+    # Example usage
+    m = 10  # Number of drawers
+    num_ball = 16 # Number of balls
+    x = 1  # Number of empty drawers
+
+    # prob = probability_empty_drawers(m, num_ball, x)
+    # print(f"The probability of having exactly {x} empty drawers is: {prob:.6f}")
+
+    # prob = probability_atleast_one_empty_drawer(m, num_ball)
+    # print(f"The probability of having at least one empty drawer is: {prob:.6f}")
+
+    threshold_prob = 0.1
+    find_best_num_drawers(threshold_prob, num_ball) 
+
+def main():
+    # test_NonEmptySlotCalculator()
+    find_best_slot_num_for_flows(10)
+
+if __name__ == '__main__':
+    main()

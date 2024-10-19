@@ -2,8 +2,11 @@ import sys
 from scripts.run_experiment import HPCCExperiment
 from scripts.blueprint_generator import BlueprintGenerator
 import scripts.helper as helper
+import scripts.algo as algo
 
 #TODO: parse offsetted fct output
+#TODO: use more conservative PFC threshold
+#TODO: reduce drop print, add drop statistics
 
 def main():
     proj_dir = 'simulation/mix/rand_offset/preliminary'
@@ -30,17 +33,20 @@ def main():
             # experiment.run_by_blueprint_proc_pool_que_msg()
             # experiment.run_by_blueprint() # single process
             experiment.run_by_blueprint_que_tsk_que_msg() # guarantee task assignment order
+
         elif sys.argv[1] == "test_algo":
-            bp2_test_algo_path = 'simulation/mix/rand_offset/preliminary/bp4.csv'
-            proc_num = 3
-            experiment = HPCCExperiment(
-                blueprint_path=bp2_test_algo_path,
-                status_col_name='state',
-                proj_dir=proj_dir,
-                app_path=app_path,
-                proc_num=proc_num,
-            )
-            experiment.run_by_blueprint_proc_pool_que_msg()
+            # bp2_test_algo_path = 'simulation/mix/rand_offset/preliminary/bp4.csv'
+            # proc_num = 3
+            # experiment = HPCCExperiment(
+            #     blueprint_path=bp2_test_algo_path,
+            #     status_col_name='state',
+            #     proj_dir=proj_dir,
+            #     app_path=app_path,
+            #     proc_num=proc_num,
+            # )
+            # experiment.run_by_blueprint_proc_pool_que_msg()
+            algo.find_best_slot_num_for_flows(10)
+
         elif sys.argv[1] == "manage_blueprint":
             pass
             # mgr = helper.BlueprintManagerBase(status_col_name='state')
@@ -50,9 +56,9 @@ def main():
             # mgr.reset_col_values_by_idx(path, idx_range=[87, 100], col_name='cc', col_val='dcqcn')
 
             # tmp_blueprint_path = 'simulation/mix/rand_offset/preliminary/tmp_exp_blueprint.csv'
-            bp4_test_algo_path = 'simulation/mix/rand_offset/preliminary/bp4.csv'
+            bp5_test_algo_path = 'simulation/mix/rand_offset/preliminary/bp5.csv'
             bp_generator = BlueprintGenerator()
-            bp_generator.gen_test_blueprint(bp4_test_algo_path)
+            bp_generator.gen_test_blueprint(bp5_test_algo_path)
 
             # bp3_test_algo_path = 'simulation/mix/rand_offset/preliminary/bp3.csv'
             # mgr = helper.BlueprintManagerBase(status_col_name='state', path=bp3_test_algo_path)

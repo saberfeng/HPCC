@@ -1,24 +1,25 @@
-
+import itertools
+import scripts.algo
 
 class BlueprintGenerator:
     def __init__(self):
         self.seed = 0
 
-    def add_param_combinations(self, repetition, slots_li, multi_factors_li, **kwargs):
+    def add_algo_param_combinations(self, repetition, algo, params_li, **kwargs):
         lines = []
-        combination = [(slots, multi_factor) 
-                            for slots in slots_li 
-                                for multi_factor in multi_factors_li]
-        for slots, multi_factor in combination:
+        # params_li: [[slots_li], [multi_factors_li]]
+        combinations = list(itertools.product(*params_li))
+        for params in combinations:
             for i in range(repetition):
                 # conf_path = gen_exp_conf(**kwargs, slots=slots, multi_factor=multi_factor)
-                lines.append(self.get_blueprint_line(slots=slots, multi_factor=multi_factor, **kwargs))
+                params_str = " ".join(params)
+                lines.append(self.get_blueprint_line(algo=algo, params=params_str, **kwargs))
         return lines
 
-    def get_blueprint_line(self, topo, seed, flow_num, cc, enable_randoffset, slots, multi_factor):
+    def get_blueprint_line(self, topo, seed, flow_num, cc, enable_randoffset, algo, params):
         state_default = -1
         line = f'{state_default},{topo},{self.seed},{flow_num},{cc},{enable_randoffset},'\
-                f'{slots},{multi_factor},'\
+                f'{algo},{params},'\
                 f'-1,-1,-1,-1,-1,-1,-1\n'
         self.seed += 1
         return line
@@ -43,20 +44,29 @@ class BlueprintGenerator:
         repetition = 3
         flow_num_range = [10, 16, 32, 64, 128, 256,319]
         cc_li = ['dcqcn', 'hp', 'dctcp', 'timely', 'hpccPint']
-        rand_offset = [0]
+        rand_offset = [1]
         inflow_filename = 'llmFlows'
         proj_dir = 'rand_offset/preliminary'
+
         # rand offset params to try
-        slots_li = [3]
-        multi_factors_li = [0.7, 1]
-        self.gen_blueprint(blueprint_path, topos, self.seed, repetition, flow_num_range, cc_li, rand_offset, inflow_filename, proj_dir, slots_li, multi_factors_li)
+        # slots_li = [3]
+        # multi_factors_li = [0.7, 1]
+        # algo = scripts.algo.BEST_SLOT_NUM_MULTI_FACTOR
+        # algo_params_li = [[slots_li], [multi_factors_li]]
+
+        algo = scripts.algo.BEST_SLOT_NUM_LINESPD_SLOT
+        algo_params_li = []
+        self.gen_blueprint(blueprint_path, topos, self.seed, repetition, flow_num_range, 
+                           cc_li, rand_offset, inflow_filename, proj_dir, algo=algo, params_li=algo_params_li)
+
 
     def gen_blueprint(
             self, blueprint_path, topos, seed, repetition, 
             flow_num_range, cc_li, rand_offset, inflow_filename, 
-            proj_dir, slots_li, multi_factors_li):
+            proj_dir, algo, params_li):
         headerline_input = 'state,topo,seed,flowNum,cc,randOffset,'
-        headerline_adjust = 'slots,multiFactor,'
+        # example algo: best_slot_num; params: slots-multi_factor
+        headerline_adjust = 'algo,params,' 
         headerline_output = 'maxFctNs,avgFctNs,mkspanJobNs,mkspanAllNs,dropPkts,linkUtil,runtimeS\n'
         headerline = headerline_input + headerline_adjust + headerline_output
         lines = []
@@ -75,10 +85,11 @@ class BlueprintGenerator:
                             'enable_randoffset': enable_randoffset,
                         }
                         if enable_randoffset:
-                            lines += self.add_param_combinations(repetition, slots_li, multi_factors_li, **kwargs) 
-                        else:
-                            kwargs['slots'] = -1
-                            kwargs['multi_factor'] = -1
+                            lines += self.add_algo_param_combinations(
+                                repetition=repetition, algo=algo, params_li=params_li, **kwargs) 
+                        else: # not enabling rand offset, algo is 
+                            kwargs['params'] = '-1,-1'
+                            kwargs['algo'] = '-1'
                             for i in range(repetition):
                                 lines.append(self.get_blueprint_line(**kwargs))
         with open(blueprint_path, 'w') as f:
