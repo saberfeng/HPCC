@@ -233,7 +233,7 @@ void qp_finish(FILE* fout, Ptr<RdmaQueuePair> q){
 	uint64_t complete_fct_ns = (Simulator::Now() - q->startTime).GetNanoSeconds();
 	// fct + offset
 	FlowInputEntry& cur_flow = (*flows)[q->flow_id];
-	uint64_t offsetted_fct_ns = complete_fct_ns + cur_flow.getOffsetStart().GetNanoSeconds();
+	uint64_t offsetted_fct_ns = complete_fct_ns + cur_flow.offset.GetNanoSeconds();
 	// standalone fct only includes the transmission delay + propagation delay (base_rtt), plus one transmission delay of all data? problem? 
 	uint64_t standalone_fct_ns = base_rtt + total_bytes * 8000000000lu / b; // fct in unit of ns
 	// sip, dip, src_port, dst_port, size (B), start_time, fct (ns), offseted_fct(ns), standalone_fct (ns), end(ns)

@@ -12,7 +12,7 @@
             "program": "${workspaceFolder}/simulation/launch.py",
             "console": "integratedTerminal",
             "args": [
-                "preliminary", "bp4.csv", "3",
+                "preliminary", "bp5.csv", "3",
             ],
             "cwd":"${workspaceFolder}",
 
@@ -48,7 +48,8 @@
             "request": "launch", // "launch" a program or "attach" to an already running instance 
             "program": "${workspaceFolder}/simulation/build/scratch/third",
             "args": [
-                "simulation/mix/rand_offset/preliminary/config_fat_llmFlows_dcqcn_1.txt",
+                "simulation/mix/rand_offset/preliminary/conf_bp4_r1_fat_s301_f10_dcqcn_0_sl-1_fc-1.txt"
+                // "simulation/mix/rand_offset/preliminary/config_fat_llmFlows_dcqcn_1.txt",
                 // "simulation/mix/rand_offset/config_fat_llmTest_dcqcn_0.txt"
             ],
             "cwd":"${workspaceFolder}", // cwd:working directory

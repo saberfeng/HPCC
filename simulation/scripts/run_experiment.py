@@ -267,14 +267,15 @@ class HPCCResultParser:
         # job_id_to_row_num = fct_df.groupby(job_id_colname).size()
         # print(job_id_to_row_num)
         start_colname = "start(ns)" 
-        complete_fct_colname = "complete_fct(ns)"
+        # complete_fct_colname = "complete_fct(ns)" # use offseted_fct_colname instead
         end_colname = "end(ns)"
+        offseted_fct_colname = "offseted_fct(ns)" # offseted_fct = complete_fct + offset
 
         groupped_df = fct_df.groupby('job_id')
         job_makespan_df = groupped_df[end_colname].max() - groupped_df[start_colname].min()
         result = {
-            'maxFctNs': fct_df[complete_fct_colname].max(),
-            'avgFctNs': fct_df[complete_fct_colname].mean(),
+            'maxFctNs': fct_df[offseted_fct_colname].max(),
+            'avgFctNs': fct_df[offseted_fct_colname].mean(),
             'mkspanJobNs': self.serialize_job_makespan(job_makespan_df.array),
             'mkspanAllNs': fct_df[end_colname].max() - fct_df[start_colname].min(),
         }
