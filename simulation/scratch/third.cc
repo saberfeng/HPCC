@@ -1069,7 +1069,8 @@ int main(int argc, char *argv[])
 	for (uint32_t i = 0; i < node_num; i++){
 		if (n.Get(i)->GetNodeType() == 1){ // is switch
 			Ptr<SwitchNode> sw = DynamicCast<SwitchNode>(n.Get(i));
-			uint32_t shift = 3; // by default 1/8
+			uint32_t shift = 3; // by default 1/8; larger shift, smaller 1/2^shift, smaller pfc threshold, more aggressive pfc
+			uint32_t sw_port_num = sw->GetNDevices();
 			for (uint32_t j = 1; j < sw->GetNDevices(); j++){
 				Ptr<QbbNetDevice> dev = DynamicCast<QbbNetDevice>(sw->GetDevice(j));
 				uint64_t rate = dev->GetDataRate().GetBitRate();
@@ -1078,10 +1079,15 @@ int main(int argc, char *argv[])
 				NS_ASSERT_MSG(rate2kmax.find(rate) != rate2kmax.end(), "must set kmax for each link speed");
 				NS_ASSERT_MSG(rate2pmax.find(rate) != rate2pmax.end(), "must set pmax for each link speed");
 				sw->m_mmu->ConfigEcn(j, rate2kmin[rate], rate2kmax[rate], rate2pmax[rate]);
-				// set pfc
-				uint64_t delay = DynamicCast<QbbChannel>(dev->GetChannel())->GetDelay().GetTimeStep();
-				uint32_t headroom = rate * delay / 8 / 1000000000 * 3;
-				sw->m_mmu->ConfigHdrm(j, headroom);
+				// // set pfc
+				// uint64_t delay = DynamicCast<QbbChannel>(dev->GetChannel())->GetDelay().GetTimeStep();
+				// uint32_t headroom = rate * delay / 8 / 1000000000 * 3; 
+				// sw->m_mmu->ConfigHdrm(j, headroom);
+
+				// port pfc hdrm = buffer * 70%
+				uint32_t hdrm_bytes = buffer_size_MB * 1024 * 1024 * 0.7;
+				sw->m_mmu->ConfigHdrm(j, hdrm_bytes);
+				// port pfc 
 				// set pfc alpha, proportional to link bw
 				sw->m_mmu->pfc_a_shift[j] = shift;
 				while (rate > nic_rate && sw->m_mmu->pfc_a_shift[j] > 0){

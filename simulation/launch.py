@@ -4,7 +4,6 @@ from scripts.blueprint_generator import BlueprintGenerator
 import scripts.helper as helper
 import scripts.algo as algo
 
-#TODO: parse offsetted fct output
 #TODO: use more conservative PFC threshold
 #TODO: reduce drop print, add drop statistics
 
