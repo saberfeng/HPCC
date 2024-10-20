@@ -124,31 +124,33 @@ class Algo:
         self.algo = algo
         self.params = params
     
-    def calc_slot_val(self, topo_file:str, flow_file:str):
+    def calc_slot_val(self, topo_file:str, flow_file:str, flow_num:int):
         if self.algo == BEST_SLOT_NUM_MULTI_FACTOR:
-            return self.calc_slot_val_bstSltNumMltFctr(topo_file, flow_file)
+            return self.calc_slot_val_bstSltNumMltFctr(topo_file, flow_file, flow_num)
         elif self.algo == BEST_SLOT_NUM_LINESPD_SLOT:
-            return self.calc_slot_val_bstSltNumLnspdSlt(topo_file, flow_file)
+            return self.calc_slot_val_bstSltNumLnspdSlt(topo_file, flow_file, flow_num)
         else:
             raise ValueError(f"Invalid algo: {self.algo}")
 
-    def calc_flow_trans_total(self, flow_file:str, topo_file:str):
-        flow_num, flow_size_bytes = helper.read_flow_file(flow_file)
+    def calc_flow_trans_total(self, flow_file:str, topo_file:str, flow_num:int):
+        _, flow_size_bytes = helper.read_flow_file(flow_file)
         nic_rate_Gbps = helper.read_topo_file(topo_file) 
         flow_trans_time_us = (flow_size_bytes * 8 / nic_rate_Gbps) / 1e3
         flow_trans_time_total_us = int(flow_num * flow_trans_time_us)
-        return flow_trans_time_total_us, flow_num, flow_size_bytes, flow_trans_time_us
+        return flow_trans_time_total_us, flow_size_bytes, flow_trans_time_us
         
-    def calc_slot_val_bstSltNumMltFctr(self, topo_file:str, flow_file:str):
+    def calc_slot_val_bstSltNumMltFctr(self, topo_file:str, flow_file:str, flow_num:int):
         multi_factor = float(self.params)
-        flow_trans_time_total_us, flow_num, flow_size_bytes, flow_trans_time_us = self.calc_flow_trans_total(flow_file, topo_file)
+        flow_trans_time_total_us, flow_size_bytes, flow_trans_time_us = \
+            self.calc_flow_trans_total(flow_file, topo_file, flow_num)
         slots_interval_us = int(flow_trans_time_total_us * multi_factor)
         nonempty_calc = NonEmptySlotCalculator()
         slot_num = nonempty_calc.find_best_slot_num_for_flows(flow_num=flow_num)
         return slot_num, slots_interval_us
 
-    def calc_slot_val_bstSltNumLnspdSlt(self, topo_file:str, flow_file:str):
-        flow_trans_time_total_us, flow_num, flow_size_bytes, flow_trans_time_us = self.calc_flow_trans_total(flow_file, topo_file)
+    def calc_slot_val_bstSltNumLnspdSlt(self, topo_file:str, flow_file:str, flow_num:int):
+        flow_trans_time_total_us, flow_size_bytes, flow_trans_time_us = \
+            self.calc_flow_trans_total(flow_file, topo_file, flow_num)
         nonempty_calc = NonEmptySlotCalculator()
         slot_num = nonempty_calc.find_best_slot_num_for_flows(flow_num=flow_num)
         slots_interval_us = int(flow_trans_time_us * slot_num)
