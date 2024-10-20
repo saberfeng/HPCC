@@ -1,0 +1,2 @@
+src_ip,dst_ip,sport,dport,m_size(bytes),start(ns),complete_fct(ns),offseted_fct(ns),standalone_fct(ns),end(ns)
+0b000c01,0b00cb01,10000,100,442973506,24,46354615,151354615,37151140,46354639
