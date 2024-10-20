@@ -1,6 +1,8 @@
 import argparse
 import sys
 import os
+import scripts.algo
+import scripts.helper as helper
 
 config_template="""ENABLE_QCN 1
 USE_DYNAMIC_PFC_THRESHOLD 1
@@ -84,34 +86,21 @@ def get_input_file_paths(topo, proj_dir):
 			QUEUE_MONITOR_FILE.format(proj_dir=proj_dir), \
 			RANDOM_PARAM_FILE.format(proj_dir=proj_dir), \
 
-def get_inout_file_paths(topo, flow_num, cc, proj_dir, enable_randoffset,slots,multi_factor,seed):
+def get_inout_file_paths(topo, flow_num, cc, proj_dir, enable_randoffset,
+						algo, params, seed):
 	failure = ''
 	# TRACE_OUTPUT_FILE = f"{proj_dir}/"\
-	# 				f"mix_{topo}_s{seed}_f{flow_num}_{cc}{failure}_{enable_randoffset}_sl{slots}_fc{multi_factor}.tr"
+	# 				f"mix_{topo}_s{seed}_f{flow_num}_{cc}{failure}_{enable_randoffset}_sl{algo}_fc{params}.tr"
 	TRACE_OUTPUT_FILE = f"{proj_dir}/"\
 					f"mix.tr"
 	FCT_OUTPUT_FILE = f"{proj_dir}/"\
-					f"fct_{topo}_s{seed}_f{flow_num}_{cc}{failure}_{enable_randoffset}_sl{slots}_fc{multi_factor}.csv"
+					f"fct_{topo}_s{seed}_f{flow_num}_{cc}{failure}_{enable_randoffset}_sl{algo}_fc{params}.csv"
 	PFC_OUTPUT_FILE = f"{proj_dir}/"\
-					f"pfc_{topo}_s{seed}_f{flow_num}_{cc}{failure}_{enable_randoffset}_sl{slots}_fc{multi_factor}.txt"
+					f"pfc_{topo}_s{seed}_f{flow_num}_{cc}{failure}_{enable_randoffset}_sl{algo}_fc{params}.txt"
 	flow_input_file = f"{proj_dir}/"\
-					f"flow_{topo}_s{seed}_f{flow_num}_{cc}{failure}_{enable_randoffset}_sl{slots}_fc{multi_factor}.txt"	
+					f"flow_{topo}_s{seed}_f{flow_num}_{cc}{failure}_{enable_randoffset}_sl{algo}_fc{params}.txt"	
 	return TRACE_OUTPUT_FILE, FCT_OUTPUT_FILE, PFC_OUTPUT_FILE, flow_input_file
 
-def update_param(slots, multi_factor, topo_file, flow_file):
-	slots = slots
-	multi_factor = multi_factor
-
-	def multiple_flow_trans(multi_factor):
-		flow_num, flow_size_bytes = read_flow_file(flow_file)
-		nic_rate_Gbps = read_topo_file(topo_file) 
-		flow_trans_time_us = (flow_size_bytes * 8 / nic_rate_Gbps) / 1e3
-		slots_interval_us = int(flow_num * flow_trans_time_us * multi_factor)
-		return slots_interval_us
-
-	slots_interval_us = multiple_flow_trans(multi_factor)
-	param_line = f"{slots:.0f} {slots_interval_us:.0f}\n\n"
-	return slots, slots_interval_us
 
 def gen_conf(args):
 	topo=args['topo']
@@ -130,8 +119,8 @@ def gen_conf(args):
 	cc = args['cc']
 	proj_dir = args['proj_dir']
 	enable_randoffset = args['enable_randoffset']
-	slots = args['slots']
-	multi_factor = args['multi_factor']
+	algo = args['algo']
+	params = args['params']
 	seed = args['seed']
 	blueprint_name = args['blueprint_name']
 	row_id = args['row_id']
@@ -149,9 +138,10 @@ def gen_conf(args):
 	TOPOLOGY_FILE, TRACE_FILE, QUEUE_MONITOR_FILE, RANDOM_PARAM_FILE = \
 		get_input_file_paths(topo, proj_dir)
 	TRACE_OUTPUT_FILE, FCT_OUTPUT_FILE, PFC_OUTPUT_FILE, flow_input_file = \
-		get_inout_file_paths(topo, flow_num, cc, proj_dir, enable_randoffset, slots, multi_factor, seed)
+		get_inout_file_paths(topo, flow_num, cc, proj_dir, enable_randoffset, algo, params, seed)
 	
-	slots_num, slots_interval_us = update_param(slots, multi_factor, TOPOLOGY_FILE, meta_flow_file)
+	algo_obj = scripts.algo.Algo(algo, params)
+	slots_num, slots_interval_us = algo_obj.calc_slot_val(TOPOLOGY_FILE, meta_flow_file, flow_num)
 	common_temp_args = {
 		"proj_dir": proj_dir,
 		"bw": bw,
@@ -246,30 +236,15 @@ def gen_conf(args):
 		print("unknown cc:", args['cc'])
 		sys.exit(1)
 
-	conf_path = get_conf_path(topo, flow_num, cc, enable_randoffset, proj_dir, seed, slots, multi_factor, blueprint_name, row_id) 
+	conf_path = get_conf_path(topo, flow_num, cc, enable_randoffset, proj_dir, seed, algo, params, blueprint_name, row_id) 
 
 	print(f'generated:{conf_path}')
 	with open(conf_path, "w") as file:
 		file.write(config)
 	return conf_path, TRACE_OUTPUT_FILE, FCT_OUTPUT_FILE, PFC_OUTPUT_FILE, flow_input_file
 	
-def get_conf_path(topo, flow_num, cc, enable_randoffset, proj_dir, seed, slots, multi_factor, blueprint_name, row_id):
-	return f"{proj_dir}/conf_{blueprint_name}_r{row_id}_{topo}_s{seed}_f{flow_num}_{cc}_{enable_randoffset}_sl{slots}_fc{multi_factor}.txt"
-
-def read_flow_file(flow_file):
-	with open(flow_file, "r") as file:
-		lines = file.readlines()
-		flow_num = int(lines[0])
-		flow_size_bytes = int(lines[1].split(" ")[4])
-	return flow_num, flow_size_bytes
-
-def read_topo_file(topo_file):
-	with open(topo_file, "r") as file:
-		lines = file.readlines()
-		node_num, switch_num, link_num = [int(x) for x in lines[0].split(" ")]
-		nic_rate = lines[2].split(" ")[2] # Gbps
-	return int(nic_rate[0:-4])
-
+def get_conf_path(topo, flow_num, cc, enable_randoffset, proj_dir, seed, algo, params, blueprint_name, row_id):
+	return f"{proj_dir}/conf_{blueprint_name}_r{row_id}_{topo}_s{seed}_f{flow_num}_{cc}_{enable_randoffset}_{algo}_{params}.txt"
 
 
 
@@ -297,4 +272,4 @@ if __name__ == "__main__":
 	
 	gen_conf(vars(args))
 	if int(args['update_model_param']) == 1:
-		update_param(vars(args))
+		calc_slot_val_by_algo(vars(args))

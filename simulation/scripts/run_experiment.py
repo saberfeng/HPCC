@@ -24,7 +24,7 @@ class HPCCExperiment(ExperimentRunnerBase):
     def __init__(self, blueprint_path, status_col_name, proj_dir, app_path, proc_num):
         super().__init__(blueprint_path, status_col_name, dtype={
             'state':int, 'topo':str, 'seed':int, 'flowNum':int, 'cc':str,
-            'randOffset':int, 'slots':int, 'multiFactor':float,
+            'randOffset':int, 'algo':str, 'params':str,
             'maxFctNs':int, 'avgFctNs':float, 'makespanNs':int, 
             'dropPkts':int, 'linkUtil':float, 'runtimeS':int,
         })
@@ -155,15 +155,17 @@ class HPCCExperiment(ExperimentRunnerBase):
         return self.blueprint_path.split('/')[-1].split('.')[-2]
 
     def execute(self, row, row_id):
+        meta_flow_file = f'{self.proj_dir}/llmFlows2.txt'
         conf_path, trace_output_file, fct_output_file, \
-        pfc_output_file, flow_input_file  = gen_conf_flow_input(
+        pfc_output_file, flow_input_file  = gen_conf_wrapper(
                                     topo=row.get('topo'), seed=row.get('seed'),
                                     flow_num=row.get('flowNum'), cc=row.get('cc'),
                                     enable_randoffset=row.get('randOffset'),
-                                    proj_dir=self.proj_dir, slots=row.get('slots'),
-                                    multi_factor=row.get('multiFactor'),
+                                    proj_dir=self.proj_dir, algo=row.get('algo'),
+                                    params=row.get('params'),
                                     blueprint_name=self.get_blueprint_name(),
-                                    row_id=row_id)
+                                    row_id=row_id, meta_flow_file=meta_flow_file)
+        gen_flow_file(meta_flow_file=meta_flow_file, out_flow_file=flow_input_file, flow_num=row.get('flowNum'))
         runtime_s = self.run_conf(conf_path)
         return conf_path, runtime_s, trace_output_file, fct_output_file, pfc_output_file
 
@@ -295,9 +297,8 @@ class HPCCResultParser:
 
 
 
-def gen_conf_flow_input(topo, seed, flow_num, cc, enable_randoffset, proj_dir, 
-                 slots, multi_factor, blueprint_name, row_id):
-    meta_flow_file = f'{proj_dir}/llmFlows2.txt'
+def gen_conf_wrapper(topo, seed, flow_num, cc, enable_randoffset, proj_dir, 
+                 algo, params, blueprint_name, row_id, meta_flow_file):
     conf_args = {
         'topo': topo,
         'update_model_param': 0, # TODO
@@ -314,8 +315,8 @@ def gen_conf_flow_input(topo, seed, flow_num, cc, enable_randoffset, proj_dir,
         'hpai':50,
         'pint_log_base':1.01,
         'pint_prob':1.0,
-        'slots':slots,
-        'multi_factor':multi_factor,
+        'algo':algo,
+        'params':params,
         'seed':seed,
         'blueprint_name':blueprint_name,
         'row_id':row_id,
@@ -323,11 +324,10 @@ def gen_conf_flow_input(topo, seed, flow_num, cc, enable_randoffset, proj_dir,
         'meta_flow_file':meta_flow_file,
     }
     flow = conf_args['flow']
-    # conf_path = run_hybrid.get_conf_path(topo, flow, cc, enable_randoffset, proj_dir, seed, slots, multi_factor) 
+    # conf_path = run_hybrid.get_conf_path(topo, flow, cc, enable_randoffset, proj_dir, seed, algo, params) 
     # update flow input file
     # generate config file
     conf_path, TRACE_OUTPUT_FILE, FCT_OUTPUT_FILE, PFC_OUTPUT_FILE, flow_input_file = run_hybrid.gen_conf(conf_args)
-    gen_flow_file(meta_flow_file=meta_flow_file, out_flow_file=flow_input_file, flow_num=flow_num)
     return conf_path, TRACE_OUTPUT_FILE, FCT_OUTPUT_FILE, PFC_OUTPUT_FILE, flow_input_file
 
 def gen_flow_file(meta_flow_file:str, out_flow_file:str, flow_num:int):
