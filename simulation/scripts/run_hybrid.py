@@ -66,7 +66,7 @@ KMAX_MAP {kmax_map}
 KMIN_MAP {kmin_map}
 PMAX_MAP {pmax_map}
 BUFFER_SIZE {buffer_size}
-QLEN_MON_FILE simulation/mix/rand_offset/qlen_{topo}_{flow_num}_{cc}{failure}.txt
+aLEN_MON_FILE simulation/mix/rand_offset/qlen_{topo}_{flow_num}_{cc}{failure}.txt
 QLEN_MON_START {qlen_mon_start_ns}
 QLEN_MON_END {qlen_mon_end_ns}
 QLEN_MON_INTV_NS {qlen_mon_intv_ns}
@@ -141,7 +141,10 @@ def gen_conf(args):
 		get_inout_file_paths(topo, flow_num, cc, proj_dir, enable_randoffset, algo, params, seed)
 	
 	algo_obj = scripts.algo.Algo(algo, params)
-	slots_num, slots_interval_us = algo_obj.calc_slot_val(TOPOLOGY_FILE, meta_flow_file, flow_num)
+	if enable_randoffset:
+		slots_num, slots_interval_us = algo_obj.calc_slot_val(TOPOLOGY_FILE, meta_flow_file, flow_num)
+	else:
+		slots_num, slots_interval_us = -1, -1
 	common_temp_args = {
 		"proj_dir": proj_dir,
 		"bw": bw,
