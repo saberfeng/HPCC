@@ -66,7 +66,7 @@ KMAX_MAP {kmax_map}
 KMIN_MAP {kmin_map}
 PMAX_MAP {pmax_map}
 BUFFER_SIZE {buffer_size}
-aLEN_MON_FILE simulation/mix/rand_offset/qlen_{topo}_{flow_num}_{cc}{failure}.txt
+QLEN_MON_FILE simulation/mix/rand_offset/qlen_{topo}_{flow_num}_{cc}{failure}.txt
 QLEN_MON_START {qlen_mon_start_ns}
 QLEN_MON_END {qlen_mon_end_ns}
 QLEN_MON_INTV_NS {qlen_mon_intv_ns}
