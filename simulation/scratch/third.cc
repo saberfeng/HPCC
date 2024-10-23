@@ -1069,8 +1069,13 @@ int main(int argc, char *argv[])
 	for (uint32_t i = 0; i < node_num; i++){
 		if (n.Get(i)->GetNodeType() == 1){ // is switch
 			Ptr<SwitchNode> sw = DynamicCast<SwitchNode>(n.Get(i));
-			uint32_t shift = 3; // by default 1/8; larger shift, smaller 1/2^shift, smaller pfc threshold, more aggressive pfc
 			uint32_t sw_port_num = sw->GetNDevices();
+			uint32_t shift = 4; // by default 1/16; larger shift, smaller 1/2^shift, smaller pfc threshold, more aggressive pfc
+			// if (sw_port_num >= 16){
+			// 	shift = 7; // 1/128
+			// } else {
+			// 	shift = 8; // 1/256
+			// }
 			for (uint32_t j = 1; j < sw->GetNDevices(); j++){
 				Ptr<QbbNetDevice> dev = DynamicCast<QbbNetDevice>(sw->GetDevice(j));
 				uint64_t rate = dev->GetDataRate().GetBitRate();
@@ -1084,8 +1089,9 @@ int main(int argc, char *argv[])
 				// uint32_t headroom = rate * delay / 8 / 1000000000 * 3; 
 				// sw->m_mmu->ConfigHdrm(j, headroom);
 
-				// port pfc hdrm = buffer * 70%
-				uint32_t hdrm_bytes = buffer_size_MB * 1024 * 1024 * 0.7;
+				// port pfc hdrm = buffer * 10%
+				// uint32_t hdrm_bytes = buffer_size_MB * 1024 * 1024 * 0.1;
+				uint32_t hdrm_bytes = 1024 * 1024; // 1MB
 				sw->m_mmu->ConfigHdrm(j, hdrm_bytes);
 				// port pfc 
 				// set pfc alpha, proportional to link bw
