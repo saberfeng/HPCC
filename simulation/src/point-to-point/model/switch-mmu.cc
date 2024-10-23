@@ -44,7 +44,7 @@ namespace ns3 {
 		auto nonpfc_notify = "Buffer full";
 		printf("Time:%luus Node:%u Drop: queue:%u,%u: %s total:%ubytes\n(port, ingress_bytes):", Simulator::Now().GetMicroSeconds(), node_id, port, qIndex, 
 				enable_pfc?pfc_notify:nonpfc_notify, buffer_size);
-		
+		printf("pfc_threshold:%u, headroom:%u\n", GetPfcThreshold(port), headroom[port]);
 		for (uint32_t i = 1; i < 64; i++){
 			if(enable_pfc){
 				printf("(%u,%u)", hdrm_bytes[i][3], ingress_bytes[i][3]);
@@ -58,7 +58,8 @@ namespace ns3 {
 	bool SwitchMmu::CheckIngressAdmission(uint32_t port, uint32_t qIndex, uint32_t psize){
 		if(enable_pfc){
 			if (psize + hdrm_bytes[port][qIndex] > headroom[port] && 
-				psize + GetSharedUsed(port, qIndex) > GetPfcThreshold(port)){
+				psize + total_hdrm + total_rsrv + shared_used_bytes > buffer_size){
+				// psize + GetSharedUsed(port, qIndex) > GetPfcThreshold(port)){
 				NotifyDrop(node_id, port, qIndex);
 				return false;
 			}
