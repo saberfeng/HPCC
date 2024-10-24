@@ -86,7 +86,7 @@ uint32_t link_down_A = 0, link_down_B = 0;
 
 uint32_t enable_trace = 1;
 
-uint32_t buffer_size_MB = 16;
+int64_t buffer_size_MB = 16;
 
 uint32_t qlen_dump_interval = 100000000, qlen_monitor_interval_ns = 100;
 uint64_t qlen_mon_start = 2000000000, qlen_mon_end = 2100000000;
@@ -1091,15 +1091,15 @@ int main(int argc, char *argv[])
 
 				// port pfc hdrm = buffer * 10%
 				// uint32_t hdrm_bytes = buffer_size_MB * 1024 * 1024 * 0.1;
-				uint32_t hdrm_bytes = 1024 * 1024; // 1MB
+				int64_t hdrm_bytes = 300 * 1024; // 300KB
 				sw->m_mmu->ConfigHdrm(j, hdrm_bytes);
 				// port pfc 
 				// set pfc alpha, proportional to link bw
 				sw->m_mmu->pfc_a_shift[j] = shift;
-				while (rate > nic_rate && sw->m_mmu->pfc_a_shift[j] > 0){
-					sw->m_mmu->pfc_a_shift[j]--;
-					rate /= 2;
-				}
+				// while (rate > nic_rate && sw->m_mmu->pfc_a_shift[j] > 0){
+				// 	sw->m_mmu->pfc_a_shift[j]--;
+				// 	rate /= 2;
+				// }
 			}
 			sw->m_mmu->ConfigNPort(sw->GetNDevices()-1);
 			sw->m_mmu->ConfigBufferSizeByte(buffer_size_MB* 1024 * 1024);

@@ -31,15 +31,15 @@ public:
 	//void GetPauseClasses(uint32_t port, uint32_t qIndex);
 	//bool GetResumeClasses(uint32_t port, uint32_t qIndex);
 
-	uint32_t GetPfcThreshold(uint32_t port);
-	uint32_t GetSharedUsed(uint32_t port, uint32_t qIndex);
+	int64_t GetPfcThreshold(uint32_t port);
+	int64_t GetSharedUsed(uint32_t port, uint32_t qIndex);
 
 	bool ShouldSendCN(uint32_t ifindex, uint32_t qIndex);
 
 	void ConfigEcn(uint32_t port, uint32_t _kmin, uint32_t _kmax, double _pmax);
-	void ConfigHdrm(uint32_t port, uint32_t size);
+	void ConfigHdrm(uint32_t port, int64_t size);
 	void ConfigNPort(uint32_t n_port);
-	void ConfigBufferSizeByte(uint32_t size);
+	void ConfigBufferSizeByte(int64_t size);
 	void ConfigEnablePFC(bool enable_pfc);
 	void NotifyDrop(uint32_t node_id, uint32_t port, uint32_t qIndex);
 
@@ -48,22 +48,22 @@ public:
 	// 		share one large buffer
 	bool enable_pfc;
 	uint32_t node_id;
-	uint32_t buffer_size;
+	int64_t buffer_size;
 	uint32_t pfc_a_shift[pCnt];
-	uint32_t reserve;
-	uint32_t headroom[pCnt];
+	int64_t reserve;
+	int64_t headroom[pCnt];
 	uint32_t resume_offset;
 	uint32_t kmin[pCnt], kmax[pCnt];
 	double pmax[pCnt];
-	uint32_t total_hdrm;
-	uint32_t total_rsrv;
+	int64_t total_hdrm;
+	int64_t total_rsrv;
 
 	// runtime
-	uint32_t shared_used_bytes;
-	uint32_t hdrm_bytes[pCnt][qCnt];
-	uint32_t ingress_bytes[pCnt][qCnt];
+	int64_t shared_used_bytes;
+	int64_t hdrm_bytes[pCnt][qCnt];
+	int64_t ingress_bytes[pCnt][qCnt];
 	uint32_t paused[pCnt][qCnt];
-	uint32_t egress_bytes[pCnt][qCnt];
+	int64_t egress_bytes[pCnt][qCnt];
 };
 
 } /* namespace ns3 */

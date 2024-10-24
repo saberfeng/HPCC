@@ -42,14 +42,15 @@ namespace ns3 {
 	void SwitchMmu::NotifyDrop(uint32_t node_id, uint32_t port, uint32_t qIndex){
 		auto pfc_notify = "Headroom full";
 		auto nonpfc_notify = "Buffer full";
-		printf("Time:%luus Node:%u Drop: queue:%u,%u: %s total:%ubytes\n(port, ingress_bytes):", Simulator::Now().GetMicroSeconds(), node_id, port, qIndex, 
-				enable_pfc?pfc_notify:nonpfc_notify, buffer_size);
-		printf("pfc_threshold:%u, headroom:%u\n", GetPfcThreshold(port), headroom[port]);
-		for (uint32_t i = 1; i < 64; i++){
+		printf("Time:%luus Node:%u Drop: queue:%u,%u: %s total:%ldbytes\n(port, ingress_bytes):\n", 
+			Simulator::Now().GetMicroSeconds(), node_id, port, qIndex, 
+			enable_pfc?pfc_notify:nonpfc_notify, buffer_size);
+		printf("pfc_threshold:%ld, headroom:%ld\n", GetPfcThreshold(port), headroom[port]);
+		for (uint32_t i = 1; i < 20; i++){
 			if(enable_pfc){
-				printf("(%u,%u)", hdrm_bytes[i][3], ingress_bytes[i][3]);
+				printf("(%ld,%ld)", hdrm_bytes[i][3], ingress_bytes[i][3]);
 			} else {
-				printf("(p%u, %u, %.2f)", i, ingress_bytes[i][3], (double)ingress_bytes[i][3]/(double)buffer_size);
+				printf("(p%u, %ld, %.2f)", i, ingress_bytes[i][3], (double)ingress_bytes[i][3]/(double)buffer_size);
 			}
 		}
 		printf("\n");	
@@ -57,15 +58,15 @@ namespace ns3 {
 
 	bool SwitchMmu::CheckIngressAdmission(uint32_t port, uint32_t qIndex, uint32_t psize){
 		if(enable_pfc){
-			if (psize + hdrm_bytes[port][qIndex] > headroom[port] && 
-				psize + total_hdrm + total_rsrv + shared_used_bytes > buffer_size){
+			if (int64_t(psize) + hdrm_bytes[port][qIndex] > headroom[port] && 
+				int64_t(psize) + total_hdrm + total_rsrv + shared_used_bytes > buffer_size){
 				// psize + GetSharedUsed(port, qIndex) > GetPfcThreshold(port)){
 				NotifyDrop(node_id, port, qIndex);
 				return false;
 			}
 			return true;
 		} else {
-			if(psize + shared_used_bytes > buffer_size){
+			if(int64_t(psize) + shared_used_bytes > buffer_size){
 				NotifyDrop(node_id, port, qIndex);
 				return false;
 			} else {
@@ -80,44 +81,44 @@ namespace ns3 {
 
 	void SwitchMmu::UpdateIngressAdmission(uint32_t port, uint32_t qIndex, uint32_t psize){
 		if(enable_pfc){
-			uint32_t new_bytes = ingress_bytes[port][qIndex] + psize;
+			uint32_t new_bytes = ingress_bytes[port][qIndex] + int64_t(psize);
 			if (new_bytes <= reserve){
-				ingress_bytes[port][qIndex] += psize;
+				ingress_bytes[port][qIndex] += int64_t(psize);
 			}else {
 				uint32_t thresh = GetPfcThreshold(port);
 				if (new_bytes - reserve > thresh){
-					hdrm_bytes[port][qIndex] += psize;
+					hdrm_bytes[port][qIndex] += int64_t(psize);
 				}else {
-					ingress_bytes[port][qIndex] += psize;
-					shared_used_bytes += std::min(psize, new_bytes - reserve);
+					ingress_bytes[port][qIndex] += int64_t(psize);
+					shared_used_bytes += std::min(int64_t(psize), new_bytes - reserve);
 				}
 			}
 		} else {
-			ingress_bytes[port][qIndex] += psize;
-			shared_used_bytes += psize;
+			ingress_bytes[port][qIndex] += int64_t(psize);
+			shared_used_bytes += int64_t(psize);
 		}
 	}
 
 	void SwitchMmu::UpdateEgressAdmission(uint32_t port, uint32_t qIndex, uint32_t psize){
-		egress_bytes[port][qIndex] += psize;
+		egress_bytes[port][qIndex] += int64_t(psize);
 	}
 
 	void SwitchMmu::RemoveFromIngressAdmission(uint32_t port, uint32_t qIndex, uint32_t psize){
 		if(enable_pfc){
-			uint32_t from_hdrm = std::min(hdrm_bytes[port][qIndex], psize);
-			uint32_t from_shared = std::min(psize - from_hdrm, ingress_bytes[port][qIndex] > reserve ? ingress_bytes[port][qIndex] - reserve : 0);
+			int64_t from_hdrm = std::min(hdrm_bytes[port][qIndex], int64_t(psize));
+			int64_t from_shared = std::min(int64_t(psize) - from_hdrm, ingress_bytes[port][qIndex] > reserve ? ingress_bytes[port][qIndex] - reserve : 0);
 			hdrm_bytes[port][qIndex] -= from_hdrm;
-			ingress_bytes[port][qIndex] -= psize - from_hdrm;
+			ingress_bytes[port][qIndex] -= int64_t(psize) - from_hdrm;
 			shared_used_bytes -= from_shared;
 		} else {
 			// when pfc disabled, only use ingress_bytes
-			ingress_bytes[port][qIndex] -= psize; 
-			shared_used_bytes -= psize;
+			ingress_bytes[port][qIndex] -= int64_t(psize); 
+			shared_used_bytes -= int64_t(psize);
 		}
 	}
 
 	void SwitchMmu::RemoveFromEgressAdmission(uint32_t port, uint32_t qIndex, uint32_t psize){
-		egress_bytes[port][qIndex] -= psize;
+		egress_bytes[port][qIndex] -= int64_t(psize);
 	}
 
 	bool SwitchMmu::CheckShouldPause(uint32_t port, uint32_t qIndex){
@@ -131,7 +132,7 @@ namespace ns3 {
 	bool SwitchMmu::CheckShouldResume(uint32_t port, uint32_t qIndex){
 		if (!paused[port][qIndex])
 			return false;
-		uint32_t shared_used = GetSharedUsed(port, qIndex);
+		int64_t shared_used = GetSharedUsed(port, qIndex);
 		return hdrm_bytes[port][qIndex] == 0 && (shared_used == 0 || shared_used + resume_offset <= GetPfcThreshold(port));
 	}
 
@@ -145,12 +146,12 @@ namespace ns3 {
 		paused[port][qIndex] = false;
 	}
 
-	uint32_t SwitchMmu::GetPfcThreshold(uint32_t port){
+	int64_t SwitchMmu::GetPfcThreshold(uint32_t port){
 		return (buffer_size - total_hdrm - total_rsrv - shared_used_bytes) >> pfc_a_shift[port];
 	}
 
-	uint32_t SwitchMmu::GetSharedUsed(uint32_t port, uint32_t qIndex){
-		uint32_t used = ingress_bytes[port][qIndex];
+	int64_t SwitchMmu::GetSharedUsed(uint32_t port, uint32_t qIndex){
+		int64_t used = ingress_bytes[port][qIndex];
 		return used > reserve ? used - reserve : 0;
 	}
 
@@ -177,7 +178,7 @@ namespace ns3 {
 		pmax[port] = _pmax;
 	}
 
-	void SwitchMmu::ConfigHdrm(uint32_t port, uint32_t size){
+	void SwitchMmu::ConfigHdrm(uint32_t port, int64_t size){
 		headroom[port] = size;
 	}
 
@@ -190,7 +191,7 @@ namespace ns3 {
 		}
 	}
 
-	void SwitchMmu::ConfigBufferSizeByte(uint32_t size){
+	void SwitchMmu::ConfigBufferSizeByte(int64_t size){
 		buffer_size = size;
 	}
 }
