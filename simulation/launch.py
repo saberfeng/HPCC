@@ -30,8 +30,8 @@ def main():
             # experiment.run_by_blueprint_parallel()
             # experiment.run_by_blueprint_proc_pool()
             # experiment.run_by_blueprint_proc_pool_que_msg()
-            # experiment.run_by_blueprint() # single process
-            experiment.run_by_blueprint_que_tsk_que_msg() # guarantee task assignment order
+            experiment.run_by_blueprint() # single process
+            # experiment.run_by_blueprint_que_tsk_que_msg() # guarantee task assignment order
 
         elif sys.argv[1] == "test_algo":
             # bp2_test_algo_path = 'simulation/mix/rand_offset/preliminary/bp4.csv'
@@ -45,7 +45,7 @@ def main():
             # )
             # experiment.run_by_blueprint_proc_pool_que_msg()
             # algo.find_best_slot_num_for_flows(10)
-            pass
+            algo.main()
 
         elif sys.argv[1] == "manage_blueprint":
             pass

@@ -98,7 +98,14 @@ def test_NonEmptySlotCalculator():
     print(f"all_slots_used_5_10: {all_slots_used_5_10}")
     try_frequency(5, 20)
     
-    
+def test_NonEmptySlotCalculator2():
+    nonempty_calc = NonEmptySlotCalculator()
+    # print the best slot num for 1 to 15 flows, in dictionary style
+    for flow_num in range(1, 16):
+        slot_num = nonempty_calc.find_best_slot_num_for_flows(flow_num=flow_num, 
+                                                              thresh_allused_prob=0.85)
+        print(f"{flow_num}: {slot_num},")
+
 def test1():
     # Example usage
     m = 10  # Number of drawers
@@ -116,7 +123,7 @@ def test1():
 
 def main():
     # test_NonEmptySlotCalculator()
-    # find_best_slot_num_for_flows(10)
+    test_NonEmptySlotCalculator2()
     pass
 
 class Algo:
