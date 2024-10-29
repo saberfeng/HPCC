@@ -62,6 +62,20 @@ SwitchNode::SwitchNode(){
 		m_lastPktSize[i] = m_lastPktTs[i] = 0;
 	for (uint32_t i = 0; i < pCnt; i++)
 		m_u[i] = 0;
+	// initialize ecn cnt
+	monitor = Monitor::GetInstance();
+	for (uint32_t i = 0; i < pCnt; i++)
+		monitor->swPortEcnCnt[GetId()][i] = 0;
+}
+
+void SwitchNode::RecordPFC(uint32_t dev_id, uint32_t pfc){
+	// get this SwitchNode's id
+	monitor->swPortTimePFCSeries[GetId()][dev_id].push_back(
+		pair<uint64_t, uint32_t>(Simulator::Now().GetNanoSeconds(), pfc));
+}
+
+void SwitchNode::RecordECN(uint32_t ifIndex){
+	monitor->swPortEcnCnt[GetId()][ifIndex]++;
 }
 
 int SwitchNode::GetOutDev(Ptr<const Packet> p, CustomHeader &ch){
@@ -98,6 +112,7 @@ void SwitchNode::CheckAndSendPfc(uint32_t inDev, uint32_t qIndex){
 	if (m_mmu->CheckShouldPause(inDev, qIndex)){
 		device->SendPfc(qIndex, 0);
 		m_mmu->SetPause(inDev, qIndex);
+		RecordPFC(device->GetNode()->GetId(), 0);
 	}
 }
 void SwitchNode::CheckAndSendResume(uint32_t inDev, uint32_t qIndex){
@@ -105,6 +120,7 @@ void SwitchNode::CheckAndSendResume(uint32_t inDev, uint32_t qIndex){
 	if (m_mmu->CheckShouldResume(inDev, qIndex)){
 		device->SendPfc(qIndex, 1);
 		m_mmu->SetResume(inDev, qIndex);
+		RecordPFC(device->GetNode()->GetId(), 1);
 	}
 }
 
@@ -197,6 +213,8 @@ bool SwitchNode::SwitchReceiveFromDevice(Ptr<NetDevice> device, Ptr<Packet> pack
 	return true;
 }
 
+
+
 void SwitchNode::SwitchNotifyDequeue(uint32_t ifIndex, uint32_t qIndex, Ptr<Packet> p){
 	FlowIdTag t;
 	p->PeekPacketTag(t);
@@ -215,6 +233,7 @@ void SwitchNode::SwitchNotifyDequeue(uint32_t ifIndex, uint32_t qIndex, Ptr<Pack
 				h.SetEcn((Ipv4Header::EcnType)0x03);
 				p->AddHeader(h);
 				p->AddHeader(ppp);
+				RecordECN(ifIndex);
 			}
 		}
 		//CheckAndSendPfc(inDev, qIndex);

@@ -25,11 +25,58 @@ namespace ns3 {
 		enable_pfc = enable;
 	}
 
+	int64_t SwitchMmu::GetInQLen(){
+		int64_t in_qlen = 0;
+		for (uint32_t port = 1; port <= pCnt; port++){
+			for (uint32_t i = 0; i < qCnt; i++){
+				in_qlen += ingress_bytes[port][i];
+			}
+		}
+		return in_qlen;
+	}
+
+	int64_t SwitchMmu::GetOutQLen(){
+		int64_t out_qlen = 0;
+		for (uint32_t port = 1; port <= pCnt; port++){
+			for (uint32_t i = 0; i < qCnt; i++){
+				out_qlen += egress_bytes[port][i];
+			}
+		}
+		return out_qlen;
+	}
+
+	void SwitchMmu::RecordInQLen(){
+		Time now = Simulator::Now();
+		if (now - monitor->swLastInRecordTime[node_id] >= monitor->record_interval){
+			monitor->swLastInRecordTime[node_id] = now;
+			monitor->swTimeToInQBytes[node_id].push_back(
+				pair<uint64_t, int64_t>(
+					Simulator::Now().GetNanoSeconds(), GetInQLen()));
+		}
+	}
+
+	void SwitchMmu::RecordOutQLen(){
+		Time now = Simulator::Now();
+		if (now - monitor->swLastOutRecordTime[node_id] >= monitor->record_interval){
+			monitor->swLastOutRecordTime[node_id] = now;
+			monitor->swTimeToOutQBytes[node_id].push_back(
+				pair<uint64_t, int64_t>(
+					Simulator::Now().GetNanoSeconds(), GetOutQLen()));
+		}
+	}
+
 	SwitchMmu::SwitchMmu(void){
 		buffer_size = 12 * 1024 * 1024;
 		reserve = 4 * 1024;
 		resume_offset = 3 * 1024;
 		enable_pfc = true;
+
+		monitor = Monitor::GetInstance();
+		monitor->swLastInRecordTime[node_id] = Simulator::Now();
+		monitor->swLastOutRecordTime[node_id] = Simulator::Now();
+
+		RecordInQLen();
+		RecordOutQLen();
 
 		// headroom
 		shared_used_bytes = 0;
@@ -97,10 +144,12 @@ namespace ns3 {
 			ingress_bytes[port][qIndex] += int64_t(psize);
 			shared_used_bytes += int64_t(psize);
 		}
+		RecordInQLen();
 	}
 
 	void SwitchMmu::UpdateEgressAdmission(uint32_t port, uint32_t qIndex, uint32_t psize){
 		egress_bytes[port][qIndex] += int64_t(psize);
+		RecordOutQLen();
 	}
 
 	void SwitchMmu::RemoveFromIngressAdmission(uint32_t port, uint32_t qIndex, uint32_t psize){
@@ -115,10 +164,12 @@ namespace ns3 {
 			ingress_bytes[port][qIndex] -= int64_t(psize); 
 			shared_used_bytes -= int64_t(psize);
 		}
+		RecordInQLen();
 	}
 
 	void SwitchMmu::RemoveFromEgressAdmission(uint32_t port, uint32_t qIndex, uint32_t psize){
 		egress_bytes[port][qIndex] -= int64_t(psize);
+		RecordOutQLen();
 	}
 
 	bool SwitchMmu::CheckShouldPause(uint32_t port, uint32_t qIndex){

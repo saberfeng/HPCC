@@ -21,6 +21,12 @@ TRACE_OUTPUT_FILE {TRACE_OUTPUT_FILE}
 FCT_OUTPUT_FILE {FCT_OUTPUT_FILE}
 PFC_OUTPUT_FILE {PFC_OUTPUT_FILE}
 
+PFC_MONITOR_FILE {PFC_MONITOR_FILE}
+ECN_MONITOR_FILE {ECN_MONITOR_FILE}
+INQBYTES_MONITOR_FILE {INQBYTES_MONITOR_FILE}
+OUTQBYTES_MONITOR_FILE {OUTQBYTES_MONITOR_FILE}
+RATE_MONITOR_FILE {RATE_MONITOR_FILE}
+
 SIMULATOR_STOP_TIME {sim_time_s}
 
 CC_MODE {mode}
@@ -99,7 +105,19 @@ def get_inout_file_paths(topo, flow_num, cc, proj_dir, enable_randoffset,
 					f"pfc_{topo}_s{seed}_f{flow_num}_{cc}{failure}_{enable_randoffset}_sl{algo}_fc{params}.txt"
 	flow_input_file = f"{proj_dir}/"\
 					f"flow_{topo}_s{seed}_f{flow_num}_{cc}{failure}_{enable_randoffset}_sl{algo}_fc{params}.txt"	
-	return TRACE_OUTPUT_FILE, FCT_OUTPUT_FILE, PFC_OUTPUT_FILE, flow_input_file
+	
+	PFC_MONITOR_FILE = f"{proj_dir}/"\
+					f"mon_pfc_{topo}_s{seed}_f{flow_num}_{cc}{failure}_{enable_randoffset}_sl{algo}_fc{params}.txt"
+	ECN_MONITOR_FILE = f"{proj_dir}/"\
+					f"mon_ecn_{topo}_s{seed}_f{flow_num}_{cc}{failure}_{enable_randoffset}_sl{algo}_fc{params}.txt"
+	INQBYTES_MONITOR_FILE = f"{proj_dir}/"\
+					f"mon_iq_{topo}_s{seed}_f{flow_num}_{cc}{failure}_{enable_randoffset}_sl{algo}_fc{params}.txt"
+	OUTQBYTES_MONITOR_FILE = f"{proj_dir}/"\
+					f"mon_oq_{topo}_s{seed}_f{flow_num}_{cc}{failure}_{enable_randoffset}_sl{algo}_fc{params}.txt"
+	RATE_MONITOR_FILE = f"{proj_dir}/"\
+					f"mon_rate_{topo}_s{seed}_f{flow_num}_{cc}{failure}_{enable_randoffset}_sl{algo}_fc{params}.txt"
+	return TRACE_OUTPUT_FILE, FCT_OUTPUT_FILE, PFC_OUTPUT_FILE, flow_input_file, \
+			PFC_MONITOR_FILE, ECN_MONITOR_FILE, INQBYTES_MONITOR_FILE, OUTQBYTES_MONITOR_FILE, RATE_MONITOR_FILE
 
 
 def gen_conf(args):
@@ -137,7 +155,8 @@ def gen_conf(args):
 
 	TOPOLOGY_FILE, TRACE_FILE, QUEUE_MONITOR_FILE, RANDOM_PARAM_FILE = \
 		get_input_file_paths(topo, proj_dir)
-	TRACE_OUTPUT_FILE, FCT_OUTPUT_FILE, PFC_OUTPUT_FILE, flow_input_file = \
+	TRACE_OUTPUT_FILE, FCT_OUTPUT_FILE, PFC_OUTPUT_FILE, flow_input_file, \
+		PFC_MONITOR_FILE, ECN_MONITOR_FILE, INQBYTES_MONITOR_FILE, OUTQBYTES_MONITOR_FILE, RATE_MONITOR_FILE = \
 		get_inout_file_paths(topo, flow_num, cc, proj_dir, enable_randoffset, algo, params, seed)
 	
 	algo_obj = scripts.algo.Algo(algo, params)
@@ -169,6 +188,12 @@ def gen_conf(args):
 		"TRACE_OUTPUT_FILE": TRACE_OUTPUT_FILE,
 		"FCT_OUTPUT_FILE": FCT_OUTPUT_FILE,
 		"PFC_OUTPUT_FILE": PFC_OUTPUT_FILE,
+
+		"PFC_MONITOR_FILE": PFC_MONITOR_FILE,
+		"ECN_MONITOR_FILE": ECN_MONITOR_FILE,
+		"INQBYTES_MONITOR_FILE": INQBYTES_MONITOR_FILE,
+		"OUTQBYTES_MONITOR_FILE": OUTQBYTES_MONITOR_FILE,
+		"RATE_MONITOR_FILE": RATE_MONITOR_FILE,
 
 		"qlen_mon_intv_ns": qlen_mon_intv_ns,
 		"qlen_mon_dump_intv_ns": qlen_mon_dump_intv_ns,

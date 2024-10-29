@@ -3,10 +3,12 @@
 
 #include <unordered_map>
 #include <ns3/node.h>
-
+#include <ns3/monitor.h>
 namespace ns3 {
 
 class Packet;
+using std::vector;
+using std::pair;
 
 class SwitchMmu: public Object{
 public:
@@ -43,6 +45,12 @@ public:
 	void ConfigEnablePFC(bool enable_pfc);
 	void NotifyDrop(uint32_t node_id, uint32_t port, uint32_t qIndex);
 
+	int64_t GetInQLen();
+	int64_t GetOutQLen();
+
+	void RecordInQLen();
+	void RecordOutQLen();
+
 	// config
 	// when pfc disabled, packets from all ports of all priorities
 	// 		share one large buffer
@@ -64,6 +72,8 @@ public:
 	int64_t ingress_bytes[pCnt][qCnt];
 	uint32_t paused[pCnt][qCnt];
 	int64_t egress_bytes[pCnt][qCnt];
+
+	Ptr<Monitor> monitor;
 };
 
 } /* namespace ns3 */

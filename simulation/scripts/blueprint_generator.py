@@ -59,6 +59,20 @@ class BlueprintGenerator:
         self.gen_blueprint(blueprint_path, topos, self.seed, repetition, flow_num_range, 
                            cc_li, rand_offset, inflow_filename, proj_dir, algo=algo, params_li=algo_params_li)
 
+    def gen_monitor_expriment_blueprint(self, blueprint_path):
+        topos = ['fat',]
+        self.seed = 600
+        repetition = 3
+        flow_num_range = [16, 32, 64]
+        cc_li = ['dcqcn', 'hp', 'dctcp', 'timely', 'hpccPint']
+        rand_offset = [0, 1]
+        inflow_filename = 'llmFlows'
+        proj_dir = 'rand_offset/monitor'
+
+        algo = scripts.algo.BEST_SLOT_NUM_LINESPD_SLOT
+        algo_params_li = []
+        self.gen_blueprint(blueprint_path, topos, self.seed, repetition, flow_num_range, 
+                           cc_li, rand_offset, inflow_filename, proj_dir, algo=algo, params_li=algo_params_li)
 
     def gen_blueprint(
             self, blueprint_path, topos, seed, repetition, 
@@ -88,7 +102,7 @@ class BlueprintGenerator:
                             lines += self.add_algo_param_combinations(
                                 repetition=repetition, algo=algo, params_li=params_li, **kwargs) 
                         else: # not enabling rand offset, algo is 
-                            kwargs['params'] = '-1,-1'
+                            kwargs['params'] = '-1'
                             kwargs['algo'] = '-1'
                             for i in range(repetition):
                                 lines.append(self.get_blueprint_line(**kwargs))

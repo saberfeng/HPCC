@@ -5,6 +5,7 @@
 #include <ns3/rdma-queue-pair.h>
 #include <ns3/node.h>
 #include <ns3/custom-header.h>
+#include <ns3/monitor.h>
 #include "qbb-net-device.h"
 #include <unordered_map>
 #include "pint.h"
@@ -115,6 +116,8 @@ public:
 	void ActiveIncreaseMlx(Ptr<RdmaQueuePair> q);
 	void HyperIncreaseMlx(Ptr<RdmaQueuePair> q);
 
+	void SetQpRate(Ptr<RdmaQueuePair> qp, DataRate rate); // set the rate of a qp, for monitoring
+
 	/***********************
 	 * High Precision CC
 	 ***********************/
@@ -150,6 +153,10 @@ public:
 	void SetPintSmplThresh(double p);
 	void HandleAckHpPint(Ptr<RdmaQueuePair> qp, Ptr<Packet> p, CustomHeader &ch);
 	void UpdateRateHpPint(Ptr<RdmaQueuePair> qp, Ptr<Packet> p, CustomHeader &ch, bool fast_react);
+
+	void RecordRate(DataRate rate);
+
+	Ptr<Monitor> monitor;
 };
 
 } /* namespace ns3 */

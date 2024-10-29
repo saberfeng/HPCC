@@ -41,7 +41,7 @@
 // #include "ns3/netcalc_model.h"
 // #include "ns3/rand_offset_injector.h"
 #include "ns3/plain_random_model.h"
-
+#include "ns3/monitor.h"
 using namespace ns3;
 using namespace std;
 using namespace rand_offset;
@@ -56,9 +56,10 @@ bool enable_qbb = false;
 uint32_t packet_payload_size = 1000, l2_chunk_size = 0, l2_ack_interval = 0;
 double pause_time = 5, simulator_stop_time = 20.01;
 std::string data_rate, link_delay, topology_file, flow_file, 
-	trace_file, monitor_file, trace_output_file, rand_param_file;
+	trace_file, monitor_file, trace_output_file, rand_param_file,
+	pfc_output_path, ecn_output_path, inqbytes_output_path, 
+	outqbytes_output_path, rate_output_path;
 std::string fct_output_file = "fct.txt";
-std::string pfc_output_file = "pfc.txt";
 
 double alpha_resume_interval = 55, rp_timer, ewma_gain = 1 / 16;
 double rate_decrease_interval = 4;
@@ -501,6 +502,7 @@ Ptr<QbbNetDevice> getQbbDevFromRdmaDriver(Ptr<RdmaDriver> driver){
 
 int main(int argc, char *argv[])
 {
+	Ptr<Monitor> monitor = Monitor::GetInstance();
 	clock_t begint, endt;
 	begint = clock();
     cout << "third app. argv[1]:" << argv[1] 
@@ -797,8 +799,8 @@ int main(int argc, char *argv[])
 				conf >> dctcp_rate_ai;
 				ss << "DCTCP_RATE_AI\t\t\t\t" << dctcp_rate_ai << "\n";
 			}else if (key.compare("PFC_OUTPUT_FILE") == 0){
-				conf >> pfc_output_file;
-				ss << "PFC_OUTPUT_FILE\t\t\t\t" << pfc_output_file << '\n';
+				conf >> pfc_output_path;
+				ss << "PFC_OUTPUT_FILE\t\t\t\t" << pfc_output_path << '\n';
 			}else if (key.compare("LINK_DOWN") == 0){
 				conf >> link_down_time >> link_down_A >> link_down_B;
 				ss << "LINK_DOWN\t\t\t\t" << link_down_time << ' '<< link_down_A << ' ' << link_down_B << '\n';
@@ -885,7 +887,32 @@ int main(int argc, char *argv[])
 				slots_num = uint32_t(slots_num_d);
 				slots_interval = MicroSeconds((slots_interval_us_d));
 				ss << "PINT_PROB\t\t\t\t" << pint_prob << '\n';
-			}		
+			}else if (key.compare("PFC_MONITOR_FILE") == 0){
+				std::string v;
+				conf >> v;
+				pfc_output_path = v;
+				ss << "PFC_MONITOR_FILE\t\t\t" << pfc_output_path << "\n";
+			}else if (key.compare("ECN_MONITOR_FILE") == 0){
+				std::string v;
+				conf >> v;
+				ecn_output_path = v;
+				ss << "ECN_MONITOR_FILE\t\t\t" << ecn_output_path << "\n";
+			}else if (key.compare("INQBYTES_MONITOR_FILE") == 0){
+				std::string v;
+				conf >> v;
+				inqbytes_output_path = v;
+				ss << "INQBYTES_MONITOR_FILE\t\t\t" << inqbytes_output_path << "\n";
+			}else if (key.compare("OUTQBYTES_MONITOR_FILE") == 0){
+				std::string v;
+				conf >> v;
+				outqbytes_output_path = v;
+				ss << "OUTQBYTES_MONITOR_FILE\t\t\t" << outqbytes_output_path << "\n";
+			}else if (key.compare("RATE_MONITOR_FILE") == 0){
+				std::string v;
+				conf >> v;
+				rate_output_path = v;
+				ss << "RATE_MONITOR_FILE\t\t\t" << rate_output_path << "\n";
+			}
 			fflush(stdout);
 		}
 		conf.close();
@@ -992,7 +1019,6 @@ int main(int argc, char *argv[])
 	rem->SetAttribute("ErrorRate", DoubleValue(error_rate_per_link));
 	rem->SetAttribute("ErrorUnit", StringValue("ERROR_UNIT_PACKET"));
 
-	FILE *pfc_file = fopen(pfc_output_file.c_str(), "w");
 
 	QbbHelper qbb;
 	Ipv4AddressHelper ipv4;
@@ -1059,8 +1085,8 @@ int main(int argc, char *argv[])
 		ipv4.Assign(d);
 
 		// setup PFC trace
-		DynamicCast<QbbNetDevice>(d.Get(0))->TraceConnectWithoutContext("QbbPfc", MakeBoundCallback (&get_pfc, pfc_file, DynamicCast<QbbNetDevice>(d.Get(0))));
-		DynamicCast<QbbNetDevice>(d.Get(1))->TraceConnectWithoutContext("QbbPfc", MakeBoundCallback (&get_pfc, pfc_file, DynamicCast<QbbNetDevice>(d.Get(1))));
+		// DynamicCast<QbbNetDevice>(d.Get(0))->TraceConnectWithoutContext("QbbPfc", MakeBoundCallback (&get_pfc, pfc_file, DynamicCast<QbbNetDevice>(d.Get(0))));
+		// DynamicCast<QbbNetDevice>(d.Get(1))->TraceConnectWithoutContext("QbbPfc", MakeBoundCallback (&get_pfc, pfc_file, DynamicCast<QbbNetDevice>(d.Get(1))));
 	}
 
 	nic_rate = get_nic_rate(n);
@@ -1291,6 +1317,31 @@ int main(int argc, char *argv[])
 	NS_LOG_INFO("Run Simulation.");
 	Simulator::Stop(Seconds(simulator_stop_time));
 	Simulator::Run();
+
+	// // output monitoring data
+	// FILE *pfc_file = fopen(pfc_output_path.c_str(), "w");
+	// FILE *ecn_file = fopen(ecn_output_path.c_str(), "w");
+	// FILE *inqbytes_file = fopen(inqbytes_output_path.c_str(), "w");
+	// FILE *outqbytes_file = fopen(outqbytes_output_path.c_str(), "w");
+	// FILE *rate_file = fopen(rate_output_path.c_str(), "w");
+	// output_sw_monitor_pfc(pfc_file, &n);
+	// output_sw_monitor_ecn(ecn_file, &n);	
+	// output_swmmu_inqbytes(inqbytes_file, &n);
+	// output_swmmu_outqbytes(outqbytes_file, &n);
+	// output_rdma_hw_rate(rate_file, &n);
+	// fclose(pfc_file);
+	// fclose(ecn_file);
+	// fclose(inqbytes_file);
+	// fclose(outqbytes_file);
+	// fclose(rate_file);
+
+    // Before program ends, output the monitor data
+	monitor->output_rdma_hw_rate(rate_output_path);
+	monitor->output_swmmu_inqbytes(inqbytes_output_path);
+	monitor->output_swmmu_outqbytes(outqbytes_output_path);
+	monitor->output_sw_monitor_pfc(pfc_output_path);
+	monitor->output_sw_monitor_ecn(ecn_output_path);
+
 	Simulator::Destroy();
 	NS_LOG_INFO("Done.");
 	log_cur_time();

@@ -183,10 +183,31 @@ TypeId RdmaHw::GetTypeId (void)
 }
 
 RdmaHw::RdmaHw(){
+	monitor = Monitor::GetInstance();
+}
+
+void RdmaHw::RecordRate(DataRate rate){
+	Time now = Simulator::Now();
+	uint32_t node_id = m_node->GetId();
+	if (now - monitor->nodeRateLastRecordTime[node_id] >= monitor->record_interval){
+		monitor->nodeRateLastRecordTime[node_id] = now;
+		monitor->nodeTimeToRate[node_id].push_back(
+			std::pair<uint64_t, uint64_t>(now.GetNanoSeconds(), rate.GetBitRate()));
+	}
+	// monitor->nodeTimeToRate[node_id].push_back(
+	// 		std::pair<uint64_t, uint64_t>(now.GetNanoSeconds(), rate.GetBitRate()));
+}
+
+// call this function where the rate is set
+void RdmaHw::SetQpRate(Ptr<RdmaQueuePair> qp, DataRate rate){
+	qp->m_rate = rate;
+	RecordRate(rate);
 }
 
 void RdmaHw::SetNode(Ptr<Node> node){
 	m_node = node;
+	uint32_t node_id = m_node->GetId();
+	monitor->nodeRateLastRecordTime[node_id] = Simulator::Now();
 }
 void RdmaHw::Setup(QpCompleteCallback cb){
 	for (uint32_t i = 0; i < m_nic.size(); i++){
@@ -244,7 +265,7 @@ void RdmaHw::AddQueuePair(
 
 	// set init variables
 	DataRate m_bps = m_nic[nic_idx].dev->GetDataRate();
-	qp->m_rate = m_bps;
+	SetQpRate(qp, m_bps);
 	qp->m_max_rate = m_bps;
 	if (m_cc_mode == 1){
 		qp->mlx.m_targetRate = m_bps;
@@ -375,7 +396,7 @@ int RdmaHw::ReceiveCnp(Ptr<Packet> p, CustomHeader &ch){
 
 	if (qp->m_rate == 0)			//lazy initialization	
 	{
-		qp->m_rate = dev->GetDataRate();
+		SetQpRate(qp, dev->GetDataRate());
 		if (m_cc_mode == 1){
 			qp->mlx.m_targetRate = dev->GetDataRate();
 		}else if (m_cc_mode == 3){
@@ -618,7 +639,7 @@ void RdmaHw::ChangeRate(Ptr<RdmaQueuePair> qp, DataRate new_rate){
 	#endif
 
 	// change to new rate
-	qp->m_rate = new_rate;
+	SetQpRate(qp, new_rate);
 }
 
 #define PRINT_LOG 0
@@ -657,7 +678,8 @@ void RdmaHw::cnp_received_mlx(Ptr<RdmaQueuePair> q){
 		// schedule rate decrease
 		ScheduleDecreaseRateMlx(q, 1); // add 1 ns to make sure rate decrease is after alpha update
 		// set rate on first CNP
-		q->mlx.m_targetRate = q->m_rate = m_rateOnFirstCNP * q->m_rate;
+		SetQpRate(q, m_rateOnFirstCNP * q->m_rate);
+		q->mlx.m_targetRate = q->m_rate;
 		q->mlx.m_first_cnp = false;
 	}
 }
@@ -675,7 +697,7 @@ void RdmaHw::CheckRateDecreaseMlx(Ptr<RdmaQueuePair> q){
 		}
 		if (clamp)
 			q->mlx.m_targetRate = q->m_rate;
-		q->m_rate = std::max(m_minRate, q->m_rate * (1 - q->mlx.m_alpha / 2));
+		SetQpRate(q, std::max(m_minRate, q->m_rate * (1 - q->mlx.m_alpha / 2)));
 		// reset rate increase related things
 		q->mlx.m_rpTimeStage = 0;
 		q->mlx.m_decrease_cnp_arrived = false;
@@ -710,7 +732,7 @@ void RdmaHw::FastRecoveryMlx(Ptr<RdmaQueuePair> q){
 	#if PRINT_LOG
 	printf("%lu fast recovery: %08x %08x %u %u (%0.3lf %.3lf)->", Simulator::Now().GetTimeStep(), q->sip.Get(), q->dip.Get(), q->sport, q->dport, q->mlx.m_targetRate.GetBitRate() * 1e-9, q->m_rate.GetBitRate() * 1e-9);
 	#endif
-	q->m_rate = (q->m_rate / 2) + (q->mlx.m_targetRate / 2);
+	SetQpRate(q, (q->m_rate / 2) + (q->mlx.m_targetRate / 2));
 	#if PRINT_LOG
 	printf("(%.3lf %.3lf)\n", q->mlx.m_targetRate.GetBitRate() * 1e-9, q->m_rate.GetBitRate() * 1e-9);
 	#endif
@@ -726,7 +748,7 @@ void RdmaHw::ActiveIncreaseMlx(Ptr<RdmaQueuePair> q){
 	q->mlx.m_targetRate += m_rai;
 	if (q->mlx.m_targetRate > dev->GetDataRate())
 		q->mlx.m_targetRate = dev->GetDataRate();
-	q->m_rate = (q->m_rate / 2) + (q->mlx.m_targetRate / 2);
+	SetQpRate(q, (q->m_rate / 2) + (q->mlx.m_targetRate / 2));
 	#if PRINT_LOG
 	printf("(%.3lf %.3lf)\n", q->mlx.m_targetRate.GetBitRate() * 1e-9, q->m_rate.GetBitRate() * 1e-9);
 	#endif
@@ -742,7 +764,7 @@ void RdmaHw::HyperIncreaseMlx(Ptr<RdmaQueuePair> q){
 	q->mlx.m_targetRate += m_rhai;
 	if (q->mlx.m_targetRate > dev->GetDataRate())
 		q->mlx.m_targetRate = dev->GetDataRate();
-	q->m_rate = (q->m_rate / 2) + (q->mlx.m_targetRate / 2);
+	SetQpRate(q, (q->m_rate / 2) + (q->mlx.m_targetRate / 2));
 	#if PRINT_LOG
 	printf("(%.3lf %.3lf)\n", q->mlx.m_targetRate.GetBitRate() * 1e-9, q->m_rate.GetBitRate() * 1e-9);
 	#endif
@@ -968,19 +990,19 @@ void RdmaHw::UpdateRateTimely(Ptr<RdmaQueuePair> qp, Ptr<Packet> p, CustomHeader
 		}
 		if (inc){
 			if (qp->tmly.m_incStage < 5){
-				qp->m_rate = qp->tmly.m_curRate + m_rai;
+				SetQpRate(qp, qp->tmly.m_curRate + m_rai);
 			}else{
-				qp->m_rate = qp->tmly.m_curRate + m_rhai;
+				SetQpRate(qp, qp->tmly.m_curRate + m_rhai);
 			}
 			if (qp->m_rate > qp->m_max_rate)
-				qp->m_rate = qp->m_max_rate;
+				SetQpRate(qp, qp->m_max_rate);
 			if (!us){
 				qp->tmly.m_curRate = qp->m_rate;
 				qp->tmly.m_incStage++;
 				qp->tmly.rttDiff = rtt_diff;
 			}
 		}else{
-			qp->m_rate = std::max(m_minRate, qp->tmly.m_curRate * c); 
+			SetQpRate(qp, std::max(m_minRate, qp->tmly.m_curRate * c)); 
 			if (!us){
 				qp->tmly.m_curRate = qp->m_rate;
 				qp->tmly.m_incStage = 0;
@@ -1046,7 +1068,7 @@ void RdmaHw::HandleAckDctcp(Ptr<RdmaQueuePair> qp, Ptr<Packet> p, CustomHeader &
 		#if PRINT_LOG
 		printf("%lu %s %08x %08x %u %u %.3lf->", Simulator::Now().GetTimeStep(), "rate", qp->sip.Get(), qp->dip.Get(), qp->sport, qp->dport, qp->m_rate.GetBitRate()*1e-9);
 		#endif
-		qp->m_rate = std::max(m_minRate, qp->m_rate * (1 - qp->dctcp.m_alpha / 2));
+		SetQpRate(qp, std::max(m_minRate, qp->m_rate * (1 - qp->dctcp.m_alpha / 2)));
 		#if PRINT_LOG
 		printf("%.3lf\n", qp->m_rate.GetBitRate() * 1e-9);
 		#endif
@@ -1056,7 +1078,7 @@ void RdmaHw::HandleAckDctcp(Ptr<RdmaQueuePair> qp, Ptr<Packet> p, CustomHeader &
 
 	// additive inc
 	if (qp->dctcp.m_caState == 0 && new_batch)
-		qp->m_rate = std::min(qp->m_max_rate, qp->m_rate + m_dctcp_rai);
+		SetQpRate(qp, std::min(qp->m_max_rate, qp->m_rate + m_dctcp_rai));
 }
 
 /*********************
