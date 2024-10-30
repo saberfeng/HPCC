@@ -54,6 +54,10 @@ public:
 	// for approximate calc in PINT
 	int logres_shift(int b, int l);
 	int log2apprx(int x, int b, int m, int l); // given x of at most b bits, use most significant m bits of x, calc the result in l bits
+
+	Ptr<Monitor> monitor;
+	void RecordPFC(uint32_t dev_id, uint32_t pfc);
+	void RecordECN(uint32_t ifIndex);
 };
 
 } /* namespace ns3 */
